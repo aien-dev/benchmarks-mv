@@ -20,7 +20,7 @@ AIEN does not compare itself with other people's systems. Speed is measured agai
 - **One evidence-backed result:** the [Prime Drag Race campaign of 5 October 2026](prime-drag-race/CAMPAIGN-2026-10-05.md) (details below).
 - **Older figures are withdrawn.** Everything under [Historical record](#historical-record-withdrawn-figures) predates the evidence standard and is kept only as a record.
 - **Merged since the last README update (2026-10-16 to 2026-10-18):** the streaming benchmark now counts tokens only from the server's own report and writes structured records (#25); an offline evidence check and a generated index, [docs/PERF_INDEX.md](docs/PERF_INDEX.md), were added (#24); rustls was updated for security advisories (#27); the hosted GitHub test workflows were removed, so the Spark is now the only test judge (#33).
-- **Known problem on `main`:** `docs/PERF_INDEX.md` is out of date with the source files. On 2026-10-19, `cargo test` on `main` failed 2 tests in `tests/perf_index.rs` and `cargo run --release --bin bench_index -- --check` exited 1. The fix is to run `cargo run --release --bin bench_index` and commit the result.
+- **Fixed on 2026-10-19:** `docs/PERF_INDEX.md` had fallen behind the source files, so `cargo test` failed 2 tests in `tests/perf_index.rs` and the BENCH-PERF-INDEX gate failed. #34 committed the regenerated index.
 - **The main harness does not build from public sources.** Its sibling dependency is a branch that is not on GitHub (see [Build and test](#build-and-test)).
 - **Planned, not started in this repository:** open tracking issues [#29](https://github.com/aien-dev/benchmarks-mv/issues/29) and [#30](https://github.com/aien-dev/benchmarks-mv/issues/30) (GB10 expert streaming, "Ribbon"), [#31](https://github.com/aien-dev/benchmarks-mv/issues/31) (Spark, iMac and M2 compute across machines) and [#32](https://github.com/aien-dev/benchmarks-mv/issues/32) (small-model training across those machines). None of them has results yet.
 
@@ -91,7 +91,7 @@ cargo run --release --bin bench_index -- --check
 sh scripts/check-no-python.sh
 ```
 
-On the Spark on 2026-10-19 with the sibling in place: `verify`, `report`, `bench_verify_records` (1 record, 1 bundle, 0 defects) and the Python check passed. `cargo test` and `bench_index --check` failed because of the stale index (see [Status](#status-2026-10-19)).
+On the Spark on 2026-10-19 with the sibling in place: `verify`, `report`, `bench_verify_records` (1 record, 1 bundle, 0 defects) and the Python check passed. `cargo test` and `bench_index --check` failed because of a stale index; after #34 regenerated it, the gate steps `test` and `perf-index` pass on the Spark (2026-10-19).
 
 ### How changes are tested
 

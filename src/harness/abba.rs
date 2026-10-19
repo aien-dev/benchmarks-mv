@@ -179,12 +179,14 @@ impl AbbaRun {
     }
 }
 
-/// One request, retried with doubling backoff while the server answers 503 busy.
+/// One request, retried with doubling backoff while the server answers 503 busy, until
+/// `retries` are used or the next retry would start after `give_up_at`.
 pub fn measure_retrying(
     cfg: &StreamConfig,
     index: u32,
     retries: u32,
     backoff_max: Duration,
+    give_up_at: Instant,
     measure: &mut dyn FnMut(&StreamConfig, u32) -> RequestSample,
 ) -> (RequestSample, u32) {
     let mut wait = Duration::from_millis(500);
@@ -192,7 +194,7 @@ pub fn measure_retrying(
     loop {
         let s = measure(cfg, index);
         let busy = s.outcome == Outcome::HttpStatus && s.http_status == Some(503);
-        if !busy || used >= retries {
+        if !busy || used >= retries || Instant::now() + wait >= give_up_at {
             return (s, used);
         }
         used += 1;
@@ -225,6 +227,7 @@ pub fn run_abba_with(
                 next_index,
                 cfg.busy_retries,
                 cfg.busy_backoff_max,
+                t0 + cfg.deadline,
                 measure,
             );
             next_index += 1;

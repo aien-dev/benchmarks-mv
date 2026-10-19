@@ -150,6 +150,24 @@ This writes one `aien-bench-record/1` JSON record and its raw samples file into 
 - **Percentiles** use the nearest-rank method over the successful requests, and the count is recorded. A p95 needs at least 20 successful requests (`P95_MIN_SAMPLES`).
 - **Labels** in the record (model, engine, precision, context length) come from the flags, not from constants in the code.
 
+### Baseline against candidate (ABBA) and regression fences
+
+```bash
+# Baseline, candidate, candidate, baseline cells of greedy serial requests. Point both arms at
+# one server to measure the box's own noise.
+cargo run --release -- abba --llm-port <baseline port> --llm-model <model id> \
+  --candidate-port <candidate port> --llm-max-tokens 24 --rounds 1 \
+  --baseline-pid <server pid> --baseline-checkpoint <revision> --out-dir records
+
+# Judge each metric's changes against its own history (read-only).
+cargo run --release --bin bench_regress -- <aien-receipts checkout> records
+```
+
+`abba` and `llm-stream` print a tokens-per-second figure only when every reply equals the
+serial greedy reference at the same settings; otherwise they print `UNVERIFIED tokens`. The
+rules, thresholds and the measured noise of this Spark are in
+[docs/NOISE.md](docs/NOISE.md).
+
 ### Other commands
 
 ```bash

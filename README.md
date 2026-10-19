@@ -1,101 +1,244 @@
-# AIEN Sovereign Systems Performance Benchmarks
+# AIEN Benchmarks
 
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](LICENSE)
 
-Empirical performance measurements and active measurement harnesses for the **AIEN Sovereign Agent Architecture** running on the **NVIDIA DGX Spark** (Grace Blackwell GB10, aarch64).
+This repository holds AIEN's performance measurements and the Rust tools that take and check them. Every measurement in it comes from one machine, the NVIDIA DGX Spark (Grace Blackwell GB10, aarch64). It has two parts: the Prime Drag Race suite runner in [prime-drag-race/](prime-drag-race/CONTRACT.md), which builds on its own, and the main measurement harness (the `aien-benchmarks` crate at the root), which needs a sibling checkout to build (see [Build and test](#build-and-test)).
 
-AIEN does not compare itself with other people's systems. Speed is measured against the machine's physical limit, and correctness against our own reference.
+AIEN does not compare itself with other people's systems. Speed is measured against the machine's physical limit and our own previous run, and correctness against our own reference.
 
+## Where this fits in AIEN
 
-> **Status (23 September 2026, labels updated 12 October 2026):** the figures in the Executive Summary and the Detailed Telemetry sections below are **withdrawn**. They predate the evidence standard adopted in [aien-sovereign-core](https://github.com/aien-spark/aien-sovereign-core#measured-results), have not been regenerated, and stay here only as a historical record. A figure is current only when its artifact bundle carries commit identity, hardware and environment record, exact command, raw samples, SHA-256 digests, measurement definition, and reproducibility steps. The raw files in `data/` are kept as recorded, including service names from before the openclaw-rs to aegis-runtime rename. On 2026-10-15 the Python baseline rows and the Rust-versus-Python like-for-like records were removed from `data/` under the rule above; they remain in git history.
+[Aienix](https://github.com/aien-dev/aienix) is the core tree of AIEN. Its README lists this repository as an attachment: a repository that lives on its own and plugs into the core at a boundary. Related repositories:
 
-> **Current result:** the [Prime Drag Race campaign of 5 October 2026](prime-drag-race/CAMPAIGN-2026-10-05.md) is the evidence-backed measurement in this repository. On the DGX Spark, the native GB10 prime sieve ran at 19,701 passes per second, 20.3x the frozen native baseline, with correctness checked on the chip against our own reference (receipt `1a3eafe9`).
+- [aien-sovereign-core-mv](https://github.com/aien-dev/aien-sovereign-core-mv): host runtime and the Spark verification pipeline that tests this repository. Its [Measured results](https://github.com/aien-dev/aien-sovereign-core-mv#measured-results) section sets the evidence standard used here.
+- [aien-architecture-mv](https://github.com/aien-dev/aien-architecture-mv): architecture and plans. Issue [#233](https://github.com/aien-dev/aien-architecture-mv/issues/233) (performance intelligence) is the plan behind the streaming and evidence work below.
+- [omega-mv](https://github.com/aien-dev/omega-mv): the language and GPU engine that the Prime Drag Race native GB10 entry runs on.
+- [aien-receipts](https://github.com/aien-dev/aien-receipts): where the Spark publishes the signed test bundle for each tested commit of this repository.
+
+## Status (2026-10-19)
+
+- **One evidence-backed result:** the [Prime Drag Race campaign of 5 October 2026](prime-drag-race/CAMPAIGN-2026-10-05.md) (details below).
+- **Older figures are withdrawn.** Everything under [Historical record](#historical-record-withdrawn-figures) predates the evidence standard and is kept only as a record.
+- **Merged since the last README update (2026-10-16 to 2026-10-18):** the streaming benchmark now counts tokens only from the server's own report and writes structured records (#25); an offline evidence check and a generated index, [docs/PERF_INDEX.md](docs/PERF_INDEX.md), were added (#24); rustls was updated for security advisories (#27); the hosted GitHub test workflows were removed, so the Spark is now the only test judge (#33).
+- **Fixed on 2026-10-19:** `docs/PERF_INDEX.md` had fallen behind the source files, so `cargo test` failed 2 tests in `tests/perf_index.rs` and the BENCH-PERF-INDEX gate failed. #34 committed the regenerated index.
+- **The main harness does not build from public sources.** Its sibling dependency is a branch that is not on GitHub (see [Build and test](#build-and-test)).
+- **Planned, not started in this repository:** open tracking issues [#29](https://github.com/aien-dev/benchmarks-mv/issues/29) and [#30](https://github.com/aien-dev/benchmarks-mv/issues/30) (GB10 expert streaming, "Ribbon"), [#31](https://github.com/aien-dev/benchmarks-mv/issues/31) (Spark, iMac and M2 compute across machines) and [#32](https://github.com/aien-dev/benchmarks-mv/issues/32) (small-model training across those machines). None of them has results yet.
+
+## Current result: Prime Drag Race
+
+On the DGX Spark, the native GB10 prime sieve ran at 19,701.34 passes per second, 20.3x the frozen native baseline of 971.48 passes per second, with correctness checked on the chip against our own reference. Source: receipt `1a3eafe9`, recorded in [CAMPAIGN-2026-10-05.md](prime-drag-race/CAMPAIGN-2026-10-05.md), with the run files under [prime-drag-race/evidence/](prime-drag-race/evidence). The frozen baseline run is in [RESULTS-2026-10-05.md](prime-drag-race/RESULTS-2026-10-05.md). That run was on Linux on the GB10, not on AIENOS. How close this is to the hardware limit for this workload has not been measured.
+
+The rules of the race (the frozen contract) are in [CONTRACT.md](prime-drag-race/CONTRACT.md).
+
+## What is in this repository
+
+| Path | What it is |
+| :--- | :--- |
+| `prime-drag-race/` | Prime Drag Race suite runner (`prime_race`), contract, results and sealed evidence. A standalone Rust crate. |
+| `src/` | The `aien-benchmarks` measurement harness and four helper programs: `bench_canonical_suite`, `bench_branching_neutral`, `bench_verify_records`, `bench_index`. |
+| `data/` | Datasets from the withdrawn 2026-09-19 sweep, kept as recorded. |
+| `artifacts/gb10_canonical_1789907893_4d762/` | One withdrawn GB10 run bundle with its `SHA256SUMS` file. |
+| `assets/` | SVG charts drawn from `data/`. |
+| `manifests/` | Workload manifests read by `bench_branching_neutral` and `bench_canonical_suite`. |
+| `docs/` | [PIPELINE.md](docs/PIPELINE.md) (how pull requests are tested and merged), [PERF_INDEX.md](docs/PERF_INDEX.md) (generated index), [LIVE_PRESSURE_BENCHMARK.md](docs/LIVE_PRESSURE_BENCHMARK.md) (an older pressure benchmark write-up, not regenerated under the evidence standard). |
+| `tests/gates/` | The Spark test gates (see [How changes are tested](#how-changes-are-tested)). |
+| `tests/fixtures/records/` | Good and bad example records for the evidence check. |
+| `scripts/check-no-python.sh` | Fails if any tracked file is Python. |
+
+## Build and test
+
+You need a Rust toolchain. The Spark used `rustc 1.98.1 (48a229cea 2026-09-01)` on 2026-10-19.
+
+### Prime Drag Race runner (builds on its own)
+
+```bash
+git clone https://github.com/aien-dev/benchmarks-mv.git
+cd benchmarks-mv/prime-drag-race
+cargo build
+cargo test
+cargo run -- --help
+```
+
+On the Spark on 2026-10-19 this built, and `cargo test` passed 33 tests with 1 ignored. `prime_race verify` runs the correctness sweep of one implementation, and `prime_race run` runs the timed trials and writes a receipt. Timed runs need the implementations under test, which live in other repositories (see the campaign file).
+
+### Main harness (needs a sibling checkout)
+
+The `aien-benchmarks` crate depends on five crates by path under `../canonical-branch-native-runtime/crates/`: `aien-platform`, `aien-platform-linux`, `aien-kv-cache`, `aien-scheduler` and `aien-inference-abi`. Without that directory, `cargo metadata` fails and nothing builds.
+
+That directory is a checkout of the branch `feat/canonical-branch-native-runtime` of aien-sovereign-core (see the comment in `tests/gates/run.sh`). On 2026-10-19 the branch was only on the Spark's local Forgejo server, not on GitHub. A checkout of aien-sovereign-core-mv `main` (commit `a75b7c2`) in its place is not enough: `bench_canonical_suite` failed to compile against it (missing `BlackwellBatchExecutor`, changed `ModelConfig` fields). So today the main harness only builds on the Spark.
+
+The committed `Cargo.lock` still names `spark-max-rs` and `spark-max-cabi` (the Modular MAX bridge, removed from AIEN on 2026-10-15) because the sibling copy of `aien-scheduler` it was generated against depended on them. No code in this repository uses them.
+
+With the sibling in place, from the repository root:
+
+```bash
+# Unit and integration tests
+cargo test --verbose
+
+# Check the committed dataset against its budgets (RSS budgets and latency thresholds)
+cargo run --release -- verify
+
+# Print a summary table of the committed dataset
+cargo run --release -- report
+
+# Check records and artifact bundles offline (one line per defect)
+cargo run --release --bin bench_verify_records -- records artifacts tests/fixtures/records/good
+
+# Check that docs/PERF_INDEX.md matches the generator (drop --check to rewrite it)
+cargo run --release --bin bench_index -- --check
+
+# Fail if any tracked file is Python
+sh scripts/check-no-python.sh
+```
+
+On the Spark on 2026-10-19 with the sibling in place: `verify`, `report`, `bench_verify_records` (1 record, 1 bundle, 0 defects) and the Python check passed. `cargo test` and `bench_index --check` failed because of a stale index; after #34 regenerated it, the gate steps `test` and `perf-index` pass on the Spark (2026-10-19).
+
+### How changes are tested
+
+The Spark is the only test judge for this repository. For each pull request head, a worker on the Spark runs the gates in `tests/gates/` that the change touches, plus the always-run gates in `.aien/always`, signs the result and publishes it to [aien-receipts/benchmarks](https://github.com/aien-dev/aien-receipts/tree/main/benchmarks). The one GitHub check, `AIEN Verification` (`.github/workflows/aien-verification.yml`), only checks that signed bundle; it does not build or test this repository's code. The full process, including how a pull request gets merged, is in [docs/PIPELINE.md](docs/PIPELINE.md).
+
+The gates, each a step of `tests/gates/run.sh`:
+
+| Gate | Runs |
+| :--- | :--- |
+| BENCH-FMT | `cargo fmt -p aien-benchmarks -- --check` |
+| BENCH-CHECK | `cargo check --all-targets` |
+| BENCH-TEST | `cargo test --verbose` |
+| BENCH-VERIFY | `cargo run --release -- verify` |
+| BENCH-GENERATE | `cargo run --release -- generate --output assets`, then fails if `assets/` changed |
+| BENCH-VERIFY-RECORDS | `bench_verify_records` as above, fails on any defect |
+| BENCH-PERF-INDEX | `bench_index`, then fails if `docs/PERF_INDEX.md` changed |
+| BENCH-ZERO-DISK-SECRETS | fails if any `.env*` file is found up to 4 directories deep (always runs) |
+
+This repository has no crumb files (`crumb verify .` reports `OK: 0 crumbs current`).
+
+## The measurement harness
+
+The main harness was built for the Spark's live service layout, so some steps only produce data where those services run. It produced the withdrawn figures in the historical record below. The streaming measurement was rewritten on 2026-10-16 (#25) and has not produced any committed result since.
+
+### Full sweep
+
+```bash
+cargo run --release -- measure
+```
+
+By default `measure` overwrites the committed `data/benchmarks_latest.json` and `assets/*.svg`. Use `--output-json` and `--output-assets` to write elsewhere. It runs these steps:
+
+1. **System discovery:** CPU architecture, memory, kernel (`uname -r`), page size and `rustc --version`.
+2. **Standalone server:** starts the harness's own Rust HTTP server on a free port.
+3. **HTTP load sweep:** sends concurrent requests to that server's `/api/status`, `/api/query` and `/api/vector` and records latency percentiles and throughput. Defaults: `--concurrency 10`, `--requests 500`, `--warmup 20`.
+4. **Memory:** reads resident memory (`VmRSS` in `/proc/<pid>/status`) of the live AIEN services it finds.
+5. **Model serving:** streams chat requests to one OpenAI-compatible endpoint (default `127.0.0.1:18006`, model `atlas-lightning-omni`, set with the `--llm-*` flags), and measures the embedding service on port 18081.
+6. **Vector math:** times 100,000 dot products of 768-number vectors.
+7. **Output:** writes the JSON dataset and redraws the SVG charts.
+
+`--skip-standalone` skips steps 2 and 3, `--skip-live` skips the live-service memory readings, and `--skip-llm` skips the streaming endpoint. All flags: `cargo run --release -- measure --help`.
+
+### Streaming measurement only
+
+```bash
+cargo run --release -- llm-stream --llm-host 127.0.0.1 --llm-port 18006 \
+  --llm-model <model id> --llm-engine <engine label> --llm-precision <e.g. BF16> \
+  --llm-context-length <tokens> --llm-requests 20 --llm-concurrency 1 --out-dir records
+```
+
+This writes one `aien-bench-record/1` JSON record and its raw samples file into `--out-dir` (default `records/`, which git ignores). It exits 2 if no request succeeded. How it measures (source: `src/harness/llm_stream.rs`, `src/harness/sse.rs`):
+
+- **TTFT** (time to first token) is the time from just before the request is sent to the first streamed event that carries text. Events with only a role, nothing, or only usage data do not count.
+- **Tokens** are counted only from the server's own `usage.completion_tokens`, and the record says `token_accounting: "backend_usage"`. Without it the record says `"events_not_tokens"` and reports events per second and time between events, never tokens per second.
+- **Failures:** read errors, timeouts, non-2xx responses, error events, cut-off bodies and streams without `data: [DONE]` count as failed requests and are not measured.
+- **Percentiles** use the nearest-rank method over the successful requests, and the count is recorded. A p95 needs at least 20 successful requests (`P95_MIN_SAMPLES`).
+- **Labels** in the record (model, engine, precision, context length) come from the flags, not from constants in the code.
+
+### Other commands
+
+```bash
+# Redraw the SVG charts from the committed dataset
+cargo run --release -- generate --output assets
+
+# Rewrite the benchmark table between the AIEN:BENCHMARKS:START and END markers in a
+# markdown file from the dataset. --check exits non-zero instead of writing.
+# With no --target it uses ../README.md and ../docs/STATE_OF_AIEN.md.
+cargo run --release -- sync-docs --target <file> --check
+```
+
+## Evidence integrity
+
+New benchmark records follow the `aien-bench-record/1` format: source commit and whether the tree was dirty, build, workload, hardware, backend, one definition per metric, metrics, evidence file paths and limitations. They live as JSON files under `records/`. The older run bundles under `artifacts/` keep their own format and are checked against their `SHA256SUMS` files, never rewritten.
+
+`cargo run --release --bin bench_verify_records` (default paths `records` and `artifacts`) checks them offline and prints one `path: field: reason` line per defect. It rejects placeholder values, short commit ids, missing evidence files and percentiles from too few samples. `cargo run --release --bin bench_index` regenerates [docs/PERF_INDEX.md](docs/PERF_INDEX.md), a list of records, sources and studies copied from the files; it is an index, not an authority.
+
+Status words in a record (source: `src/evidence.rs`):
+
+- **VERIFIED**: measured from a clean committed build, with evidence files in this repository that anyone can re-check.
+- **EXPERIMENTAL**: a real measurement that has not been qualified yet; not a claim.
+- **HISTORICAL**: kept as a record of what an earlier run wrote; not a current claim. Fields that run did not record say `not_recorded` and are named in its limitations.
+- **NOT_RUN**: a required measurement that has not been performed; it carries no numbers and no evidence.
+- **FAIL**: the run happened and did not meet its acceptance check; kept as evidence.
+- **SUPERSEDED**: replaced by a newer record.
+
+## Hardware
+
+All measurements here come from one NVIDIA DGX Spark (`spark-b87b`), Grace Blackwell GB10, aarch64. The withdrawn dataset `data/benchmarks_latest.json` records kernel `7.0.0-1019-nvidia` and `rustc 1.98.1 (48a229cea 2026-09-01)`. On 2026-10-19 the Spark reported the same kernel and compiler, a 4096-byte page size (`getconf PAGESIZE`) and 121 GiB of memory (`free -g`). Nothing in this repository measures or tests any other platform. Work across other machines is planned in issues #31 and #32 and has no results yet.
 
 ---
 
-## Hardware & Environment Specification
+## Historical record (withdrawn figures)
 
-- **Workstation**: NVIDIA DGX Spark (`spark-b87b`)
-- **Processor**: NVIDIA Grace Blackwell (GB10, aarch64)
-- **Memory**: 128 GB Unified LPDDR5X installed, about 121 GiB visible to the OS (Unified CPU/GPU Physical Memory)
-- **Host Kernel**: Linux 7.0.0-1019-nvidia (4 KB page size)
-- **Compiler**: rustc 1.98.1 (48a229cea 2026-09-01)
-- **SIMD / Vector Width**: 128-bit NEON / SVE vector extensions
+> Everything in this section was recorded before the evidence standard in [aien-sovereign-core-mv](https://github.com/aien-dev/aien-sovereign-core-mv#measured-results) (this note was first written on 23 September 2026; labels updated 12 October 2026). None of it has been regenerated, and none of it is a current result. A figure is current only when its bundle carries commit identity, a hardware and environment record, the exact command, raw samples, SHA-256 digests, a measurement definition and steps to reproduce it. The files in `data/` are kept as recorded, including service names from before the openclaw-rs to aegis-runtime rename. On 2026-10-15 the Python baseline rows and the Rust-versus-Python records were removed from `data/` under this rule; they remain in git history. The model serving rows were served by Modular MAX, which AIEN removed on 2026-10-15.
 
----
+### Summary (withdrawn)
 
-## Executive Summary (withdrawn: pre-standard figures)
+1. **Memory:** the Rust services read 4.56 MB to 18.66 MB resident memory, apart from the embedding service, which holds model weights.
+2. **HTTP latency and throughput:** p50 time to first byte of 0.26 ms to 0.50 ms at 19,000 to 34,000 requests per second (concurrency 10, 500 requests per endpoint).
+3. **Vector math:** 0.58 microseconds per 768-number dot product.
+4. **Model serving (Modular MAX):** the GPU seat (`atlas-lightning-omni`, Nemotron 3.5 Lightning 30B) measured 426.9 ms TTFT and 46.9 ms between tokens. The CPU fallback seat (`unsloth/Llama-3.2-1B-Instruct`) measured 155.4 ms TTFT and 88.8 ms between tokens.
 
-*Withdrawn. Every figure in this section predates the evidence standard and has not been regenerated. See the status note at the top.*
-
-The AIEN architecture enforces a strict Native Systems Priority: zero Python or Node interpreters across core services, gateways, or background daemons. Core agent services run as pure compiled native Rust binaries with in-memory TPM-bound key resolution.
-
-1. **Memory Footprint**: Native Rust daemons run in **4.56 MB to 18.66 MB** resident set size (RSS), apart from the embedding service, which holds model weights. `aegis-runtime` maintains an autonomous heartbeat loop within **4.56 MB** RSS.
-2. **Gateway Latency & Throughput**: Axum microservices deliver **sub-millisecond p50 TTFB (0.26ms to 0.50ms)** at **19,000 to 34,000 requests/second** under concurrent load (concurrency=10, 500 requests per endpoint).
-3. **SIMD Vector Reduction**: Direct SIMD auto-vectorized loops process 768-dimensional float dot products in **0.58 microseconds** per operation (over 1.7 million vector comparisons per second).
-4. **Live Neural Inference (historical record, served by Modular MAX, which AIEN removed on 2026-10-15)**: Real-time streaming evaluations against the live active seat (`atlas-lightning-omni`, Nemotron 3.5 Lightning 30B on Grace Blackwell GB10 GPU) measure a Time to First Token (TTFT) of **426.9 ms** and an Inter-Token Latency (ITL) of **46.9 ms** (~21.3 tokens/second). The CPU fallback seat (`unsloth/Llama-3.2-1B-Instruct`) achieves **155.4 ms TTFT** and **88.8 ms ITL**.
-
----
-
-## Detailed Telemetry Tables (withdrawn: pre-standard figures)
-
-*Withdrawn. Every table, chart and figure from here to the Portability section predates the evidence standard and has not been regenerated.*
-
-### 1. Memory Resident Set Size (RSS)
+### 1. Memory resident set size (withdrawn)
 
 ![Memory RSS](assets/memory_comparison.svg)
 
-Measured directly from `/proc/[pid]/status` (`VmRSS`) under steady state on live workstation services:
+Read from `/proc/[pid]/status` (`VmRSS`) on live services:
 
-| Service | Architecture | Role | Memory RSS |
+| Service | Built with | Role | Memory RSS |
 | :--- | :--- | :--- | :--- |
-| **aegis-runtime** | Native Rust (Axum + SQLite) | Autonomous Agent Runtime | **4.56 MB** |
-| **spark-cockpit-rs** | Native Rust (Axum) | Health & Telemetry Gateway | **12.90 MB** |
-| **cortex-rs** | Native Rust (Axum + SQLite WAL) | Knowledge Graph Engine | **18.66 MB** |
-| **cortex-encoder-rs** | Native Rust (ONNX INT8) | Local Vector Embedding | **777.43 MB** |
+| **aegis-runtime** | Rust (Axum + SQLite) | Agent runtime | **4.56 MB** |
+| **spark-cockpit-rs** | Rust (Axum) | Health and telemetry gateway | **12.90 MB** |
+| **cortex-rs** | Rust (Axum + SQLite WAL) | Knowledge graph engine | **18.66 MB** |
+| **cortex-encoder-rs** | Rust (ONNX INT8) | Local vector embedding | **777.43 MB** |
 
----
-
-### 2. HTTP Gateway Latency and Throughput
+### 2. HTTP latency and throughput (withdrawn)
 
 ![Gateway Latency](assets/latency_comparison.svg)
 
-Multi-threaded concurrency sweep (concurrency=10, 500 requests per endpoint on localhost):
+Concurrency 10, 500 requests per endpoint on localhost:
 
-| Gateway Endpoint | Service Engine | Requests / Sec | p50 TTFB | p95 Latency | p99 Latency |
+| Endpoint | Service | Requests / sec | p50 TTFB | p95 | p99 |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **cortex-encoder-rs `/health`** | Rust Axum + ONNX Runtime | **34,684.6 req/s** | **0.26 ms** | 0.35 ms | 0.40 ms |
-| **cortex-rs `/api/cortex/get`** | Rust Axum + SQLite WAL | **19,366.6 req/s** | **0.50 ms** | 0.65 ms | 0.69 ms |
-| **spark-cockpit-rs `/api/pulse`** | Rust Axum | **5,840.2 req/s** | **1.63 ms** | 2.44 ms | 2.86 ms |
+| **cortex-encoder-rs `/health`** | Rust Axum + ONNX Runtime | **34,684.6** | **0.26 ms** | 0.35 ms | 0.40 ms |
+| **cortex-rs `/api/cortex/get`** | Rust Axum + SQLite WAL | **19,366.6** | **0.50 ms** | 0.65 ms | 0.69 ms |
+| **spark-cockpit-rs `/api/pulse`** | Rust Axum | **5,840.2** | **1.63 ms** | 2.44 ms | 2.86 ms |
 
----
+### 3. Model serving and vector math (withdrawn)
 
-### 3. Local Neural Inference & SIMD Acceleration
+These rows came from the old streaming parser, which counted every `data:` line as a token, gave all events from one socket read the same time, treated read errors as end of stream, and reported one TTFT sample as both p50 and p95. The TTFT rows are single samples, so their p50 and p95 are the same value. For the vector row, the p50 is the mean time per iteration over 100,000 iterations and the p95 was that value times 1.3, not a measured percentile. The current harness works differently (see [Streaming measurement only](#streaming-measurement-only)).
 
-TTFT rows come from single-sample runs, so their p50 and p95 are the same value and do not describe a distribution. For the SIMD row, the p50 is the mean time per iteration over 100,000 iterations, and the p95 is that value times 1.3 (`src/harness/mod.rs`), so it is not a measured percentile.
-
-Historical record: the two model seat rows were served by Modular MAX, which AIEN removed on 2026-10-15. The harness now measures whatever OpenAI-compatible local model seat answers on ports 18006 and 18082.
-
-**Measurement semantics (current, issue aien-spark/aien-architecture#233).** The rows below are HISTORICAL and were produced by the old parser, which counted every `data:` line as a token, stamped all events from one socket read with one time, treated read errors as end of stream, and reported one TTFT sample as both p50 and p95. The harness no longer works that way. It now decodes the HTTP response (chunked, Content-Length or read-until-close) and the SSE stream incrementally (`src/harness/sse.rs`, `src/harness/llm_stream.rs`) and uses one clock, `std::time::Instant`. A request starts just before its bytes are written; an event arrives when the socket read holding its final byte returns. TTFT is the time to the first event that carries content, so role-only, empty and usage-only events do not count. Read errors, timeouts, non-2xx responses, error events, truncated bodies and streams without `data: [DONE]` count as failed requests and are never measured. Tokens are counted only from the backend's own `usage.completion_tokens`, and the record says `token_accounting: "backend_usage"`. Without it the record says `"events_not_tokens"` and reports SSE events per second and inter-event latency, never tokens per second or inter-token latency. Percentiles use the nearest-rank method over N successful observations, with N recorded: p50 needs one sample, and p95 needs at least 20. The SIMD row's p95 is no longer computed. Endpoint, model, engine, precision, context length, prompt, max_tokens, requests and concurrency are set with `--llm-*` flags, and the record labels come from those flags, not from constants. `llm-stream` writes one `aien-bench-record/1` JSON record and its raw samples file into `--out-dir` (default `records/`, which git ignores); evidence paths are relative to the record's directory. This change adds no new numbers.
-
-| Workload | Model / Target | Execution Engine | p50 Latency | p95 Latency | Observed Speed |
+| Workload | Model / target | Engine | p50 | p95 | Observed speed |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **First Token Latency (TTFT) - GPU Seat** | `Nemotron 3.5 Lightning 30B` (BF16) | Modular MAX on Grace Blackwell GB10 GPU | **426.91 ms** | 426.91 ms | Active Model Seat |
-| **Inter-Token Latency (ITL) - GPU Seat** | `Nemotron 3.5 Lightning 30B` (BF16) | Modular MAX on Grace Blackwell GB10 GPU | **46.91 ms** | 47.88 ms | **~21.3 tok/s** |
-| **First Token Latency (TTFT) - CPU Fallback** | `Llama 3.2 1B Instruct` (Q4_K) | Modular MAX on Grace Neoverse CPU | **155.40 ms** | 155.40 ms | Fallback Model Seat |
-| **Inter-Token Latency (ITL) - CPU Fallback** | `Llama 3.2 1B Instruct` (Q4_K) | Modular MAX on Grace Neoverse CPU | **88.82 ms** | 99.42 ms | **~11.3 tok/s** |
-| **Bi-Encoder Vector Embedding** | `BAAI/bge-base-en-v1.5` (INT8) | cortex-encoder-rs (ONNX Runtime) | **8.55 ms** | 8.83 ms | Local CPU ONNX |
-| **SIMD Vector Dot Product (768-dim)** | 100,000 iterations | Rust SIMD Vector Loop | **0.0006 ms** (0.58 us) | 0.0008 ms | 1.71M ops/sec |
+| **TTFT, GPU seat** | `Nemotron 3.5 Lightning 30B` (BF16) | Modular MAX on GB10 GPU | **426.91 ms** | 426.91 ms | |
+| **Time between tokens, GPU seat** | `Nemotron 3.5 Lightning 30B` (BF16) | Modular MAX on GB10 GPU | **46.91 ms** | 47.88 ms | about 21.3 tok/s |
+| **TTFT, CPU fallback** | `Llama 3.2 1B Instruct` (Q4_K) | Modular MAX on Grace CPU | **155.40 ms** | 155.40 ms | |
+| **Time between tokens, CPU fallback** | `Llama 3.2 1B Instruct` (Q4_K) | Modular MAX on Grace CPU | **88.82 ms** | 99.42 ms | about 11.3 tok/s |
+| **Vector embedding** | `BAAI/bge-base-en-v1.5` (INT8) | cortex-encoder-rs (ONNX Runtime) | **8.55 ms** | 8.83 ms | |
+| **Dot product (768 numbers)** | 100,000 iterations | Rust loop | **0.0006 ms** (0.58 us) | 0.0008 ms | 1.71M ops/sec |
 
----
+### 4. GB10 run gb10_canonical_1789907893_4d762 (withdrawn)
 
-### 4. Canonical Grace Blackwell GB10 Silicon Proof (Run gb10_canonical_1789907893_4d762)
+Recorded on the DGX Spark GB10 (`sm_121`). The run files report `fallback_count: 0` for every step.
 
-Physical hardware verification executed on the NVIDIA DGX Spark Grace Blackwell GB10 workstation (`sm_121`, 128 GB Unified LPDDR5X memory, NVLink-C2C 900 GB/s bidirectional interconnect). All matrix products execute through compiled Blackwell GPU tensor kernels with zero fallback (`fallback_count: 0`).
+#### A. Continuous batching sweep (TinyLlama-1.1B BF16)
 
-#### A. Continuous Batching Sweep (TinyLlama-1.1B BF16)
-
-| Concurrency | TTFT p50 | ITL p50 | Throughput | Step Latency p50 | GPU Power | GPU Utilization | Active KV Blocks | Fallback Count |
+| Concurrency | TTFT p50 | ITL p50 | Throughput | Step latency p50 | GPU power | GPU utilization | Active KV blocks | Fallback count |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **C = 1** | 33.39 ms | 22.26 ms | 44.65 tok/s | 22.26 ms | 16.94 W | 10% | 8 | 0 |
 | **C = 2** | 31.38 ms | 20.92 ms | 94.87 tok/s | 20.92 ms | 21.29 W | 95% | 16 | 0 |
@@ -105,22 +248,22 @@ Physical hardware verification executed on the NVIDIA DGX Spark Grace Blackwell 
 | **C = 32** | 112.76 ms | 75.17 ms | 222.77 tok/s | 75.17 ms | 41.90 W | 96% | 166 | 0 |
 | **C = 64** | 152.55 ms | 101.70 ms | 510.16 tok/s | 101.70 ms | 42.52 W | 96% | 416 | 0 |
 
-#### B. Branch-Native Reasoning (500 Branches, 32,768 Prefix Tokens)
+#### B. Branching (500 branches, 32,768 prefix tokens)
 
-- **Total 500-Branch Fork Time**: 1.20 ms (1,202.2 µs)
-- **Median Fork Latency per Branch**: 2.06 µs (p90: 3.18 µs, p99: 5.86 µs)
-- **Physical Shared Blocks**: 2,048 blocks (refcount 501, zero duplicate blocks)
-- **Physical Allocated KV Memory**: 704.00 MB vs 352,000.00 MB (343.75 GB) unshared copy baseline
-- **Physical Memory Savings Ratio**: **500.0x**
-- **Cold Fork to First Token**: 13.04 µs (0.013 ms)
-- **Copy-on-Write Mutation Latency**: 13.30 µs (13,297 ns)
-- **Kernel Fallback Count**: 0 (Pure sm_121 Blackwell GPU kernels)
+- **Total time to fork 500 branches:** 1.20 ms (1,202.2 µs)
+- **Median fork time per branch:** 2.06 µs (p90: 3.18 µs, p99: 5.86 µs)
+- **Shared blocks:** 2,048 (reference count 501, no duplicate blocks)
+- **KV memory allocated:** 704.00 MB, against 352,000.00 MB (343.75 GB) if every branch had its own copy
+- **Memory ratio:** 500.0x
+- **Cold fork to first token:** 13.04 µs (0.013 ms)
+- **Copy-on-write change:** 13.30 µs (13,297 ns)
+- **Fallback count:** 0
 
-#### C. Cryptographic Provenance Receipts
+#### C. File digests
 
-All raw JSON telemetry files and manifests are preserved under `artifacts/gb10_canonical_1789907893_4d762/`:
+The run files are under `artifacts/gb10_canonical_1789907893_4d762/`. Their SHA-256 digests match its `SHA256SUMS` file, and `bench_verify_records` digest-checked all 5 on 2026-10-19:
 
-| Artifact | SHA-256 Checksum |
+| File | SHA-256 |
 | :--- | :--- |
 | `manifest.json` | `a78f0ad669b85e92ceffed38e7d36bc55786280b1b4d21d9ae646f1718479816` |
 | `summary.json` | `9cf62a25445e643b3f7d0af5bc86217aed2de1067bcb37c6610e653c2d2cedc8` |
@@ -128,119 +271,17 @@ All raw JSON telemetry files and manifests are preserved under `artifacts/gb10_c
 | `branch_steady.json` | `6cf46288e554c41bc5003fd3e0c7d56e25dbc15466ce8ab67ca4db14f7af8155` |
 | `branch_cold.json` | `d09869d5a3ec4365bec4f97f1d8e7ba32ea0d799ea6160bb0aed82b9904fa567` |
 
-To reproduce the full suite on physical Grace Blackwell hardware (needs the sibling crates described under "Reproducing the Benchmarks"):
-```bash
-cargo run --release --bin bench_canonical_suite
-```
+The program that produced it is `bench_canonical_suite` (`cargo run --release --bin bench_canonical_suite`). It needs the sibling checkout described in [Build and test](#build-and-test) and the GB10 GPU.
 
 ---
 
-## Universal Multi-Platform Portability
-
-Every measurement and artifact in this repository comes from one machine, the NVIDIA DGX Spark (Grace Blackwell GB10). The table lists the platforms AIEN is designed to target. Nothing in this repository measures or tests any platform other than the Spark.
-
-| Platform Target | Primary Accelerators | Engine & Execution Path | Status in this repository |
-| :--- | :--- | :--- | :--- |
-| **macOS (Apple Silicon)** | M1 / M2 / M3 / M4 (Pro / Max / Ultra) | Metal, native aarch64 Rust | Not measured here |
-| **Linux x86_64** | Intel / AMD CPUs, NVIDIA GPUs | glibc / musl native binaries, AVX-512 SIMD | Not measured here |
-| **AMD ROCm** | Radeon RX 7000 / Instinct MI300 | ROCm / HIP targets, native Rust gateway | Not measured here |
-| **NVIDIA DGX Spark** | Grace Blackwell GB10 / GB200 | Unified LPDDR5X, NVFP4 | Measured here (GB10 only) |
-| **Sovereign Bare Metal** | Air-gapped on-prem servers | Hardware TPM 2.0 vault, zero cloud calls | Not measured here |
-
-This repository builds only its own benchmark crates (see below); it does not compile AIEN for other targets.
-
----
-
-## Reproducing the Benchmarks (Active Measurement Harness)
-
-The benchmark repository contains the active measurement harness used to generate the withdrawn numbers above. It is built for the Spark's live service layout, so some steps only produce data where those services run.
-
-### Before you build
-
-The main crate (`aien-benchmarks`) has path dependencies on five crates under `../canonical-branch-native-runtime/crates/`: `aien-platform`, `aien-platform-linux`, `aien-kv-cache`, `aien-scheduler` and `aien-inference-abi`. No repository of that name exists in the aien-dev organisation, so a fresh clone does not build (`cargo metadata` fails to load `aien-inference-abi`) until that sibling directory is provided. Crates with the same names are in `aien-sovereign-core` under `crates/`; this repository does not record whether they are the same code. The `prime-drag-race/` crate declares its own workspace and builds on its own. The committed `Cargo.lock` still names `spark-max-rs` and `spark-max-cabi` (the Modular MAX bridge, removed from AIEN on 2026-10-15) only because the sibling copy of `aien-scheduler` it was generated against depended on them; no code in this repository uses them.
-
-### One-Command Measurement Sweep
-
-```bash
-# Clone the repository
-git clone https://github.com/aien-spark/benchmarks.git
-cd benchmarks
-
-# Run the complete live measurement harness (needs the sibling crates above)
-cargo run --release -- measure
-```
-
-By default `measure` writes `data/benchmarks_latest.json` and `assets/*.svg`, overwriting the committed copies. Use `--output-json` and `--output-assets` to write elsewhere. `--skip-standalone` skips steps 2 and 3 below, and `--skip-live` skips the live-service part of step 4. Step 5 measures the one streaming endpoint set by the `--llm-*` flags (see `llm-stream` below; `--skip-llm` skips it) and the embedding service on port 18081.
-
-### What the Measurement Harness Does Automatically
-
-1. **System & Environment Discovery**: Probes CPU architecture, unified memory capacity, host operating system kernel (`uname -r`), page size, and compiler version (`rustc --version`).
-2. **Ephemeral Microservice Orchestration**: Starts the native compiled Rust standalone server on a dynamic ephemeral port.
-3. **Concurrency Stress Testing**: Executes multi-threaded HTTP load sweeps across the standalone server's endpoints (`/api/status`, `/api/query`, `/api/vector`) measuring exact microsecond latency distributions (p50, p95, p99, min, max) and request throughput.
-4. **OS Memory Telemetry**: Inspects process Resident Set Size (RSS) directly from `/proc/[pid]/status` (`VmRSS`) across live sovereign background services.
-5. **Live Neural Inference Benchmarking**: Streams chat completion requests to one OpenAI-compatible endpoint (default `127.0.0.1:18006`, model `atlas-lightning-omni`, set with the `--llm-*` flags) and reports TTFT, inter-event latency and, only when the backend reports `usage.completion_tokens`, token rates (see "Measurement semantics (current)" above).
-6. **SIMD Vector Benchmark**: Runs 100,000 iterations of 768-dimensional vector dot products to measure raw vector throughput and per-operation latency.
-7. **Dataset & Asset Regeneration**: Automatically updates the structured JSON dataset (`data/benchmarks_latest.json`) and re-renders SVG charts (`assets/*.svg`).
-
-### Additional CLI Commands
-
-```bash
-# Print the terminal summary report from existing dataset
-cargo run --release -- report
-
-# Verify all metrics against invariant budgets (RSS budgets and latency thresholds)
-cargo run --release -- verify
-
-# Re-render SVG charts with custom output directory
-cargo run --release -- generate --output assets
-
-# Measure one streaming endpoint and write records/llm_streaming-<time>.json plus its
-# .samples.json (exit 2 if no request succeeded). All --llm-* flags: --help.
-cargo run --release --bin aien-benchmarks -- llm-stream --llm-host 127.0.0.1 --llm-port 18006 \
-  --llm-model <model id> --llm-engine <engine label> --llm-precision <e.g. BF16> \
-  --llm-context-length <tokens> --llm-requests 20 --llm-concurrency 1 --out-dir records
-
-# Rewrite the marked benchmark table (between AIEN:BENCHMARKS:START and END markers) in
-# documentation files from the dataset; with no --target it uses ../README.md and
-# ../docs/STATE_OF_AIEN.md. --check exits non-zero if a file is out of date instead of writing.
-cargo run --release -- sync-docs --target <file> [--check]
-
-# Run unit tests
-cargo test --verbose
-```
-
----
-
-## Evidence integrity
-
-New structured benchmark records follow the `aien-bench-record/1` contract (source commit and dirty flag, build, workload, hardware, backend, methodology with one definition per metric, metrics, evidence paths, limitations) and live as JSON files under `records/`; the older run bundles under `artifacts/` keep their own format and are checked against their `SHA256SUMS`, never rewritten. `cargo run --release --bin bench_verify_records` (default paths `records` and `artifacts`) checks them offline and prints one `path: field: reason` line per defect: placeholder values, short commit ids, missing evidence files and percentiles from too few samples are all rejected. `cargo run --release --bin bench_index` regenerates [docs/PERF_INDEX.md](docs/PERF_INDEX.md), a list of records, sources, studies and issue links copied from the files; it is not an authority. Status words:
-
-- **VERIFIED**: measured from a clean committed build, with evidence files in this repository that anyone can re-check.
-- **EXPERIMENTAL**: a real measurement that has not been qualified yet; not a claim.
-- **HISTORICAL**: kept as a record of what an earlier run wrote; not a current claim. Fields that run did not record say `not_recorded` and are named in its limitations.
-- **NOT_RUN**: a required measurement that has not been performed; it carries no numbers and no evidence.
-- **FAIL**: the run happened and did not meet its acceptance check; kept as evidence.
-- **SUPERSEDED**: replaced by a newer record.
-
----
-
-## Ecosystem Integration
-
-- **Primary Repository**: [github.com/aien-spark/aien-dev](https://github.com/aien-spark/aien-dev)
-- **Sovereign Core**: [github.com/aien-spark/aien-sovereign-core](https://github.com/aien-spark/aien-sovereign-core)
-- **Website & Showcase**: [github.com/aien-spark/drakestapleton.com](https://github.com/aien-spark/drakestapleton.com) ([drakestapleton.com](https://drakestapleton.com))
-
----
-
-## License and Governance
+## License
 
 Licensed under the GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later). See [LICENSE](LICENSE).
 Copyright (c) 2026 Drake Stapleton and AIEN Contributors. See [NOTICE](NOTICE) for attribution.
 
-- **Benchmark Code & Harness**: Standard [GNU AGPL-3.0-or-later](LICENSE) for universal execution, replication, and integration.
-- **Benchmark Data & Metrics**: Raw telemetry JSON, hardware timing records, and SVG charts are dedicated to the public domain under [CC0-1.0](https://creativecommons.org/publicdomain/zero/1.0/).
-- **Upstream Development Charter**: [CONSTITUTION.md](CONSTITUTION.md) defines the internal architectural doctrine and stewardship standards for upstream development and does not bind downstream users.
+- **Code and harness:** [AGPL-3.0-or-later](LICENSE).
+- **Benchmark data:** the raw JSON telemetry, timing records and SVG charts are dedicated to the public domain under [CC0-1.0](https://creativecommons.org/publicdomain/zero/1.0/).
+- **Development charter:** [CONSTITUTION.md](CONSTITUTION.md) sets the rules for upstream development. It does not bind people who use this code.
 
-## Prime Drag Race
-
-The current, evidence-backed result is the [5 October 2026 campaign](prime-drag-race/CAMPAIGN-2026-10-05.md) (summary at the top of this README). The frozen contract and suite runner for the AIEN Prime Drag Race live in [prime-drag-race/](prime-drag-race/CONTRACT.md). The runner is a standalone Rust crate (`cargo build` inside that directory).
+Contributing: see [CONTRIBUTING.md](CONTRIBUTING.md). Security reports: see [SECURITY.md](SECURITY.md).

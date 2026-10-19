@@ -110,7 +110,7 @@ The gates, each a step of `tests/gates/run.sh`:
 | BENCH-PERF-INDEX | `bench_index`, then fails if `docs/PERF_INDEX.md` changed |
 | BENCH-ZERO-DISK-SECRETS | fails if any `.env*` file is found up to 4 directories deep (always runs) |
 
-This repository has no crumb files (`crumb verify .` reports `OK: 0 crumbs current`).
+This repository has no crumb files. Crumbs are notes for agents and never a merge check.
 
 ## The measurement harness
 

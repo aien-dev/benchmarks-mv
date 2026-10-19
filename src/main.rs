@@ -110,7 +110,7 @@ enum Commands {
         baseline_checkpoint: Option<String>,
         #[arg(long)]
         candidate_checkpoint: Option<String>,
-        /// PID of the baseline / candidate server: its binary hash and loaded GPU libraries
+        /// PID of the baseline / candidate server: its binary hash and loaded libraries
         /// are read from /proc into the receipt
         #[arg(long)]
         baseline_pid: Option<u32>,

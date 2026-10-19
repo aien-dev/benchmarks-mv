@@ -371,7 +371,7 @@ pub fn arm_line(s: &ArmSummary) -> String {
 pub struct ArmIdentity {
     pub engine_commit: Option<String>,
     pub checkpoint_revision: Option<String>,
-    /// Running server process to read the binary hash and loaded GPU libraries from.
+    /// Running server process to read the binary hash and loaded libraries from.
     pub server_pid: Option<u32>,
 }
 
@@ -379,7 +379,8 @@ fn or_not_recorded(v: &Option<String>) -> Value {
     json!(v.clone().unwrap_or_else(|| "not_recorded".to_string()))
 }
 
-/// SHA-256 of the server binary and the GPU runtime libraries it has mapped, read from
+/// SHA-256 of the server binary and every shared library it has mapped (plus the
+/// /dev/nvidia* device nodes it holds, which have no hash), read from
 /// /proc (no tool is run).
 pub fn server_identity(pid: u32) -> Value {
     let exe = std::fs::read_link(format!("/proc/{}/exe", pid))
@@ -393,19 +394,7 @@ pub fn server_identity(pid: u32) -> Value {
         .lines()
         .filter_map(|l| l.split_whitespace().nth(5).map(str::to_string))
         .filter(|p| {
-            let name = p.rsplit('/').next().unwrap_or("");
-            name.contains(".so")
-                && [
-                    "cuda",
-                    "cublas",
-                    "nvidia",
-                    "nvrtc",
-                    "nccl",
-                    "cudnn",
-                    "nvJitLink",
-                ]
-                .iter()
-                .any(|k| name.contains(k))
+            p.rsplit('/').next().unwrap_or("").contains(".so") || p.starts_with("/dev/nvidia")
         })
         .collect();
     libs.sort();
@@ -419,7 +408,9 @@ pub fn server_identity(pid: u32) -> Value {
             json!({
                 "path": p,
                 "resolved": real,
-                "sha256": std::fs::read(p).ok().map(|b| sha256_hex(&b)),
+                "sha256": (!p.starts_with("/dev/"))
+                    .then(|| std::fs::read(p).ok().map(|b| sha256_hex(&b)))
+                    .flatten(),
             })
         })
         .collect();
@@ -718,5 +709,16 @@ mod tests {
         let run = run_abba_with(&c, &mut m);
         assert!(run.stopped.is_some());
         assert!(!summarize_arm(&run, &c, Arm::Candidate).tokens_verified());
+    }
+
+    #[test]
+    fn server_identity_reads_own_process() {
+        let v = server_identity(std::process::id());
+        assert_eq!(v["exe_sha256"].as_str().map(str::len), Some(64));
+        let libs = v["runtime_libraries"].as_array().unwrap();
+        assert!(libs
+            .iter()
+            .any(|l| l["path"].as_str().unwrap().contains("libc.so")
+                && l["sha256"].as_str().is_some()));
     }
 }

@@ -15,6 +15,7 @@
 use super::sse::{HttpResponseParser, SseEvent, SseParser};
 use serde::Serialize;
 use serde_json::{json, Map, Value};
+use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 use std::io::{ErrorKind, Read, Write};
 use std::net::{TcpStream, ToSocketAddrs};
@@ -50,6 +51,8 @@ pub struct StreamConfig {
     pub concurrency: u32,
     pub warmup: u32,
     pub request_usage: bool,
+    /// `temperature` sent in each request; omitted when None. The token check needs 0 (greedy).
+    pub temperature: Option<f64>,
     pub connect_timeout: Duration,
     pub read_timeout: Duration,
 }
@@ -71,6 +74,7 @@ impl Default for StreamConfig {
             concurrency: 1,
             warmup: 1,
             request_usage: true,
+            temperature: None,
             connect_timeout: Duration::from_secs(5),
             read_timeout: Duration::from_secs(20),
         }
@@ -89,6 +93,9 @@ impl StreamConfig {
             "max_tokens": self.max_tokens,
             "stream": true,
         });
+        if let Some(t) = self.temperature {
+            body["temperature"] = json!(t);
+        }
         if self.request_usage {
             body["stream_options"] = json!({"include_usage": true});
         }
@@ -178,6 +185,38 @@ pub fn classify(event: Option<&str>, data: &str) -> Classified {
     c
 }
 
+/// The generated text one SSE event carries: per choice, `delta.reasoning_content`, then
+/// `delta.content`, then `text`, concatenated. Empty when the event carries none.
+pub fn content_text(data: &str) -> String {
+    let mut out = String::new();
+    let Ok(v) = serde_json::from_str::<Value>(data) else {
+        return out;
+    };
+    for ch in v
+        .get("choices")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+    {
+        let delta = ch.get("delta");
+        for part in [
+            delta.and_then(|d| d.get("reasoning_content")),
+            delta.and_then(|d| d.get("content")),
+            ch.get("text"),
+        ] {
+            if let Some(s) = part.and_then(Value::as_str) {
+                out.push_str(s);
+            }
+        }
+    }
+    out
+}
+
+/// Lowercase hex SHA-256 of `bytes`.
+pub fn sha256_hex(bytes: &[u8]) -> String {
+    format!("{:x}", Sha256::digest(bytes))
+}
+
 /// How one request ended. Only `Complete` contributes observations.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -245,6 +284,9 @@ pub struct RequestSample {
     pub malformed_events: u64,
     pub usage_completion_tokens: Option<u64>,
     pub usage_prompt_tokens: Option<u64>,
+    /// SHA-256 of the reply text (see [`content_text`]) of a complete request; the token check
+    /// compares it with the serial greedy reference.
+    pub output_sha256: Option<String>,
     pub reads: u64,
     pub bytes: u64,
     pub sse_comments: u64,
@@ -276,6 +318,7 @@ impl RequestSample {
             malformed_events: 0,
             usage_completion_tokens: None,
             usage_prompt_tokens: None,
+            output_sha256: None,
             reads: 0,
             bytes: 0,
             sse_comments: 0,
@@ -299,6 +342,7 @@ pub struct StreamAccumulator {
     sse: SseParser,
     body: Vec<u8>,
     events: Vec<SseEvent>,
+    text: String,
     error_body: Vec<u8>,
     sample: RequestSample,
     failure: Option<(Outcome, String)>,
@@ -313,6 +357,7 @@ impl StreamAccumulator {
             sse: SseParser::new(),
             body: Vec::new(),
             events: Vec::new(),
+            text: String::new(),
             error_body: Vec::new(),
             sample: RequestSample::empty(index),
             failure: None,
@@ -383,6 +428,7 @@ impl StreamAccumulator {
             match c.kind {
                 EventKind::Content => {
                     self.sample.content_events += 1;
+                    self.text.push_str(&content_text(&ev.data));
                     if self.sample.first_content_ms.is_none() {
                         self.sample.first_content_ms = Some(offset_ms);
                     }
@@ -469,7 +515,9 @@ impl StreamAccumulator {
         };
         s.outcome = outcome;
         s.detail = detail;
-        if outcome != Outcome::Complete {
+        if outcome == Outcome::Complete {
+            s.output_sha256 = Some(sha256_hex(self.text.as_bytes()));
+        } else {
             s.completion_ms = None;
         }
         self.sample
@@ -610,6 +658,71 @@ impl TokenAccounting {
     }
 }
 
+/// Whether a run's replies may carry a speed figure (TensorFold rule: never quote a speed
+/// before checking that run's tokens; a build once looked 25% faster because a bug gave
+/// wrong tokens that were easier to draft).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TokenCheck {
+    /// Every complete reply hashed equal to the serial greedy reference.
+    Verified { reference_sha256: String },
+    /// Why no tokens-per-second figure may be quoted.
+    Unverified(String),
+}
+
+impl TokenCheck {
+    pub fn is_verified(&self) -> bool {
+        matches!(self, TokenCheck::Verified { .. })
+    }
+
+    pub fn as_str(&self) -> &'static str {
+        if self.is_verified() {
+            "verified"
+        } else {
+            "unverified"
+        }
+    }
+}
+
+/// Compare every complete reply in `samples` with `reference`, a reply produced by a serial
+/// request at the same settings. Verified only when `temperature` is exactly 0 (greedy, so
+/// the reply is a function of prompt, checkpoint and engine), the reference completed, and
+/// at least one sample completed with every complete sample's reply hash equal to it.
+/// Failed samples carry no speed and are reported separately.
+pub fn token_check(
+    temperature: Option<f64>,
+    reference: Option<&RequestSample>,
+    samples: &[RequestSample],
+) -> TokenCheck {
+    if temperature != Some(0.0) {
+        return TokenCheck::Unverified(
+            "temperature 0 was not requested, so there is no greedy reference to compare with"
+                .to_string(),
+        );
+    }
+    let Some(want) = reference.and_then(|r| r.output_sha256.clone()) else {
+        return TokenCheck::Unverified("no complete serial reference reply".to_string());
+    };
+    let ok: Vec<&RequestSample> = samples.iter().filter(|s| s.is_complete()).collect();
+    if ok.is_empty() {
+        return TokenCheck::Unverified("no complete measured reply".to_string());
+    }
+    let differ = ok
+        .iter()
+        .filter(|s| s.output_sha256.as_deref() != Some(want.as_str()))
+        .count();
+    if differ > 0 {
+        return TokenCheck::Unverified(format!(
+            "{} of {} complete replies differ from the serial greedy reference {}",
+            differ,
+            ok.len(),
+            &want[..12]
+        ));
+    }
+    TokenCheck::Verified {
+        reference_sha256: want,
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct StreamSummary {
     pub requests_attempted: usize,
@@ -629,6 +742,8 @@ pub struct StreamSummary {
     pub output_tokens_total: Option<u64>,
     pub output_tokens_per_sec: Option<f64>,
     pub tpot: Option<Distribution>,
+    /// Set by the caller with [`token_check`]; `summarize` alone cannot see the reference.
+    pub token_check: TokenCheck,
 }
 
 pub fn summarize(samples: &[RequestSample], wall: Duration) -> StreamSummary {
@@ -703,6 +818,7 @@ pub fn summarize(samples: &[RequestSample], wall: Duration) -> StreamSummary {
         output_tokens_total,
         output_tokens_per_sec,
         tpot,
+        token_check: TokenCheck::Unverified("token check not run".to_string()),
     }
 }
 
@@ -866,7 +982,10 @@ pub fn build_record(
     if let Some(v) = summary.output_tokens_total {
         m.insert("output_tokens_total".into(), json!(v));
     }
-    if let Some(v) = summary.output_tokens_per_sec {
+    if let Some(v) = summary
+        .output_tokens_per_sec
+        .filter(|_| summary.token_check.is_verified())
+    {
         m.insert("output_tokens_per_sec".into(), json!(v));
     }
     if let Some(d) = &summary.tpot {
@@ -899,7 +1018,9 @@ pub fn build_record(
     def("percentiles", format!("nearest-rank over the N successful observations of that metric; p50 when N >= 1, p95 only when N >= {}; N is recorded as <metric>_samples", P95_MIN_SAMPLES));
     def("warmup", format!("{} warmup request(s) with the same prompt and max_tokens ran serially first and were discarded", cfg.warmup));
     if summary.token_accounting == TokenAccounting::BackendUsage {
-        def("output_tokens_per_sec", "sum of backend-reported usage.completion_tokens over successful requests divided by wall_ms".into());
+        if summary.token_check.is_verified() {
+            def("output_tokens_per_sec", "sum of backend-reported usage.completion_tokens over successful requests divided by wall_ms".into());
+        }
         def("tpot_ms", "per request: (last content event arrival - first content event arrival) / (usage.completion_tokens - 1); requests with fewer than 2 tokens are excluded".into());
     }
 
@@ -919,6 +1040,17 @@ pub fn build_record(
         TokenAccounting::BackendUsage => limitations.push(
             "Token counts are the backend's own usage.completion_tokens, not verified by this client.".to_string(),
         ),
+    }
+    match &summary.token_check {
+        TokenCheck::Verified { reference_sha256 } => limitations.push(format!(
+            "Token check: every complete reply equals the serial greedy reference (reply text SHA-256 {}); the hash covers the streamed text, not token ids.",
+            reference_sha256
+        )),
+        TokenCheck::Unverified(why) if summary.token_accounting == TokenAccounting::BackendUsage => limitations.push(format!(
+            "UNVERIFIED tokens: {}; output_tokens_per_sec is omitted.",
+            why
+        )),
+        TokenCheck::Unverified(_) => {}
     }
     if summary.events_coalesced_in_read > 0 {
         limitations.push(format!(
@@ -991,6 +1123,7 @@ pub fn build_record(
             "clock": CLOCK,
             "definitions": Value::Object(defs),
             "token_accounting": summary.token_accounting.as_str(),
+            "token_check": summary.token_check.as_str(),
             "samples": summary.ttft.samples,
         },
         "metrics": Value::Object(m),
@@ -1494,5 +1627,93 @@ mod tests {
             ..StreamConfig::default()
         };
         assert_eq!(measure_one(&cfg, 0).outcome, Outcome::ConnectError);
+    }
+
+    fn record_for(summary: &StreamSummary) -> Value {
+        build_record(
+            &StreamConfig::default(),
+            summary,
+            &SourceIdentity {
+                commit: "0".repeat(40),
+                dirty: false,
+            },
+            &BuildIdentity {
+                profile: "debug".into(),
+                rustc: "rustc test".into(),
+            },
+            &HardwareIdentity {
+                host: "h".into(),
+                cpu: "c".into(),
+                gpu: "none_detected".into(),
+            },
+            &["x.samples.json".to_string()],
+        )
+    }
+
+    fn reply(text: &str) -> RequestSample {
+        let usage = "data: {\"choices\":[],\"usage\":{\"completion_tokens\":4}}\n\n";
+        run_reads(&[
+            cat(&[HEAD_CLOSE, content(text).as_bytes()]),
+            content("!").into_bytes(),
+            cat(&[usage.as_bytes(), b"data: [DONE]\n\n"]),
+        ])
+    }
+
+    #[test]
+    fn reply_text_hash_and_temperature_in_body() {
+        let a = reply("hello");
+        assert_eq!(
+            a.output_sha256.as_deref(),
+            Some(sha256_hex(b"hello!").as_str())
+        );
+        assert_eq!(
+            content_text("{\"choices\":[{\"delta\":{\"reasoning_content\":\"r\",\"content\":\"c\"}},{\"text\":\"t\"}]}"),
+            "rct"
+        );
+        let cfg = StreamConfig {
+            temperature: Some(0.0),
+            ..StreamConfig::default()
+        };
+        let v: Value = serde_json::from_str(&cfg.request_body()).unwrap();
+        assert_eq!(v["temperature"], 0.0);
+        let v: Value = serde_json::from_str(&StreamConfig::default().request_body()).unwrap();
+        assert!(v.get("temperature").is_none());
+    }
+
+    #[test]
+    fn token_check_gates_the_tokens_per_second_figure() {
+        let reference = reply("same");
+        let same = vec![reply("same"), reply("same")];
+        let check = token_check(Some(0.0), Some(&reference), &same);
+        assert!(check.is_verified());
+
+        // Not greedy, no reference, or one differing reply: unverified.
+        assert!(!token_check(None, Some(&reference), &same).is_verified());
+        assert!(!token_check(Some(0.7), Some(&reference), &same).is_verified());
+        assert!(!token_check(Some(0.0), None, &same).is_verified());
+        let differs = vec![reply("same"), reply("diff")];
+        let bad = token_check(Some(0.0), Some(&reference), &differs);
+        assert!(matches!(&bad, TokenCheck::Unverified(w) if w.starts_with("1 of 2")));
+
+        let mut sum = summarize(&same, Duration::from_secs(1));
+        assert!(sum.output_tokens_per_sec.is_some());
+        // summarize alone never vouches for the tokens.
+        assert!(!sum.token_check.is_verified());
+        let rec = record_for(&sum);
+        assert!(rec["metrics"].get("output_tokens_per_sec").is_none());
+        assert_eq!(rec["methodology"]["token_check"], "unverified");
+        assert!(rec["limitations"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|l| l.as_str().unwrap().starts_with("UNVERIFIED tokens")));
+
+        sum.token_check = check;
+        let rec = record_for(&sum);
+        assert_eq!(rec["metrics"]["output_tokens_per_sec"], 8.0);
+        assert_eq!(rec["methodology"]["token_check"], "verified");
+        assert!(rec["methodology"]["definitions"]
+            .get("output_tokens_per_sec")
+            .is_some());
     }
 }

@@ -59,6 +59,67 @@ enum Commands {
         #[arg(long, default_value = "records")]
         out_dir: String,
     },
+    /// Compare a baseline and a candidate endpoint in baseline, candidate, candidate, baseline
+    /// order (greedy, serial); tok/s is quoted only when every reply equals the serial
+    /// reference. Point both arms at one server to measure the box's own noise.
+    Abba {
+        /// Baseline endpoint and labels (the --llm-* flags)
+        #[command(flatten)]
+        llm: LlmArgs,
+        /// Candidate port (default: the baseline's)
+        #[arg(long)]
+        candidate_port: Option<u16>,
+        /// Candidate host (default: the baseline's)
+        #[arg(long)]
+        candidate_host: Option<String>,
+        /// Candidate model id (default: the baseline's)
+        #[arg(long)]
+        candidate_model: Option<String>,
+        /// Candidate engine label (default: the baseline's)
+        #[arg(long)]
+        candidate_engine: Option<String>,
+        #[arg(long, default_value = "baseline")]
+        baseline_label: String,
+        #[arg(long, default_value = "candidate")]
+        candidate_label: String,
+        /// File with one prompt per non-empty line (default: a built-in set of three)
+        #[arg(long)]
+        prompts_file: Option<String>,
+        /// ABBA rounds; each round is four cells
+        #[arg(long, default_value_t = 1)]
+        rounds: u32,
+        /// Discarded passes over the prompts on the candidate before the first cell
+        #[arg(long, default_value_t = 1)]
+        candidate_warmup_passes: u32,
+        /// Retries of one request while the server answers 503 busy
+        #[arg(long, default_value_t = 40)]
+        busy_retries: u32,
+        /// Longest wait between busy retries, in seconds
+        #[arg(long, default_value_t = 30)]
+        busy_backoff_max_secs: u64,
+        /// Start no new request after this many seconds
+        #[arg(long, default_value_t = 840)]
+        deadline_secs: u64,
+        /// Engine commit of the baseline / candidate server (written to the receipt)
+        #[arg(long)]
+        baseline_engine_commit: Option<String>,
+        #[arg(long)]
+        candidate_engine_commit: Option<String>,
+        /// Checkpoint revision served by the baseline / candidate
+        #[arg(long)]
+        baseline_checkpoint: Option<String>,
+        #[arg(long)]
+        candidate_checkpoint: Option<String>,
+        /// PID of the baseline / candidate server: its binary hash and loaded GPU libraries
+        /// are read from /proc into the receipt
+        #[arg(long)]
+        baseline_pid: Option<u32>,
+        #[arg(long)]
+        candidate_pid: Option<u32>,
+        /// Directory for the receipt
+        #[arg(long, default_value = "records")]
+        out_dir: String,
+    },
     /// Render SVG charts to assets/ directory
     Generate {
         #[arg(short, long, default_value = "assets")]
@@ -127,6 +188,10 @@ struct LlmArgs {
     /// Do not send stream_options.include_usage
     #[arg(long)]
     llm_no_usage_request: bool,
+    /// temperature sent in each request (omitted when not given). Output tokens/s is printed
+    /// only with 0 (greedy) and when every reply equals the first warmup reply.
+    #[arg(long)]
+    llm_temperature: Option<f64>,
     /// TCP connect timeout in seconds
     #[arg(long, default_value_t = 5)]
     llm_connect_timeout_secs: u64,
@@ -151,6 +216,7 @@ impl LlmArgs {
             concurrency: self.llm_concurrency,
             warmup: self.llm_warmup,
             request_usage: !self.llm_no_usage_request,
+            temperature: self.llm_temperature,
             connect_timeout: std::time::Duration::from_secs(self.llm_connect_timeout_secs),
             read_timeout: std::time::Duration::from_secs(self.llm_read_timeout_secs),
         }
@@ -327,7 +393,10 @@ fn main() {
                 cfg.warmup
             );
             let run = llm_stream::run_stream_benchmark(&cfg);
-            let summary = llm_stream::summarize(&run.samples, run.wall);
+            let mut summary = llm_stream::summarize(&run.samples, run.wall);
+            // The first warmup request ran serially before the measured ones: it is the reference.
+            summary.token_check =
+                llm_stream::token_check(cfg.temperature, run.warmup.first(), &run.samples);
             harness::inference_bench::print_stream_summary(&summary);
             match llm_stream::write_run(Path::new(&out_dir), &cfg, &run, &summary, &source) {
                 Ok(path) => println!("record: {}", path.display()),
@@ -337,6 +406,154 @@ fn main() {
                 }
             }
             if summary.requests_ok == 0 {
+                std::process::exit(2);
+            }
+        }
+        Commands::Abba {
+            llm,
+            candidate_port,
+            candidate_host,
+            candidate_model,
+            candidate_engine,
+            baseline_label,
+            candidate_label,
+            prompts_file,
+            rounds,
+            candidate_warmup_passes,
+            busy_retries,
+            busy_backoff_max_secs,
+            deadline_secs,
+            baseline_engine_commit,
+            candidate_engine_commit,
+            baseline_checkpoint,
+            candidate_checkpoint,
+            baseline_pid,
+            candidate_pid,
+            out_dir,
+        } => {
+            use harness::{abba, llm_stream};
+            let source = match llm_stream::source_identity() {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("abba: {}; refusing to write an unbound receipt", e);
+                    std::process::exit(1);
+                }
+            };
+            let prompts: Vec<String> = match &prompts_file {
+                Some(p) => match fs::read_to_string(p) {
+                    Ok(t) => t
+                        .lines()
+                        .map(str::trim)
+                        .filter(|l| !l.is_empty())
+                        .map(str::to_string)
+                        .collect(),
+                    Err(e) => {
+                        eprintln!("abba: read {}: {}", p, e);
+                        std::process::exit(1);
+                    }
+                },
+                None => vec![
+                    "Name three primary colors.".to_string(),
+                    "Count from one to ten in words.".to_string(),
+                    "What is the boiling point of water at sea level in Celsius?".to_string(),
+                ],
+            };
+            if prompts.is_empty() || rounds == 0 {
+                eprintln!("abba: need at least one prompt and one round");
+                std::process::exit(1);
+            }
+            let baseline = llm.to_config();
+            let candidate = llm_stream::StreamConfig {
+                host: candidate_host.unwrap_or_else(|| baseline.host.clone()),
+                port: candidate_port.unwrap_or(baseline.port),
+                model: candidate_model.unwrap_or_else(|| baseline.model.clone()),
+                engine: candidate_engine.unwrap_or_else(|| baseline.engine.clone()),
+                ..baseline.clone()
+            };
+            let cfg = abba::AbbaConfig {
+                baseline,
+                candidate,
+                prompts,
+                rounds,
+                candidate_warmup_passes,
+                busy_retries,
+                busy_backoff_max: std::time::Duration::from_secs(busy_backoff_max_secs),
+                deadline: std::time::Duration::from_secs(deadline_secs),
+            };
+            println!(
+                "ABBA: baseline {} ({}) vs candidate {} ({}), {} prompt(s), {} round(s), max_tokens {}, greedy, serial",
+                cfg.baseline.endpoint(),
+                baseline_label,
+                cfg.candidate.endpoint(),
+                candidate_label,
+                cfg.prompts.len(),
+                rounds,
+                cfg.baseline.max_tokens
+            );
+            let run = abba::run_abba(&cfg);
+            let base = abba::summarize_arm(&run, &cfg, abba::Arm::Baseline);
+            let cand = abba::summarize_arm(&run, &cfg, abba::Arm::Candidate);
+            for c in &run.cells {
+                let busy: u32 = c.requests.iter().map(|m| m.busy_retries).sum();
+                println!(
+                    "  cell {} {:<9} median decode tok/s {} | requests {} | busy retries {}",
+                    c.index,
+                    c.arm.as_str(),
+                    c.median_rate()
+                        .map_or("-".to_string(), |v| format!("{:.3}", v)),
+                    c.requests.len(),
+                    busy
+                );
+            }
+            println!("{}", abba::arm_line(&base));
+            println!("{}", abba::arm_line(&cand));
+            match abba::delta(&base, &cand) {
+                Some(d) => println!("candidate vs baseline: {:+.2}%", d * 100.0),
+                None => println!(
+                    "candidate vs baseline: no figure (UNVERIFIED tokens or missing cells)"
+                ),
+            }
+            if let Some(why) = &run.stopped {
+                println!("stopped early: {}", why);
+            }
+            let ids = (
+                abba::ArmIdentity {
+                    engine_commit: baseline_engine_commit,
+                    checkpoint_revision: baseline_checkpoint,
+                    server_pid: baseline_pid,
+                },
+                abba::ArmIdentity {
+                    engine_commit: candidate_engine_commit,
+                    checkpoint_revision: candidate_checkpoint,
+                    server_pid: candidate_pid,
+                },
+            );
+            let receipt = abba::build_receipt(
+                &cfg,
+                &run,
+                &source,
+                (&ids.0, &ids.1),
+                (&baseline_label, &candidate_label),
+            );
+            let dir = Path::new(&out_dir);
+            let path = dir.join(format!(
+                "abba-{}.json",
+                chrono::Utc::now().format("%Y%m%dT%H%M%SZ")
+            ));
+            let written = fs::create_dir_all(dir).and_then(|_| {
+                fs::write(
+                    &path,
+                    serde_json::to_string_pretty(&receipt).unwrap_or_default() + "\n",
+                )
+            });
+            match written {
+                Ok(()) => println!("receipt: {}", path.display()),
+                Err(e) => {
+                    eprintln!("abba: write {}: {}", path.display(), e);
+                    std::process::exit(1);
+                }
+            }
+            if !(base.tokens_verified() && cand.tokens_verified()) {
                 std::process::exit(2);
             }
         }

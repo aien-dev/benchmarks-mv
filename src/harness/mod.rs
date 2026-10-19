@@ -1,3 +1,4 @@
+pub mod abba;
 pub mod http_bench;
 pub mod inference_bench;
 pub mod llm_stream;

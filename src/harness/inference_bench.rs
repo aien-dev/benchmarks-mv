@@ -68,7 +68,8 @@ pub fn run_neural_inference_benchmarks(llm: Option<&StreamConfig>) -> Vec<Neural
             cfg.concurrency
         );
         let run = llm_stream::run_stream_benchmark(cfg);
-        let s = llm_stream::summarize(&run.samples, run.wall);
+        let mut s = llm_stream::summarize(&run.samples, run.wall);
+        s.token_check = llm_stream::token_check(cfg.temperature, run.warmup.first(), &run.samples);
         print_stream_summary(&s);
         if s.requests_ok > 0 {
             metrics.push(NeuralMetric {
@@ -174,11 +175,20 @@ pub fn print_stream_summary(s: &llm_stream::StreamSummary) {
         println!("        content events/s: {:.1}", eps);
     }
     if s.token_accounting == TokenAccounting::BackendUsage {
-        if let (Some(total), Some(tps)) = (s.output_tokens_total, s.output_tokens_per_sec) {
-            println!(
-                "        backend usage: {} output tokens, {:.1} output tokens/s",
+        match (
+            s.output_tokens_total,
+            s.output_tokens_per_sec,
+            &s.token_check,
+        ) {
+            (Some(total), Some(tps), llm_stream::TokenCheck::Verified { .. }) => println!(
+                "        backend usage: {} output tokens, {:.1} output tokens/s (tokens verified)",
                 total, tps
-            );
+            ),
+            (Some(total), _, llm_stream::TokenCheck::Unverified(why)) => println!(
+                "        backend usage: {} output tokens, output tokens/s: UNVERIFIED tokens ({})",
+                total, why
+            ),
+            _ => {}
         }
         if let Some(t) = &s.tpot {
             println!(

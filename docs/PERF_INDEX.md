@@ -29,9 +29,11 @@ Scanned: `src/**/*.rs`, `prime-drag-race/src/**/*.rs`. The text is the first `//
 | `prime-drag-race/src/validate.rs` | Strict validation of one implementation run against the canonical result. |
 | `src/bin/bench_branching_neutral.rs` | Neutral out-of-process benchmark runner for agentic branching suites on NVIDIA DGX Spark GB10. |
 | `src/bin/bench_canonical_suite.rs` | Canonical Blackwell GB10 Inference Benchmark Suite |
+| `src/bin/bench_exactness.rs` | Exactness contract client: runs the byte-equalities against a live aien-serve-http. |
 | `src/bin/bench_index.rs` | Writes (or with `--check`, compares) `docs/PERF_INDEX.md`, the generated discovery index. |
 | `src/bin/bench_verify_records.rs` | Offline evidence-integrity check: validates benchmark records and SHA256SUMS artifact bundles. |
 | `src/evidence.rs` | Offline evidence-integrity checks for benchmark records (`aien-bench-record/1`) and SHA256SUMS artifact bundles. |
+| `src/exactness.rs` | Exactness contract for an OpenAI-compatible server: pure checks, no sockets. |
 | `src/harness/http_bench.rs` | (no doc comment) |
 | `src/harness/inference_bench.rs` | (item doc) Live neural rows for the measurement sweep: the configured streaming endpoint (if any) |
 | `src/harness/llm_stream.rs` | Streaming benchmark for an OpenAI-compatible `/v1/chat/completions` endpoint. |

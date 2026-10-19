@@ -44,3 +44,7 @@ path = "src/bin/bench_verify_records.rs"
 [[bin]]
 name = "bench_index"
 path = "src/bin/bench_index.rs"
+
+[[bin]]
+name = "bench_exactness"
+path = "src/bin/bench_exactness.rs"

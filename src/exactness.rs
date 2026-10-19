@@ -15,7 +15,7 @@
 //!   whose cache states were not the ones the equality is about is `Unverified`: the path under
 //!   test did not run.
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 /// sha256 over the token ids as consecutive little-endian u32 values, lowercase hex.
@@ -29,7 +29,7 @@ pub fn token_sha256(ids: &[u32]) -> String {
 }
 
 /// Observed prompt-cache state of one request.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "state", content = "reused_tokens")]
 pub enum CacheState {
     /// The server reported zero reused prompt tokens.
@@ -93,7 +93,7 @@ fn parse_engine_reuse(line: &str) -> Option<usize> {
 }
 
 /// What one request produced, as observed by the client.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Observation {
     /// Label of the run in the plan, e.g. `long/fresh`.
     pub label: String,
@@ -102,15 +102,15 @@ pub struct Observation {
     pub prompt_tokens: Option<usize>,
     pub completion_tokens: Option<usize>,
     pub finish_reason: Option<String>,
-    /// `usage.aien_token_ids`; `None` when the server did not return them.
-    #[serde(skip)]
+    /// `usage.aien_token_ids`; `None` when the server did not return them. Kept in the report so
+    /// a later run can compare against it (`--reference`).
     pub token_ids: Option<Vec<u32>>,
     pub token_count: Option<usize>,
     pub token_sha256: Option<String>,
     /// sha256 of the reply text, for reference only (text equality is not token equality).
     pub text_sha256: String,
     /// The reply text (a follow-up turn sends it back); not in the report.
-    #[serde(skip)]
+    #[serde(skip, default)]
     pub reply_text: String,
     pub cache: CacheState,
     /// 503 answers seen before this request was served.

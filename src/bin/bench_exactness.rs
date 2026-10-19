@@ -63,6 +63,10 @@ struct Args {
     /// Concurrent widths for (c), comma-separated
     #[arg(long, default_value = "2,4")]
     widths: String,
+    /// Earlier report whose solo runs (c) reuses instead of running them again. Refused unless it
+    /// names the same model and the server has not restarted since (its uptime only grew).
+    #[arg(long)]
+    reference: Option<PathBuf>,
     /// Write the JSON report here (rewritten after every request)
     #[arg(long)]
     out: Option<PathBuf>,
@@ -175,7 +179,13 @@ impl Ctx {
                 .json(&body)
                 .send()
                 .await
-                .map_err(|e| format!("{label}: send: {e}"))?;
+                .map_err(|e| {
+                    if e.is_timeout() {
+                        format!("{label}: timed out after {busy} 503s (the server was still waiting for the chip)")
+                    } else {
+                        format!("{label}: send: {e}")
+                    }
+                })?;
             let status = resp.status();
             let text = resp
                 .text()
@@ -367,7 +377,12 @@ async fn resume(ctx: &Ctx, run: &mut Run, nonce: u128) -> Result<(), String> {
 
 /// (c) concurrent == solo. Each question differs after the shared system prompt, so the
 /// server's state from one stream is never a prefix of another stream's prompt.
-async fn concurrent(ctx: Arc<Ctx>, run: &mut Run, widths: &[usize]) -> Result<(), String> {
+async fn concurrent(
+    ctx: Arc<Ctx>,
+    run: &mut Run,
+    widths: &[usize],
+    reference: Option<Vec<Observation>>,
+) -> Result<(), String> {
     println!("(c) concurrent == solo, N = {widths:?}, streamed");
     let n = ctx.args.max_tokens;
     let questions = [
@@ -385,9 +400,19 @@ async fn concurrent(ctx: Arc<Ctx>, run: &mut Run, widths: &[usize]) -> Result<()
     }
     let mut solo = Vec::new();
     for (i, q) in questions.iter().take(max).enumerate() {
-        let o = ctx
-            .run(&format!("solo/{i}"), SYSTEM, vec![user(q)], n, true)
-            .await?;
+        let label = format!("solo/{i}");
+        if let Some(r) = reference
+            .as_ref()
+            .and_then(|r| r.iter().find(|o| o.label == label))
+        {
+            println!(
+                "  {label:<22} from the reference report, token_sha256 {}",
+                r.token_sha256.as_deref().unwrap_or("MISSING")
+            );
+            solo.push(r.clone());
+            continue;
+        }
+        let o = ctx.run(&label, SYSTEM, vec![user(q)], n, true).await?;
         solo.push(ctx.record(run, o));
     }
     for &width in widths {
@@ -421,6 +446,34 @@ async fn concurrent(ctx: Arc<Ctx>, run: &mut Run, widths: &[usize]) -> Result<()
         run.save(ctx.args.out.as_ref());
     }
     Ok(())
+}
+
+/// Solo observations from an earlier report, accepted only for the same model on a server that
+/// has not restarted since (same process, so same binary and weights).
+fn load_reference(path: &PathBuf, model: &str, health: &Value) -> Result<Vec<Observation>, String> {
+    let text = std::fs::read_to_string(path).map_err(|e| e.to_string())?;
+    let v: Value = serde_json::from_str(&text).map_err(|e| e.to_string())?;
+    if v["model"].as_str() != Some(model) {
+        return Err(format!("model {} is not {model}", v["model"]));
+    }
+    let (then, now) = (
+        v["health"]["uptime_s"].as_u64(),
+        health["uptime_s"].as_u64(),
+    );
+    match (then, now) {
+        (Some(t), Some(n)) if n >= t => {}
+        _ => {
+            return Err(format!(
+                "server uptime {now:?} s is not past the reference {then:?} s (restarted?)"
+            ))
+        }
+    }
+    let obs: Vec<Observation> =
+        serde_json::from_value(v["observations"].clone()).map_err(|e| e.to_string())?;
+    Ok(obs
+        .into_iter()
+        .filter(|o| o.label.starts_with("solo/") && o.token_ids.is_some())
+        .collect())
 }
 
 #[tokio::main]
@@ -470,6 +523,16 @@ async fn main() {
         health["engine"].as_str().unwrap_or("?")
     );
     println!("(a) drafted == plain: NOT TESTED, the server exposes no per-request draft switch");
+    let mut reference = match &args.reference {
+        None => None,
+        Some(path) => match load_reference(path, &model, &health) {
+            Ok(r) => Some(r),
+            Err(e) => {
+                eprintln!("bench_exactness: reference {}: {e}", path.display());
+                std::process::exit(2);
+            }
+        },
+    };
     let mut run = Run {
         header: json!({
             "schema": "aien-exactness/1",
@@ -478,6 +541,7 @@ async fn main() {
             "model": model,
             "health": health,
             "nonce": nonce.to_string(),
+            "reference": args.reference.as_ref().map(|p| p.display().to_string()),
             "drafted_eq_plain": "not tested: the server exposes no per-request draft switch",
         }),
         ..Run::default()
@@ -495,7 +559,7 @@ async fn main() {
         }
     }
     if only == "all" || only == "concurrent" {
-        if let Err(e) = concurrent(ctx.clone(), &mut run, &widths).await {
+        if let Err(e) = concurrent(ctx.clone(), &mut run, &widths, reference.take()).await {
             run.errors.push(e);
         }
     }

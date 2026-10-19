@@ -33,16 +33,18 @@ Scanned: `src/**/*.rs`, `prime-drag-race/src/**/*.rs`. The text is the first `//
 | `src/bin/bench_verify_records.rs` | Offline evidence-integrity check: validates benchmark records and SHA256SUMS artifact bundles. |
 | `src/evidence.rs` | Offline evidence-integrity checks for benchmark records (`aien-bench-record/1`) and SHA256SUMS artifact bundles. |
 | `src/harness/http_bench.rs` | (no doc comment) |
-| `src/harness/inference_bench.rs` | (no doc comment) |
+| `src/harness/inference_bench.rs` | (item doc) Live neural rows for the measurement sweep: the configured streaming endpoint (if any) |
+| `src/harness/llm_stream.rs` | Streaming benchmark for an OpenAI-compatible `/v1/chat/completions` endpoint. |
 | `src/harness/memory.rs` | (no doc comment) |
-| `src/harness/mod.rs` | (no doc comment) |
+| `src/harness/mod.rs` | (item doc) Streaming LLM endpoint to measure; None skips it. |
 | `src/harness/smaps.rs` | (no doc comment) |
+| `src/harness/sse.rs` | Incremental framing for a streamed HTTP/1.1 response carrying Server-Sent Events. |
 | `src/harness/standalone.rs` | (no doc comment) |
 | `src/harness/system.rs` | (no doc comment) |
 | `src/harness/workloads.rs` | (no doc comment) |
 | `src/lib.rs` | (no doc comment) |
 | `src/main.rs` | (item doc) Execute live measurement sweep, generate benchmark dataset, and render SVG charts |
-| `src/models.rs` | (no doc comment) |
+| `src/models.rs` | (item doc) Absent when too few observations exist for a real p95 (see llm_stream::P95_MIN_SAMPLES). |
 | `src/perf_index.rs` | Generator for `docs/PERF_INDEX.md`, the discovery index of records, artifacts, sources, studies and issues. |
 | `src/svg_chart.rs` | (no doc comment) |
 

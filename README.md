@@ -8,7 +8,7 @@ AIEN does not compare itself with other people's systems. Speed is measured agai
 
 ## Where this fits in AIEN
 
-[Aienix](https://github.com/aien-dev/aienix) is the core tree of AIEN. Its README lists this repository as an attachment: a repository that lives on its own and plugs into the core at a boundary. Related repositories:
+[AienOS](https://github.com/aien-dev/aienix) is the core tree of AIEN. Its README lists this repository as an attachment: a repository that lives on its own and plugs into the core at a boundary. Related repositories:
 
 - [aien-sovereign-core-mv](https://github.com/aien-dev/aien-sovereign-core-mv): host runtime and the Spark verification pipeline that tests this repository. Its [Measured results](https://github.com/aien-dev/aien-sovereign-core-mv#measured-results) section sets the evidence standard used here.
 - [aien-architecture-mv](https://github.com/aien-dev/aien-architecture-mv): architecture and plans. Issue [#233](https://github.com/aien-dev/aien-architecture-mv/issues/233) (performance intelligence) is the plan behind the streaming and evidence work below.
@@ -26,7 +26,7 @@ AIEN does not compare itself with other people's systems. Speed is measured agai
 
 ## Current result: Prime Drag Race
 
-On the DGX Spark, the native GB10 prime sieve ran at 19,701.34 passes per second, 20.3x the frozen native baseline of 971.48 passes per second, with correctness checked on the chip against our own reference. Source: receipt `1a3eafe9`, recorded in [CAMPAIGN-2026-10-05.md](prime-drag-race/CAMPAIGN-2026-10-05.md), with the run files under [prime-drag-race/evidence/](prime-drag-race/evidence). The frozen baseline run is in [RESULTS-2026-10-05.md](prime-drag-race/RESULTS-2026-10-05.md). That run was on Linux on the GB10, not on AIENOS. How close this is to the hardware limit for this workload has not been measured.
+On the DGX Spark, the native GB10 prime sieve ran at 19,701.34 passes per second, 20.3x the frozen native baseline of 971.48 passes per second, with correctness checked on the chip against our own reference. Source: receipt `1a3eafe9`, recorded in [CAMPAIGN-2026-10-05.md](prime-drag-race/CAMPAIGN-2026-10-05.md), with the run files under [prime-drag-race/evidence/](prime-drag-race/evidence). The frozen baseline run is in [RESULTS-2026-10-05.md](prime-drag-race/RESULTS-2026-10-05.md). That run was on Linux on the GB10, not on Aienux. How close this is to the hardware limit for this workload has not been measured.
 
 The rules of the race (the frozen contract) are in [CONTRACT.md](prime-drag-race/CONTRACT.md).
 

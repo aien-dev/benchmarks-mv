@@ -104,7 +104,7 @@ Results are only comparable inside one class:
 
 1. Host CPU (`linux-host-cpu`).
 2. Linux-hosted GB10, native AIEN path (`linux-hosted-gb10-native`).
-3. AIENOS booted natively: not yet measured.
+3. Aienux booted natively: not yet measured.
 
 ## Upstream relationship
 

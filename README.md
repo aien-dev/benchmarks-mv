@@ -8,7 +8,7 @@ AIEN does not compare itself with other people's systems. Speed is measured agai
 
 ## Where this fits in AIEN
 
-[Aienix](https://github.com/aien-dev/aienix) is the core tree of AIEN. Its README lists this repository as an attachment: a repository that lives on its own and plugs into the core at a boundary. Related repositories:
+[AienOS](https://github.com/aien-dev/aienix) is the core tree of AIEN. Its README lists this repository as an attachment: a repository that lives on its own and plugs into the core at a boundary. Related repositories:
 
 - [aien-sovereign-core-mv](https://github.com/aien-dev/aien-sovereign-core-mv): host runtime and the Spark verification pipeline that tests this repository. Its [Measured results](https://github.com/aien-dev/aien-sovereign-core-mv#measured-results) section sets the evidence standard used here.
 - [aien-architecture-mv](https://github.com/aien-dev/aien-architecture-mv): architecture and plans. Issue [#233](https://github.com/aien-dev/aien-architecture-mv/issues/233) (performance intelligence) is the plan behind the streaming and evidence work below.

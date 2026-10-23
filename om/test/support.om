@@ -1,0 +1,174 @@
+note Native qualification support. Child output goes to regular files, never bounded pipes.
+global tstate ulong 4
+note stage, compiler, constant pool, tracked-path count.
+text tbase "build/om/test."
+text tnull "/dev/null"
+fn tline pool ulong index ulong to ulong
+start = ulong 0
+row = ulong 0
+for i ulong add slen pool 1
+split = eq i slen pool
+if not split
+split = eq schar pool i 10
+end
+if split
+if eq row index
+ret ssub pool start sub i start
+end
+row = add row 1
+start = add i 1
+end
+end
+ret 0
+end
+fn tconstant index ulong to ulong
+ret tline get tstate 2 index
+end
+fn tpath name ulong to ulong
+ret spath get tstate 0 name
+end
+fn tnullpath to ulong
+p = get sp 0
+for i ulong len tnull
+sbyte get tnull i
+end
+ret sdone p
+end
+fn tstage to bool
+p = get sp 0
+for i ulong len tbase
+sbyte get tbase i
+end
+path = scat sdone p suint ulong getpid
+put tstate 0 path
+r = makedir sb soff path slen path 448
+ret eq r 0
+end
+fn twrite path ulong value ulong to bool
+fd = fopen sb soff path slen path 524865 384
+if lt fd 0
+ret false
+end
+p = ulong 0
+while lt p slen value
+r = write int fd sb add soff value p sub slen value p
+if ne r -4
+if le r 0
+c = fclose int fd
+ret false
+end
+p = add p ulong r
+end
+end
+c = fclose int fd
+ret eq c 0
+end
+fn tchild infd int outfd int size ulong closed bool to void
+saved = infd
+if gt outfd saved
+saved = outfd
+end
+saved = add saved 1
+r = dupfd infd saved 524288
+if lt r 0
+exit 126
+end
+r = dupfd outfd add saved 1 524288
+if lt r 0
+exit 126
+end
+r = dupfd saved 0 0
+if lt r 0
+exit 126
+end
+if closed
+r = fclose 1
+else
+r = dupfd add saved 1 1 0
+if lt r 0
+exit 126
+end
+end
+r = execprog packet 0 size
+exit 127
+end
+fn trun input ulong output ulong closed bool to long
+infd = fopenread input
+if lt infd 0
+ret -1
+end
+outfd = fopen sb soff output slen output 524865 384
+if lt outfd 0
+r = fclose int infd
+ret -1
+end
+size = ppack
+pid = fork
+if eq pid 0
+tchild int infd int outfd size closed
+exit 126
+end
+r = fclose int infd
+r = fclose int outfd
+if lt pid 0
+ret -1
+end
+ret preap pid add monons 60000000000
+end
+fn treplace value ulong old ulong repl ulong to ulong
+pos = sfind value old
+if lt pos 0
+exit 70
+end
+p = ulong pos
+ret scat3 ssub value 0 p repl ssub value add p slen old sub slen value add p slen old
+end
+fn tcompile source ulong binary ulong to bool
+path = scat binary L_om
+if not twrite path source
+ret false
+end
+preset
+parg get tstate 1
+if ne trun path binary false 0
+ret false
+end
+fd = fopenread binary
+if lt fd 0
+ret false
+end
+r = fchmod int fd 448
+c = fclose int fd
+ret and eq r 0 eq c 0
+end
+fn tload path ulong to ulong
+raw = ftext path
+if lt raw 0
+swrite 2 path
+swrite 2 L_newline
+exit 74
+end
+ret ulong raw
+end
+fn tcleanup to bool
+if not fwalk get tstate 0
+ret false
+end
+for i ulong get fcounts 0
+path = get ffiles i
+r = unlink sb soff path slen path
+if ne r 0
+ret false
+end
+end
+n = get fcounts 1
+while gt n 0
+n = sub n 1
+path = get fqueue n
+r = rmdir sb soff path slen path
+if ne r 0
+ret false
+end
+end
+ret true
+end

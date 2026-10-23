@@ -1,0 +1,24 @@
+# Native compilation units. Each row is TARGET followed by its ordered Omega source files.
+om-test om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/test/support.om om/test/guard.om om/test/hash.om om/test/prime.om om/test/mutations.om om/test/process.om tests/om/test-coordinator-guard.om om/test/main.om
+om-no-python om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/test/support.om om/test/guard.om om/test/guard-main.om
+test-double-ops om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/data/double.om om/data/decimal.om tests/om/double-ops.om
+test-decimal om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/data/double.om om/data/decimal.om tests/om/decimal.om
+test-decimal-fixed om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/data/double.om om/data/decimal.om tests/om/decimal-fixed.om
+om-build om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/build/main.om
+prime-reference om/prime/reference.om om/prime/main.om
+om-sha256 om/data/sha256.om om/data/hash-main.om
+bench_verify_records om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/data/json.om om/core/json-access.om om/data/finite.om om/evidence/check.om om/evidence/bundles.om om/evidence/main.om
+bench_index om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/data/json.om om/core/json-access.om om/data/finite.om om/evidence/check.om om/evidence/bundles.om om/index/index.om om/index/issues.om om/index/main.om
+test-json-api om/data/json.om tests/om/json-api.om
+test-json-grammar om/data/json.om tests/om/json-grammar.om
+test-json-write om/data/json.om om/data/json-write.om tests/om/json-write.om
+test-json om/data/json.om om/data/json-write.om tests/om/json.om
+test-sha256 om/data/sha256.om tests/om/sha256.om
+test-stats om/data/stats.om tests/om/stats.om
+test-reference om/prime/reference.om tests/om/reference.om
+test-measurement om/data/json.om om/data/json-write.om om/data/json-file.om om/data/stats.om om/data/sha256.om om/prime/reference.om tests/om/measurement.om
+test-finite om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/data/json.om om/core/json-access.om om/data/finite.om tests/om/finite.om
+test-evidence-cli om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om tests/om/evidence-cli.om
+test-offline-records om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om tests/om/offline-records.om
+test-offline-bundles om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om tests/om/offline-bundles.om
+test-offline-index om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/data/json.om om/core/json-access.om om/data/finite.om om/evidence/check.om om/evidence/bundles.om om/index/index.om om/index/issues.om tests/om/offline-index.om

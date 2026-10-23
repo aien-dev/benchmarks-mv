@@ -1,0 +1,207 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note SHA256SUMS validation, including unlisted members and missing listed files.
+global ebundles ulong 4096
+global ebcount ulong 1
+global elisted ulong 16384
+global elcount ulong 1
+
+fn eishex s ulong to bool
+if ne slen s 64
+ret false
+end
+for i ulong 64
+c = schar s i
+if not or and ge c 48 le c 57 or and ge c 97 le c 102 and ge c 65 le c 70
+ret false
+end
+end
+ret true
+end
+fn eline dir ulong line ulong number ulong to void
+sumfile = spath dir L_sums
+put estate 0 sumfile
+if eq slen strim line 0
+ret
+end
+if sends line L_newline
+line = ssub line 0 sub slen line 1
+end
+n = slen line
+split = ulong 0
+while lt split n
+if swhite schar line split
+elineparts dir line split number
+ret
+end
+split = add split 1
+end
+eadd scat L_linelabel suint number L_badsum
+end
+fn elineparts dir ulong line ulong split ulong number ulong to void
+hash = ssub line 0 split
+p = split
+more = true
+while and more lt p slen line
+if swhite schar line p
+p = add p 1
+else
+more = false
+end
+end
+more = true
+while and more lt p slen line
+if eq schar line p 42
+p = add p 1
+else
+more = false
+end
+end
+name = ssub line p sub slen line p
+if or not eishex hash not srelative name
+eadd scat L_linelabel suint number L_badsum
+ret
+end
+echeckdigest dir name hash
+end
+fn echeckdigest dir ulong name ulong hash ulong to void
+n = get elcount 0
+if eq n len elisted
+exit 70
+end
+put elisted n name
+put elcount 0 add n 1
+path = spath dir name
+put estate 0 path
+digest = fhash ffull path
+if lt digest 0
+eadd L_sums L_listedmissing
+ret
+end
+put estate 4 add get estate 4 1
+if not seq ulong digest slower hash
+eadd L_sha256 L_mismatch
+end
+end
+fn eislisted name ulong to bool
+for i ulong get elcount 0
+if seq name get elisted i
+ret true
+end
+end
+ret false
+end
+fn ebundle dir ulong to void
+put estate 3 add get estate 3 1
+sumfile = spath dir L_sums
+put estate 0 sumfile
+raw = ftext ffull sumfile
+if lt raw 0
+eadd L_file L_cannotread
+ret
+end
+textval = ulong raw
+put elcount 0 0
+eparsesums dir textval
+eunlisted dir
+end
+fn eparsesums dir ulong textval ulong to void
+start = ulong 0
+number = ulong 1
+for i ulong add slen textval 1
+split = eq i slen textval
+if not split
+split = eq schar textval i 10
+end
+if split
+line = ssub textval start sub i start
+if ne slen line 0
+if eq schar line sub slen line 1 13
+line = ssub line 0 sub slen line 1
+end
+end
+eline dir line number
+number = add number 1
+start = add i 1
+end
+end
+end
+fn eunlisted dir ulong to void
+for i ulong get fcounts 0
+path = get ffiles i
+if seq sparent path dir
+name = sbase path
+if and not seq name L_sums not eislisted name
+put estate 0 path
+eadd L_sums L_unlisted
+end
+end
+end
+end
+fn einbundle path ulong to bool
+parent = sparent path
+for i ulong get ebcount 0
+if seq parent get ebundles i
+ret true
+end
+end
+ret false
+end
+fn ejson path ulong to void
+put estate 0 path
+if not jread path
+eadd L_file L_invalidjson
+ret
+end
+start = get estate 1
+schema = efield L_schema
+if jsame schema L_recordschema
+put estate 2 add get estate 2 1
+erecord
+else
+if einbundle path
+estrings 0 L_empty true
+else
+if lt schema 0
+eadd L_schema L_notschema
+else
+eadd L_schema scat jraw schema L_isnotrecord
+end
+end
+end
+edsort start
+end
+fn epath path ulong to void
+if not fwalk path
+if eq get ferr 0 -2
+swrite 2 L_summary
+swrite 2 path
+swrite 2 L_skip
+else
+put estate 0 path
+eadd L_file L_cannotwalk
+end
+ret
+end
+fsort
+put ebcount 0 0
+for i ulong get fcounts 0
+file = get ffiles i
+if seq sbase file L_sums
+n = get ebcount 0
+if eq n len ebundles
+exit 70
+end
+put ebundles n sparent file
+put ebcount 0 add n 1
+end
+end
+for i ulong get ebcount 0
+ebundle get ebundles i
+end
+for i ulong get fcounts 0
+file = get ffiles i
+if sends file L_json
+ejson file
+end
+end
+end

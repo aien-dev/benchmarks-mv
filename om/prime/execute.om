@@ -1,0 +1,130 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Prime child runner: file-backed stdout/stderr, exact argv, empty environment, bounded deadline.
+note pxstate: temporary dir, stdout path, stderr path, report path, bitmap path, wall ns.
+note pxcode[0] exit code, negative signal, or -1000 host setup failure. Files retained for evidence.
+text pxwords "/tmp/prime-native-~stdout~stderr~report.json~bitmap.bin~--limit~--audit-passes~--min-seconds~--bitmap-out~--report-out~"
+global pxstate ulong 6
+global pxcode long 1
+global pxcach ulong 10
+fn pxinit to void
+p = get sp 0
+n = ulong 0
+for i ulong len pxwords
+c = get pxwords i
+if eq c 126
+put pxcach n sdone p
+n = add n 1
+p = get sp 0
+else
+sbyte c
+end
+end
+end
+fn pxword i ulong to ulong
+ret get pxcach i
+end
+fn pxopen path ulong to long
+if not fvalid path
+ret -1
+end
+ret fopen sb soff path slen path 524481 384
+end
+fn pxchild outfd int errfd int size ulong to void
+saved = outfd
+if gt errfd saved
+saved = errfd
+end
+saved = add saved 1
+r = dupfd outfd saved 524288
+if lt r 0
+exit 126
+end
+r = dupfd errfd add saved 1 524288
+if lt r 0
+exit 126
+end
+r = fclose outfd
+r = fclose errfd
+r = dupfd saved 1 0
+if lt r 0
+exit 126
+end
+r = dupfd add saved 1 2 0
+if lt r 0
+exit 126
+end
+r = fclose saved
+r = fclose add saved 1
+nullfd = fopen devnull 0 len devnull 524288 0
+if lt nullfd 0
+exit 126
+end
+if ne nullfd 0
+r = dupfd int nullfd 0 0
+if lt r 0
+exit 126
+end
+end
+if gt nullfd 2
+r = fclose int nullfd
+end
+r = execprog packet 0 size
+exit 127
+end
+fn pxspawn timeout ulong to bool
+size = ppack
+outfd = pxopen get pxstate 1
+if lt outfd 0
+ret false
+end
+errfd = pxopen get pxstate 2
+if lt errfd 0
+r = fclose int outfd
+ret false
+end
+start = monons
+pid = fork
+if eq pid 0
+pxchild int outfd int errfd size
+end
+r = fclose int outfd
+r = fclose int errfd
+if lt pid 0
+ret false
+end
+code = preap pid add start long timeout
+put pxcode 0 code
+put pxstate 5 ulong sub monons start
+ret true
+end
+fn pxrun imp ulong limit ulong seconds ulong audit ulong timeout ulong to bool
+for i ulong 6
+put pxstate i 0
+end
+put pxcode 0 -1000
+dir = scat pxword 0 suint ulong monons
+r = makedir sb soff dir slen dir 448
+if ne r 0
+ret false
+end
+put pxstate 0 dir
+for i ulong 4
+put pxstate add i 1 spath dir pxword add i 1
+end
+preset
+parg imp
+parg pxword 5
+parg suint limit
+if ne audit 0
+parg pxword 6
+parg suint audit
+else
+parg pxword 7
+parg seconds
+end
+parg pxword 8
+parg get pxstate 4
+parg pxword 9
+parg get pxstate 3
+ret pxspawn timeout
+end

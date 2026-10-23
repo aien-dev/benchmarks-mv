@@ -1,0 +1,215 @@
+note Human-readable dataset summary and the historical service budget checks.
+text drwords "================================================================================\n  AIEN Sovereign Systems Performance Benchmark Report\n  Hardware: \n  Unified Memory: \n GB | OS: \n  Compiler: \n  Kernel: \n | Page Size: \n KB\n  Timestamp: \n--- 1. Memory Resident Set Size (RSS) ---\nService\nArchitecture\nRSS (MB)\n--- 2. HTTP Gateway Latency (p50 TTFB) & Concurrency Throughput ---\nEndpoint\nEngine\nReq/sec\np50 (ms)\np95 (ms)\n--- 3. Local Neural Inference & SIMD Vectors (Grace Blackwell) ---\nWorkload\nModel / Kernel\nn/a\nopenclaw-rs\naegis-runtime\ncortex-rs\nRust\n RSS exceeded 10MB budget\ncortex-rs RSS exceeded 25MB budget\nRust service latency exceeded 10ms p50\nRust service throughput below 1000 req/s\nAll invariant checks passed successfully.\n"
+global drpool ulong 1
+fn drinit to void
+p = get sp 0
+for i ulong len drwords
+sbyte get drwords i
+end
+put drpool 0 sdone p
+end
+fn drword i ulong to ulong
+ret dsline get drpool 0 i
+end
+fn drline i ulong to void
+doadd drword i
+donewline
+end
+fn drhead to void
+drline 0
+drline 1
+hardware = dfield 0 3
+doadd drword 2
+doadd dstr hardware 12
+dobyte 32
+dobyte 40
+doadd dstr hardware 13
+dobyte 32
+doadd dstr hardware 14
+dobyte 41
+donewline
+doadd drword 3
+doint duint hardware 15
+doadd drword 4
+doadd dstr hardware 16
+donewline
+env = dfield 0 4
+compiler = dstr env 17
+if ne slen compiler 0
+doadd drword 5
+doadd compiler
+donewline
+doadd drword 6
+doadd dstr env 18
+doadd drword 7
+doint duint env 19
+doadd drword 8
+donewline
+end
+doadd drword 9
+doadd dstr 0 2
+donewline
+drline 0
+donewline
+end
+fn drrule width ulong last bool to void
+for i ulong width
+dobyte 45
+end
+if not last
+dobyte 45
+dobyte 124
+dobyte 45
+end
+end
+fn drmemory to void
+drline 10
+dopad drword 11 28 false
+doseparator
+dopad drword 12 32 false
+doseparator
+dopad drword 13 10 true
+donewline
+drrule 28 false
+drrule 32 false
+drrule 10 true
+donewline
+list = dfield 0 5
+i = add ulong list 1
+while lt i get jn ulong list
+dopad dstr long i 24 28 false
+doseparator
+dopad dstr long i 14 32 false
+doseparator
+dopad df_to_fixed dval long i 26 2 10 true
+donewline
+i = get jn i
+end
+donewline
+end
+fn drlatency to void
+drline 14
+dopad drword 15 32 false
+doseparator
+dopad drword 16 24 false
+for k ulong 3
+doseparator
+dopad drword add 17 k 10 true
+end
+donewline
+drrule 32 false
+drrule 24 false
+drrule 10 false
+drrule 10 false
+drrule 10 true
+donewline
+list = dfield 0 6
+i = add ulong list 1
+while lt i get jn ulong list
+label = scat3 dstr long i 24 L_space dstr long i 27
+dopad label 32 false
+doseparator
+dopad dstr long i 29 24 false
+for k ulong 3
+digits = ulong 2
+if eq k 0
+digits = ulong 1
+end
+doseparator
+dopad df_to_fixed dval long i add 30 k digits 10 true
+end
+donewline
+i = get jn i
+end
+donewline
+end
+fn drneuralnumber token long to ulong
+if or lt token 0 jkind token 7
+ret drword 23
+end
+value = dnum token
+digits = ulong 2
+if lt dfcmp value dfdiv df_from_u64 1 df_from_u64 100 0
+digits = ulong 4
+end
+ret df_to_fixed value digits
+end
+fn drneural to void
+drline 20
+dopad drword 21 42 false
+doseparator
+dopad drword 22 32 false
+doseparator
+dopad drword 18 10 true
+doseparator
+dopad drword 19 10 true
+donewline
+drrule 42 false
+drrule 32 false
+drrule 10 false
+drrule 10 true
+donewline
+list = dfield 0 7
+i = add ulong list 1
+while lt i get jn ulong list
+dopad dstr long i 36 42 false
+doseparator
+dopad dstr long i 37 32 false
+doseparator
+dopad drneuralnumber dfield long i 31 10 true
+doseparator
+dopad drneuralnumber dfield long i 32 10 true
+donewline
+i = get jn i
+end
+drline 0
+end
+fn dreport to ulong
+doreset
+drhead
+drmemory
+drlatency
+drneural
+ret doresult
+end
+fn dverify to bool
+list = dfield 0 5
+i = add ulong list 1
+while lt i get jn ulong list
+name = dstr long i 24
+rss = dval long i 26
+if or seq name drword 24 seq name drword 25
+if ge dfcmp rss df_from_u64 10 0
+swrite 2 scat name drword 28
+swrite 2 L_newline
+ret false
+end
+end
+if seq name drword 26
+if ge dfcmp rss df_from_u64 25 0
+swrite 2 drword 29
+swrite 2 L_newline
+ret false
+end
+end
+i = get jn i
+end
+list = dfield 0 6
+i = add ulong list 1
+while lt i get jn ulong list
+if ge sfind dstr long i 29 drword 27 0
+if ge dfcmp dval long i 31 df_from_u64 10 0
+swrite 2 drword 30
+swrite 2 L_newline
+ret false
+end
+if le dfcmp dval long i 30 df_from_u64 1000 0
+swrite 2 drword 31
+swrite 2 L_newline
+ret false
+end
+end
+i = get jn i
+end
+ret true
+end

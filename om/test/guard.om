@@ -1,0 +1,133 @@
+note Tracked Python prohibition, preserving the former filename and first-line shebang rules.
+text gnames "setup.py\nsetup.cfg\npyproject.toml\npipfile\npipfile.lock\npoetry.lock\nuv.lock\n.python-version\n"
+text gexts ".py\n.pyi\n.pyw\n.pyx\n.pyc\n.ipynb\n"
+text gwords "/usr/bin/git\nls-files\n-z\nrequirements\n.txt\n.in\npython\n#!\n-C\nrev-parse\n--show-toplevel\n"
+global gpools ulong 3
+fn ginit to void
+p = get sp 0
+for i ulong len gnames
+sbyte get gnames i
+end
+put gpools 0 sdone p
+p = get sp 0
+for i ulong len gexts
+sbyte get gexts i
+end
+put gpools 1 sdone p
+p = get sp 0
+for i ulong len gwords
+sbyte get gwords i
+end
+put gpools 2 sdone p
+end
+fn gword index ulong to ulong
+ret tline get gpools 2 index
+end
+fn gname path ulong to bool
+base = slower sbase path
+for i ulong 8
+if seq base tline get gpools 0 i
+ret true
+end
+end
+for i ulong 6
+if sends base tline get gpools 1 i
+ret true
+end
+end
+if sstarts base gword 3
+ret or sends base gword 4 sends base gword 5
+end
+ret false
+end
+fn gshebang path ulong to bool
+fd = fopenread path
+if lt fd 0
+note Deleted tracked files have no working-tree shebang; filename policy still applies.
+if eq get ferr 0 -2
+ret false
+end
+exit 74
+end
+start = get sp 0
+first = true
+more = true
+while more
+r = read int fd fi 0 len fi
+if ne r -4
+if lt r 0
+exit 74
+end
+if eq r 0
+more = false
+else
+if first
+first = false
+if lt r 2
+c = fclose int fd
+ret false
+end
+if or ne get fi 0 35 ne get fi 1 33
+c = fclose int fd
+ret false
+end
+end
+for i ulong ulong r
+if more
+c = get fi i
+if eq c 10
+more = false
+else
+if gt sub get sp 0 start 1000000
+exit 66
+end
+sbyte c
+end
+end
+end
+end
+end
+end
+c = fclose int fd
+if ne c 0
+exit 74
+end
+line = slower sdone start
+ret and sstarts line gword 7 ge sfind line gword 6 0
+end
+fn gtracked to ulong
+preset
+parg gword 0
+parg gword 8
+parg get fr 0
+parg gword 1
+parg gword 2
+r = pcapture
+if lt r 0
+exit 2
+end
+if eq slen ulong r 0
+exit 2
+end
+ret ulong r
+end
+fn gcheck paths ulong to bool
+bad = false
+start = ulong 0
+put tstate 3 0
+for i ulong slen paths
+if eq schar paths i 0
+path = ssub paths start sub i start
+mark = get sp 0
+if or gname path gshebang ffull path
+swrite 2 path
+swrite 2 L_newline
+bad = true
+end
+put sp 0 mark
+put tstate 3 add get tstate 3 1
+start = add i 1
+end
+end
+ret and not bad eq start slen paths
+end

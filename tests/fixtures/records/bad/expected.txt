@@ -1,0 +1,16 @@
+tests/fixtures/records/bad/bad_commit.json: source.commit: "dfd5ea9" is not a 40-character lowercase hex commit id
+tests/fixtures/records/bad/bad_status.json: status: "PASSED" is not one of VERIFIED, EXPERIMENTAL, HISTORICAL, NOT_RUN, FAIL, SUPERSEDED
+tests/fixtures/records/bad/events_as_tokens.json: metrics.decode_throughput_tok_per_sec: token metric with token_accounting events_not_tokens (stream events are not tokens)
+tests/fixtures/records/bad/missing_evidence.json: evidence[0]: path does not exist: artifacts/gb10_canonical_1789907893_4d762/does_not_exist.json
+tests/fixtures/records/bad/missing_field.json: backend.model: missing
+tests/fixtures/records/bad/non_numeric.json: metrics.physical_cow_pages_allocated: must be a finite number
+tests/fixtures/records/bad/non_numeric.json: workload.prefix_tokens: must be a finite number
+tests/fixtures/records/bad/p95_one_sample.json: metrics.cold_fork_to_first_token_ms_p95: p95 needs at least 20 samples, record has 1
+tests/fixtures/records/bad/placeholder.json: backend.precision: placeholder value "TBD"
+tests/fixtures/records/bad/verified_dirty.json: backend.endpoint: not_recorded is only allowed in HISTORICAL or SUPERSEDED records
+tests/fixtures/records/bad/verified_dirty.json: build.profile: not_recorded is only allowed in HISTORICAL or SUPERSEDED records
+tests/fixtures/records/bad/verified_dirty.json: build.rustc: not_recorded is only allowed in HISTORICAL or SUPERSEDED records
+tests/fixtures/records/bad/verified_dirty.json: methodology.clock: not_recorded is only allowed in HISTORICAL or SUPERSEDED records
+tests/fixtures/records/bad/verified_dirty.json: methodology.samples: not_recorded is only allowed in HISTORICAL or SUPERSEDED records
+tests/fixtures/records/bad/verified_dirty.json: methodology.token_accounting: not_recorded is only allowed in HISTORICAL or SUPERSEDED records
+tests/fixtures/records/bad/verified_dirty.json: source.dirty: VERIFIED requires dirty == false

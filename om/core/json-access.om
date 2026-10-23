@@ -1,0 +1,131 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note String-arena access to the native JSON tree. Negative token ids mean absent.
+global jcache ulong 131072
+fn jsame token long textval ulong to bool
+if lt token 0
+ret false
+end
+id = ulong token
+if ne get jk id 3
+ret false
+end
+if ne get jl id slen textval
+ret false
+end
+p = get jd id
+for i ulong slen textval
+if ne get jp add p i schar textval i
+ret false
+end
+end
+ret true
+end
+fn jlookup object long key ulong to long
+if lt object 0
+ret -1
+end
+obj = ulong object
+if ne get jk obj 1
+ret -1
+end
+found = long -1
+t = add obj 1
+while lt t get jn obj
+if jsame long t key
+found = long add t 1
+end
+t = get jn add t 1
+end
+ret found
+end
+fn jpath object long dotted ulong to long
+start = ulong 0
+value = object
+for i ulong add slen dotted 1
+split = eq i slen dotted
+if not split
+split = eq schar dotted i 46
+end
+if split
+value = jlookup value ssub dotted start sub i start
+if lt value 0
+ret -1
+end
+start = add i 1
+end
+end
+ret value
+end
+fn jkind token long kind uchar to bool
+if lt token 0
+ret false
+end
+ret eq get jk ulong token kind
+end
+fn jstringval token long to ulong
+if not jkind token 3
+ret 0
+end
+id = ulong token
+if ne get jcache id 0
+ret get jcache id
+end
+p = get sp 0
+start = get jd id
+for i ulong get jl id
+sbyte get jp add start i
+end
+s = sdone p
+put jcache id s
+ret s
+end
+fn jraw token long to ulong
+if lt token 0
+ret 0
+end
+id = ulong token
+p = get sp 0
+start = get ja id
+count = sub get jz id start
+for i ulong count
+sbyte get jb add start i
+end
+ret sdone p
+end
+fn jread path ulong to bool
+put js 2 0
+put js 4 1
+raw = ftext ffull path
+if lt raw 0
+ret false
+end
+s = ulong raw
+for i ulong slen s
+put jb i schar s i
+end
+for i ulong len jcache
+put jcache i 0
+end
+ret jparse slen s
+end
+fn junsigned token long to bool
+if not jkind token 4
+ret false
+end
+saved = get js 4
+ok = ju64 ulong token
+put js 4 saved
+ret ok
+end
+fn jlistcount token long to ulong
+if not jkind token 2
+ret 0
+end
+n = ulong 0
+t = add ulong token 1
+while lt t get jn ulong token
+n = add n 1
+t = get jn t
+end
+ret n
+end

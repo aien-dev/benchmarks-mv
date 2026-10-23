@@ -1,0 +1,202 @@
+note Read-only Linux ARM64 metadata. Missing observations remain unknown, never inferred from hostnames.
+global msroot ulong 1
+global mshost ulong 6
+global msnums ulong 7
+global msvalue ulong 1
+global mspool ulong 1
+note mshost: system, processor, architecture, OS, compiler label, kernel.
+note msnums: memory GiB, page KiB, concurrency, requests, warmup, memory known, page known.
+text mswords "/\nunknown\naarch64\nlinux unix\nOmega native (compiler version not recorded)\nproc/device-tree/model\netc/hostname\nproc/cpuinfo\nproc/meminfo\nproc/sys/kernel/osrelease\nproc/self/auxv\nMemTotal:\nmodel name\nProcessor\nHardware\nproc\nstatus\ncmdline\nsmaps_rollup\ntask\nchildren\nVmRSS:\nRss:\nPss:\nPss_Dirty:\nPrivate_Dirty:\nShared_Clean:\nkB\n"
+fn msline pool ulong index ulong to ulong
+start = ulong 0
+row = ulong 0
+for i ulong add slen pool 1
+split = eq i slen pool
+if not split
+split = eq schar pool i 10
+end
+if split
+if eq row index
+ret ssub pool start sub i start
+end
+row = add row 1
+start = add i 1
+end
+end
+ret 0
+end
+fn msword i ulong to ulong
+ret msline get mspool 0 i
+end
+fn msinit root ulong to void
+p = get sp 0
+for i ulong len mswords
+sbyte get mswords i
+end
+put mspool 0 sdone p
+if eq root 0
+root = msword 0
+end
+put msroot 0 root
+end
+fn mspath path ulong to ulong
+ret spath get msroot 0 path
+end
+fn msnumber raw ulong to bool
+s = strim raw
+if eq slen s 0
+ret false
+end
+v = ulong 0
+for i ulong slen s
+c = schar s i
+if or lt c 48 gt c 57
+ret false
+end
+d = ulong sub c 48
+if gt v div sub ulong 18446744073709551615 d 10
+ret false
+end
+v = add mul v 10 d
+end
+put msvalue 0 v
+ret true
+end
+fn msfield raw ulong name ulong to ulong
+start = ulong 0
+for i ulong add slen raw 1
+split = eq i slen raw
+if not split
+split = eq schar raw i 10
+end
+if split
+line = ssub raw start sub i start
+if sstarts line name
+ret strim ssub line slen name sub slen line slen name
+end
+start = add i 1
+end
+end
+ret 0
+end
+fn mskb raw ulong name ulong to bool
+value = msfield raw name
+if not sends value msword 27
+ret false
+end
+returner = strim ssub value 0 sub slen value 2
+ret msnumber returner
+end
+fn msprocessor raw ulong to ulong
+start = ulong 0
+for i ulong add slen raw 1
+split = eq i slen raw
+if not split
+split = eq schar raw i 10
+end
+if split
+line = ssub raw start sub i start
+for k ulong slen line
+if eq schar line k 58
+key = strim ssub line 0 k
+for n ulong 3
+if seq key msword add 12 n
+value = strim ssub line add k 1 sub slen line add k 1
+if ne slen value 0
+ret value
+end
+end
+end
+end
+end
+start = add i 1
+end
+end
+ret msword 1
+end
+fn msauxword raw ulong off ulong to ulong
+v = ulong 0
+for i ulong 8
+v = or v shl ulong schar raw add off i mul i 8
+end
+ret v
+end
+fn msauxv raw ulong to bool
+if ne rem slen raw 16 0
+ret false
+end
+for i ulong div slen raw 16
+off = mul i 16
+kind = msauxword raw off
+if eq kind 0
+ret false
+end
+if eq kind 6
+size = msauxword raw add off 8
+if or eq size 0 ne rem size 1024 0
+ret false
+end
+put msvalue 0 div size 1024
+ret true
+end
+end
+ret false
+end
+fn mslabel path ulong to ulong
+raw = ftext mspath path
+if lt raw 0
+ret 0
+end
+s = ulong raw
+n = slen s
+while gt n 0
+if ne schar s sub n 1 0
+ret strim ssub s 0 n
+end
+n = sub n 1
+end
+ret 0
+end
+fn msdetect concurrency ulong requests ulong warmup ulong to void
+for i ulong len mshost
+put mshost i msword 1
+end
+for i ulong len msnums
+put msnums i 0
+end
+put mshost 2 msword 2
+put mshost 3 msword 3
+put mshost 4 msword 4
+put msnums 2 concurrency
+put msnums 3 requests
+put msnums 4 warmup
+value = mslabel msword 5
+if eq slen value 0
+value = mslabel msword 6
+end
+if ne slen value 0
+put mshost 0 value
+end
+raw = ftext mspath msword 7
+if ge raw 0
+put mshost 1 msprocessor ulong raw
+end
+raw = ftext mspath msword 8
+if ge raw 0
+if mskb ulong raw msword 11
+put msnums 0 div get msvalue 0 1048576
+put msnums 5 1
+end
+end
+value = mslabel msword 9
+if ne slen value 0
+put mshost 5 value
+end
+raw = ftext mspath msword 10
+if ge raw 0
+if msauxv ulong raw
+put msnums 1 get msvalue 0
+put msnums 6 1
+end
+end
+end

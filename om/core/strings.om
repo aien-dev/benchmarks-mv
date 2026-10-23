@@ -1,0 +1,294 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Bounded immutable byte strings: high 32 bits offset, low 32 bits length.
+note Arena overflow exits 70 explicitly; no allocation failure is mistaken for an empty string.
+global sb uchar 16777216
+global sp ulong 1
+global scache ulong 512
+
+fn slen s ulong to ulong
+ret and s 4294967295
+end
+fn soptinline arg ulong name ulong to bool
+if le slen arg slen name
+ret false
+end
+if not sstarts arg name
+ret false
+end
+ret eq schar arg slen name 61
+end
+fn sshorthelp arg ulong to bool
+if ne slen arg 2
+ret false
+end
+ret and eq schar arg 0 45 eq schar arg 1 104
+end
+fn soff s ulong to ulong
+ret shr s 32
+end
+fn schar s ulong i ulong to uchar
+if ge i slen s
+exit 70
+end
+ret get sb add soff s i
+end
+fn sbyte c uchar to void
+p = get sp 0
+if ge p len sb
+exit 70
+end
+put sb p c
+put sp 0 add p 1
+end
+fn sdone start ulong to ulong
+ret or shl start 32 sub get sp 0 start
+end
+fn sappend s ulong to void
+for i ulong slen s
+sbyte schar s i
+end
+end
+fn scat a ulong b ulong to ulong
+p = get sp 0
+sappend a
+sappend b
+ret sdone p
+end
+fn scat3 a ulong b ulong c ulong to ulong
+p = get sp 0
+sappend a
+sappend b
+sappend c
+ret sdone p
+end
+fn ssub s ulong start ulong size ulong to ulong
+if gt start slen s
+exit 70
+end
+if gt size sub slen s start
+exit 70
+end
+ret or shl add soff s start 32 size
+end
+fn seq a ulong b ulong to bool
+if ne slen a slen b
+ret false
+end
+for i ulong slen a
+if ne schar a i schar b i
+ret false
+end
+end
+ret true
+end
+fn scmp a ulong b ulong to int
+n = slen a
+if lt slen b n
+n = slen b
+end
+for i ulong n
+x = schar a i
+y = schar b i
+if lt x y
+ret -1
+end
+if gt x y
+ret 1
+end
+end
+if lt slen a slen b
+ret -1
+end
+if gt slen a slen b
+ret 1
+end
+ret 0
+end
+fn sstarts s ulong prefix ulong to bool
+if lt slen s slen prefix
+ret false
+end
+ret seq ssub s 0 slen prefix prefix
+end
+fn sends s ulong tail ulong to bool
+if lt slen s slen tail
+ret false
+end
+ret seq ssub s sub slen s slen tail slen tail tail
+end
+fn sfind s ulong part ulong to long
+if gt slen part slen s
+ret -1
+end
+for i ulong add sub slen s slen part 1
+if seq ssub s i slen part part
+ret long i
+end
+end
+ret -1
+end
+fn slower s ulong to ulong
+p = get sp 0
+for i ulong slen s
+c = schar s i
+if and ge c 65 le c 90
+c = add c 32
+end
+sbyte c
+end
+ret sdone p
+end
+fn swhite c uchar to bool
+ret or eq c 32 and ge c 9 le c 13
+end
+fn swhitebytes s ulong p ulong to ulong
+c = schar s p
+if swhite c
+ret 1
+end
+if lt sub slen s p 2
+ret 0
+end
+b = schar s add p 1
+if and eq c 194 or eq b 133 eq b 160
+ret 2
+end
+if lt sub slen s p 3
+ret 0
+end
+d = schar s add p 2
+if and and eq c 225 eq b 154 eq d 128
+ret 3
+end
+if and eq c 226 eq b 128
+if or and ge d 128 le d 138 or or eq d 168 eq d 169 eq d 175
+ret 3
+end
+end
+if and and eq c 226 eq b 129 eq d 159
+ret 3
+end
+if and and eq c 227 eq b 128 eq d 128
+ret 3
+end
+ret 0
+end
+fn strim s ulong to ulong
+p = ulong 0
+start = ulong 0
+last = ulong 0
+seen = false
+while lt p slen s
+space = swhitebytes s p
+if ne space 0
+p = add p space
+else
+if not seen
+start = p
+seen = true
+end
+p = add p 1
+last = p
+end
+end
+ret ssub s start sub last start
+end
+fn suint n ulong to ulong
+p = get sp 0
+power = ulong 1
+while le power div n 10
+power = mul power 10
+end
+while ne power 0
+sbyte uchar add div n power 48
+n = rem n power
+power = div power 10
+end
+ret sdone p
+end
+fn swrite fd int s ulong to void
+p = ulong 0
+while lt p slen s
+w = write fd sb add soff s p sub slen s p
+if ne w -4
+if le w 0
+exit 74
+end
+p = add p ulong w
+end
+end
+end
+fn sarg index ulong to ulong
+p = get sp 0
+if gt p sub len sb 4096
+exit 70
+end
+n = argread index sb p 4096
+if lt n 0
+exit 64
+end
+put sp 0 add p ulong n
+ret sdone p
+end
+fn spath a ulong b ulong to ulong
+if eq slen a 0
+ret b
+end
+if eq slen b 0
+ret a
+end
+if eq schar b 0 47
+ret b
+end
+p = get sp 0
+sappend a
+if ne schar a sub slen a 1 47
+sbyte 47
+end
+sappend b
+ret sdone p
+end
+fn sbase s ulong to ulong
+p = ulong 0
+for i ulong slen s
+if eq schar s i 47
+p = add i 1
+end
+end
+ret ssub s p sub slen s p
+end
+fn sparent s ulong to ulong
+n = sub slen s slen sbase s
+if eq n 0
+ret 0
+end
+ret ssub s 0 sub n 1
+end
+fn srelative s ulong to bool
+if eq slen s 0
+ret false
+end
+if eq schar s 0 47
+ret false
+end
+start = ulong 0
+for i ulong add slen s 1
+split = eq i slen s
+if not split
+c = schar s i
+if eq c 0
+ret false
+end
+split = eq c 47
+end
+if split
+if eq sub i start 2
+if and eq schar s start 46 eq schar s add start 1 46
+ret false
+end
+end
+start = add i 1
+end
+end
+ret true
+end

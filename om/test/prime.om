@@ -1,0 +1,113 @@
+note Preserve all historical prime CLI and stdin assertions.
+text pcases "c 0\n0\nc 1\n0\nc 2\n1\nc 10\n4\nc 100\n25\nc 1000\n168\nc 10000\n1229\nc 100000\n9592\nc 1000000\n78498\nc 10000000\n664579\np 3215031751\n0\np 18446744073709551557\n1\np 18446744073709551615\n0\n"
+text pbad "\np \np -1\np 18446744073709551616\np 1 garbage\np 0000000000000000000000000000000000000000000000000000000000000000\nz 10\nb 10000001\nc 18446744073709551615\n"
+text pwords "c\np\nb\n1000000\n18446744073709551557\n10000\n20\n10\nbitmap\nclosed-bitmap\nunwanted\n78498\n1\np 2\np 3\n"
+global ppool ulong 1
+fn pword i ulong to ulong
+ret tline get ppool 0 i
+end
+fn pstdin input ulong want ulong code long to bool
+if not twrite tpath tconstant 3 input
+ret false
+end
+preset
+parg tbin tconstant 9
+status = trun tpath tconstant 3 tpath tconstant 2 false
+if ne status code
+swrite 2 input
+swrite 2 L_newline
+ret false
+end
+ret seq tload tpath tconstant 2 want
+end
+fn tprimes to bool
+p = get sp 0
+for i ulong len pwords
+sbyte get pwords i
+end
+put ppool 0 sdone p
+p = get sp 0
+for i ulong len pcases
+sbyte get pcases i
+end
+pool = sdone p
+for i ulong 13
+mark = get sp 0
+ok = pstdin scat tline pool mul i 2 L_newline scat tline pool add mul i 2 1 L_newline 0
+put sp 0 mark
+if not ok
+ret false
+end
+end
+p = get sp 0
+for i ulong len pbad
+sbyte get pbad i
+end
+pool = sdone p
+for i ulong 9
+code = long 64
+if ge i 7
+code = long 65
+end
+if not pstdin tline pool i 0 code
+ret false
+end
+end
+ret pstdin scat3 pword 13 L_newline scat pword 14 L_newline 0 64
+end
+fn pcli mode ulong number ulong output ulong closed bool to long
+preset
+parg tbin tconstant 9
+parg mode
+parg number
+if ne output 0
+parg output
+end
+ret trun tnullpath tpath tconstant 2 closed
+end
+fn tprimefiles to bool
+if ne pcli pword 0 pword 3 0 false 0
+ret false
+end
+if not seq tload tpath tconstant 2 scat pword 11 L_newline
+ret false
+end
+if ne pcli pword 1 pword 4 0 false 0
+ret false
+end
+if not seq tload tpath tconstant 2 scat pword 12 L_newline
+ret false
+end
+if ne pcli pword 2 pword 5 0 false 0
+ret false
+end
+want = fhash tpath tconstant 2
+if lt want 0
+ret false
+end
+if ne pcli pword 2 pword 5 tpath pword 8 false 0
+ret false
+end
+actual = fhash tpath pword 8
+if or lt actual 0 not seq ulong actual ulong want
+ret false
+end
+if ne pcli pword 2 pword 5 tpath pword 9 true 0
+ret false
+end
+actual = fhash tpath pword 9
+if or lt actual 0 not seq ulong actual ulong want
+ret false
+end
+if ne pcli pword 2 pword 6 tpath pword 8 false 74
+ret false
+end
+actual = fhash tpath pword 8
+if or lt actual 0 not seq ulong actual ulong want
+ret false
+end
+if ne pcli pword 0 pword 7 tpath pword 10 false 64
+ret false
+end
+ret not fexists tpath pword 10
+end

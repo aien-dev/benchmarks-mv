@@ -1,0 +1,222 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Normalize the existing supported issue references; sort and deduplicate path associations.
+fn ialnum c uchar to bool
+ret or or and ge c 48 le c 57 and ge c 65 le c 90 and ge c 97 le c 122
+end
+fn irepoch c uchar to bool
+ret or ialnum c or or eq c 45 eq c 95 eq c 46
+end
+fn idigit c uchar to bool
+ret and ge c 48 le c 57
+end
+fn issueadd key ulong path ulong to void
+n = get nissues 0
+for i ulong n
+if and seq get issuekey i key seq get ipaths i path
+ret
+end
+end
+if eq n len issuekey
+exit 70
+end
+put issuekey n key
+put ipaths n path
+put nissues 0 add n 1
+end
+fn issueafter textval ulong pos ulong owner ulong path ulong to void
+start = add pos slen owner
+p = start
+more = true
+while and more lt p slen textval
+if irepoch schar textval p
+p = add p 1
+else
+more = false
+end
+end
+repoend = p
+more = true
+while and more gt repoend start
+if eq schar textval sub repoend 1 46
+repoend = sub repoend 1
+else
+more = false
+end
+end
+if eq repoend start
+ret
+end
+tail = ssub textval p sub slen textval p
+if sstarts tail L_hashmark
+p = add p 1
+else
+if sstarts tail L_issues
+p = add p slen L_issues
+else
+if sstarts tail L_pull
+p = add p slen L_pull
+else
+ret
+end
+end
+end
+issuenumber textval p scat owner ssub textval start sub repoend start path
+end
+fn issuenumber textval ulong start ulong repo ulong path ulong to void
+p = start
+more = true
+while and more lt p slen textval
+if idigit schar textval p
+p = add p 1
+else
+more = false
+end
+end
+if eq p start
+ret
+end
+key = scat3 repo L_hashmark ssub textval start sub p start
+issueadd key path
+end
+fn issueowner textval ulong owner ulong path ulong to void
+p = ulong 0
+while lt p slen textval
+tail = ssub textval p sub slen textval p
+found = sfind tail owner
+if lt found 0
+ret
+end
+p = add p ulong found
+issueafter textval p owner path
+p = add p slen owner
+end
+end
+fn issuebare line ulong path ulong to void
+for i ulong slen line
+if eq schar line i 35
+good = eq i 0
+if not good
+good = not irepoch schar line sub i 1
+end
+if good
+issuebarenumber line add i 1 path
+end
+end
+end
+end
+fn issuebarenumber line ulong start ulong path ulong to void
+p = start
+more = true
+while and more lt p slen line
+if idigit schar line p
+p = add p 1
+else
+more = false
+end
+end
+if eq p start
+ret
+end
+key = scat3 L_hashmark ssub line start sub p start L_unnamed
+issueadd key path
+end
+fn issueowning textval ulong path ulong to void
+start = ulong 0
+owning = false
+for i ulong add slen textval 1
+split = eq i slen textval
+if not split
+split = eq schar textval i 10
+end
+if split
+line = ssub textval start sub i start
+if ne slen line 0
+if eq schar line 0 35
+owning = issueheading line
+else
+if owning
+issuebare line path
+end
+end
+end
+start = add i 1
+end
+end
+end
+fn issueheading line ulong to bool
+p = ulong 0
+more = true
+while and more lt p slen line
+if eq schar line p 35
+p = add p 1
+else
+more = false
+end
+end
+ret seq slower strim ssub line p sub slen line p L_owning
+end
+fn issuefile path ulong to void
+raw = ftext ffull path
+if lt raw 0
+exit 74
+end
+issueowner ulong raw L_spark path
+issueowner ulong raw L_aien path
+issueowning ulong raw path
+end
+fn issueshift p ulong to void
+put issuekey p get issuekey sub p 1
+put ipaths p get ipaths sub p 1
+end
+fn issuesort to void
+for i ulong get nissues 0
+key = get issuekey i
+path = get ipaths i
+p = i
+more = true
+while and more gt p 0
+cmp = scmp get issuekey sub p 1 key
+if eq cmp 0
+cmp = scmp get ipaths sub p 1 path
+end
+if gt cmp 0
+issueshift p
+p = sub p 1
+else
+more = false
+end
+end
+put issuekey p key
+put ipaths p path
+end
+end
+fn issuesrows to ulong
+issuesort
+start = get sp 0
+if eq get nissues 0 0
+sappend L_emptyissues
+ret sdone start
+end
+last = ulong 0
+for i ulong get nissues 0
+key = get issuekey i
+if not seq last key
+if ne i 0
+sappend L_rowend
+end
+sbyte 124
+sbyte 32
+note Normalized issue keys have no vertical bar or newline, so no cell escape allocates here.
+sappend key
+sappend L_separator
+last = key
+else
+sappend L_comma
+end
+sappend L_ticks
+sappend get ipaths i
+sappend L_ticks
+end
+sappend L_rowend
+ret sdone start
+end

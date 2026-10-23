@@ -1,0 +1,42 @@
+note Native sample statistics: independently known moments of 1,2,3,4.
+fn main to int
+for i ulong 4
+put prsample i df_from_u64 add i 1
+end
+if not prstatistics 4
+ret 1
+end
+half = dfdiv df_from_u64 5 df_from_u64 2
+if ne get prstats 1 half
+ret 2
+end
+if ne get prstats 4 half
+ret 3
+end
+if ne get prstats 2 df_from_u64 1
+ret 4
+end
+if ne get prstats 3 df_from_u64 4
+ret 5
+end
+variance = dfdiv df_from_u64 5 df_from_u64 3
+square = dfmul get prstats 5 get prstats 5
+tol = dfdiv df_from_u64 1 df_from_u64 1000000000000
+if gt dfcmp df_abs dfsub variance square tol 0
+ret 6
+end
+if ne get prstats 6 dfdiv get prstats 5 half
+ret 7
+end
+put prsample 0 df_from_u64 9
+if not prstatistics 1
+ret 8
+end
+if or ne get prstats 5 0 ne get prstats 6 0
+ret 9
+end
+if prstatistics 0
+ret 10
+end
+ret 0
+end

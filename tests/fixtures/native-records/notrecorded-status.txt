@@ -1,0 +1,1 @@
+build.rustc: not_recorded is only allowed in HISTORICAL or SUPERSEDED records

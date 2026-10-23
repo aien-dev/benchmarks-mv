@@ -1,0 +1,188 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Native bounded child execution. Explicit argv, no shell, no inherited environment.
+global pargs ulong 64
+global pn ulong 1
+global packet uchar 4096
+global pipes uchar 8
+global pstatus uchar 4
+global pmeta long 2
+text devnull "/dev/null"
+
+fn preset to void
+put pn 0 0
+end
+fn parg s ulong to void
+n = get pn 0
+if eq n len pargs
+exit 64
+end
+put pargs n s
+put pn 0 add n 1
+end
+fn ppack to ulong
+n = get pn 0
+if eq n 0
+exit 64
+end
+put packet 0 uchar n
+put packet 1 0
+p = ulong 2
+for i ulong n
+s = get pargs i
+if gt slen s sub sub len packet p 2
+exit 64
+end
+put packet p uchar and slen s 255
+put packet add p 1 uchar shr slen s 8
+p = add p 2
+for j ulong slen s
+c = schar s j
+if eq c 0
+exit 64
+end
+put packet p c
+p = add p 1
+end
+end
+ret p
+end
+fn pfd off ulong to int
+v = uint 0
+for i ulong 4
+v = or v shl uint get pipes add off i uint mul i 8
+end
+ret int v
+end
+fn pcode to long
+v = or uint get pstatus 0 shl uint get pstatus 1 8
+signal = and v 127
+if ne signal 0
+ret neg long signal
+end
+ret long shr v 8
+end
+fn preap pid long deadline long to long
+more = true
+while more
+r = waitpid int pid pstatus 0 len pstatus 1
+if eq r pid
+ret pcode
+end
+if and lt r 0 ne r -4
+ret -1
+end
+if ge monons deadline
+more = false
+else
+r = sleepns 1000000
+end
+end
+r = killpid int pid 9
+r = waitpid int pid pstatus 0 len pstatus 0
+ret -9
+end
+fn pcapture to long
+size = ppack
+rc = pipefds pipes 0 len pipes 524288
+if lt rc 0
+ret -1
+end
+rd = pfd 0
+wr = pfd 4
+pid = fork
+if lt pid 0
+rc = fclose rd
+rc = fclose wr
+ret -1
+end
+if eq pid 0
+rc = fclose rd
+saved = add wr 1
+rc = dupfd wr saved 524288
+if lt rc 0
+exit 126
+end
+rc = dupfd saved 1 0
+if lt rc 0
+exit 126
+end
+if ne wr 1
+rc = fclose wr
+end
+nullfd = fopen devnull 0 len devnull 524290 0
+if lt nullfd 0
+exit 126
+end
+if ne nullfd 0
+rc = dupfd int nullfd 0 0
+end
+if ne nullfd 2
+rc = dupfd int nullfd 2 0
+end
+if gt nullfd 2
+rc = fclose int nullfd
+end
+rc = execprog packet 0 size
+exit 127
+end
+rc = fclose wr
+ret pcapture_parent pid rd
+end
+fn pcopy start ulong size ulong to bool
+if gt add sub get sp 0 start size 1000000
+ret false
+end
+for i ulong size
+sbyte get fi i
+end
+ret true
+end
+fn pcapture_parent pid long rd int to long
+start = get sp 0
+deadline = add monons 10000000000
+more = true
+good = true
+while more
+left = sub deadline monons
+if le left 0
+good = false
+more = false
+else
+ready = waitio rd 1 left
+if le ready 0
+if ne ready -4
+good = false
+more = false
+end
+else
+r = read rd fi 0 len fi
+if ne r -4
+if lt r 0
+good = false
+more = false
+else
+if eq r 0
+more = false
+else
+if not pcopy start ulong r
+good = false
+more = false
+end
+end
+end
+end
+end
+end
+end
+rc = fclose rd
+if not good
+rc = killpid int pid 9
+end
+status = preap pid deadline
+put pmeta 0 status
+put pmeta 1 long sdone start
+if or not good ne status 0
+ret -1
+end
+ret long sdone start
+end

@@ -1,0 +1,45 @@
+note Native evidence-path, content digest, readonly and no-overwrite qualification.
+text prtest "{\"fixture\":true}\n"
+fn main to int
+sinit
+pxinit
+prinit
+if prsetup sarg 2
+ret 1
+end
+if prsetup sarg 3
+ret 2
+end
+if not prsetup sarg 1
+ret 3
+end
+p = get sp 0
+for i ulong len prtest
+sbyte get prtest i
+end
+body = sdone p
+digest = prstore body true
+if eq digest 0
+ret 4
+end
+if ne and fmode get prstate 2 511 292
+ret 5
+end
+actual = fhash get prstate 2
+if or lt actual 0 not seq ulong actual digest
+ret 6
+end
+if ne prstore body true 0
+ret 7
+end
+blob = prblob get prstate 2
+if not seq blob digest
+ret 8
+end
+if not seq prblob get prstate 2 digest
+ret 9
+end
+swrite 1 get prstate 2
+swrite 1 L_newline
+ret 0
+end

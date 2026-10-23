@@ -1,0 +1,197 @@
+note Native contract test fixtures exercise validation only; fixed elapsed values are not measurements.
+text pvtests "build/om/sweep-fixture~fixture~algorithm=base,faithful=yes,bits=1,threads=1~0.001~aien-fixture;2;0.002000;1;algorithm=base,faithful=yes,bits=1\n~aien-fixture;0;0.002000;1;algorithm=base,faithful=yes,bits=1\n~aien-fixture;2;0.000000;1;algorithm=base,faithful=yes,bits=1\n~aien-wrong;2;0.002000;1;algorithm=base,faithful=yes,bits=1\n~bad\n~\"passes\":2~\"passes\":0~\"elapsed_s\":0.002~\"elapsed_s\":0.0000001~\"status\":\"COMPLETE\"~\"status\":\"EXEC_FAILED\"~\"schema\":\"aien-prime-race/impl-report/v1\"~\"schema\":\"wrong\"~\"bits\":1~\"bits\":64~\"elapsed_s\":0.003~"
+global pvtcache ulong 20
+fn pvtinit to void
+p = get sp 0
+n = ulong 0
+for i ulong len pvtests
+c = get pvtests i
+if eq c 126
+put pvtcache n sdone p
+n = add n 1
+p = get sp 0
+else
+sbyte c
+end
+end
+end
+fn pvt i ulong to ulong
+ret get pvtcache i
+end
+fn pvtwrite path ulong body ulong to bool
+fd = fopen sb soff path slen path 524865 384
+if lt fd 0
+ret false
+end
+ok = prwrite int fd body
+closed = fclose int fd
+ret and ok eq closed 0
+end
+fn pvtstart audit ulong to bool
+for i ulong 9
+put pvexpect i 0
+end
+put pvexpect 0 pvt 1
+put pvexpect 1 10
+ok = df_parse pvt 3
+put pvexpect 2 get dfstate 0
+put pvexpect 3 audit
+if ne tgparse pvt 2 0
+ret false
+end
+for i ulong 5
+put pvexpect add i 4 get tgstate i
+end
+ret pxrun pvt 0 10 pvt 3 audit 1000000000
+end
+fn pvtchange from ulong into ulong to bool
+raw = ftext get pxstate 3
+if lt raw 0
+ret false
+end
+s = ulong raw
+at = sfind s from
+if lt at 0
+ret false
+end
+start = get sp 0
+sappend ssub s 0 ulong at
+sappend into
+pos = add ulong at slen from
+sappend ssub s pos sub slen s pos
+ret pvtwrite get pxstate 3 sdone start
+end
+fn pvtcase which ulong to ulong
+if not pvtstart 0
+ret 100
+end
+if eq which 0
+put pxcode 0 2
+end
+if eq which 1
+ok = pvtwrite get pxstate 1 L_empty
+end
+if eq which 2
+ok = pvtwrite get pxstate 1 scat pvt 4 pvt 4
+end
+if eq which 3
+ok = pvtwrite get pxstate 1 pvt 8
+end
+if eq which 4
+put pxstate 3 scat get pxstate 3 pvt 1
+end
+if eq which 5
+ok = pvtchange pvt 15 pvt 16
+end
+if eq which 6
+ok = pvtchange pvt 13 pvt 14
+end
+if eq which 7
+ok = pvtwrite get pxstate 1 pvt 7
+end
+if eq which 8
+ok = pvtchange pvt 11 pvt 19
+end
+if eq which 9
+ok = pvtchange pvt 9 pvt 10
+ok = pvtwrite get pxstate 1 pvt 5
+end
+if eq which 10
+ok = pvtchange pvt 11 pvt 12
+ok = pvtwrite get pxstate 1 pvt 6
+end
+if eq which 11
+put pxstate 4 scat get pxstate 4 pvt 1
+end
+if eq which 12
+ok = pvtwrite get pxstate 4 L_empty
+end
+ret pvvalidate
+end
+fn main to int
+sinit
+pxinit
+pvinit
+prinit
+pvtinit
+if not pvtstart 0
+ret 1
+end
+if ne pvvalidate 0
+ret 2
+end
+if not pvtstart 3
+ret 3
+end
+if ne pvvalidate 0
+ret 4
+end
+fd = fopen sb soff get pxstate 4 slen get pxstate 4 524290 0
+if lt fd 0
+ret 5
+end
+put fi 0 1
+r = write int fd fi 0 1
+closed = fclose int fd
+if ne pvvalidate 17
+ret 6
+end
+if ne get pvresult 6 1
+ret 7
+end
+if not pvtstart 3
+ret 8
+end
+ok = pvtwrite get pxstate 1 pvt 8
+if ne pvvalidate 2
+ret 9
+end
+if not pvtstart 3
+ret 10
+end
+put pvexpect 3 4
+if ne pvvalidate 13
+ret 11
+end
+if not pvtstart 0
+ret 12
+end
+ok = pvtchange pvt 17 pvt 18
+if ne pvvalidate 9
+ret 13
+end
+if not pvtstart 0
+ret 14
+end
+p = get sp 0
+sbyte 255
+ok = pvtwrite get pxstate 1 sdone p
+if ne pvvalidate 5
+ret 15
+end
+want = new ulong 13 0
+put want 0 1
+put want 1 3
+put want 2 4
+put want 3 5
+put want 4 6
+put want 5 7
+put want 6 8
+put want 7 9
+put want 8 10
+put want 9 11
+put want 10 12
+put want 11 14
+put want 12 15
+for i ulong 13
+code = pvtcase i
+if ne code get want i
+swrite 2 suint i
+swrite 2 L_colon
+swrite 2 suint code
+swrite 2 L_newline
+ret int add i 20
+end
+end
+ret 0
+end

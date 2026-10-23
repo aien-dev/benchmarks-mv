@@ -1,0 +1,143 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Native index CLI with atomic replacement and deterministic --check.
+fn ijoinrows to ulong
+isort
+start = get sp 0
+for i ulong get icount 0
+sappend get irows i
+end
+ret sdone start
+end
+fn igenerate to ulong
+put icount 0 0
+ievidence L_records L_record
+ievidence L_artifacts L_artifact
+ievidence L_data L_dataset
+ievidence L_results L_summarykind
+if eq get icount 0 0
+iadd L_emptyrows
+end
+records = ijoinrows
+put icount 0 0
+isources L_omsources
+isources L_src
+isources L_primesrc
+sources = ijoinrows
+put icount 0 0
+put nstudies 0 0
+istudies L_docs
+istudies L_prime
+study = ijoinrows
+put nissues 0 0
+for i ulong get nstudies 0
+issuefile get studies i
+end
+if fwalk L_records
+for i ulong get fcounts 0
+path = get ffiles i
+if sends path L_json
+issuefile path
+end
+end
+else
+if ne get ferr 0 -2
+exit 74
+end
+end
+issues = issuesrows
+ret iassemble records sources study issues
+end
+fn iassemble records ulong sources ulong study ulong issues ulong to ulong
+start = get sp 0
+sappend L_indexintro
+sappend L_indexrecords
+sappend records
+sappend L_indexsources
+sappend sources
+sappend L_indexstudies
+sappend study
+sappend L_indexissues
+sappend issues
+ret sdone start
+end
+fn istore path ulong value ulong to bool
+temp = scat3 path L_dot suint ulong getpid
+fd = fopen sb soff temp slen temp 524481 420
+if lt fd 0
+ret false
+end
+p = ulong 0
+good = true
+while and good lt p slen value
+w = write int fd sb add soff value p sub slen value p
+if ne w -4
+if le w 0
+good = false
+else
+p = add p ulong w
+end
+end
+end
+synced = fsync int fd
+closed = fclose int fd
+if or not good or ne synced 0 ne closed 0
+ret false
+end
+preset
+parg temp
+parg path
+size = ppack
+r = renames packet 0 size 0
+ret eq r 0
+end
+fn main to int
+sinit
+put fr 0 L_dot
+check = false
+i = ulong 1
+while lt i ulong argcnt
+arg = sarg i
+if soptinline arg L_root
+put fr 0 ssub arg 7 sub slen arg 7
+else
+if seq arg L_root
+i = add i 1
+if ge i ulong argcnt
+swrite 2 L_indexhelp
+ret 2
+end
+put fr 0 sarg i
+else
+if seq arg L_check
+check = true
+else
+if or seq arg L_help sshorthelp arg
+swrite 1 L_indexhelp
+ret 0
+else
+swrite 2 L_indexhelp
+ret 2
+end
+end
+end
+end
+i = add i 1
+end
+result = igenerate
+path = ffull L_indexpath
+if check
+old = ftext path
+if ge old 0
+if seq ulong old result
+ret 0
+end
+end
+swrite 2 L_indexdrift
+ret 1
+end
+if not istore path result
+ret 74
+end
+swrite 2 L_indexwritten
+ret 0
+end

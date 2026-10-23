@@ -1,0 +1,61 @@
+text ac_wire "HTTP/1.1 200 OK\n\ndata: {\"error\":null,\"choices\":[{},null,{\"text\":\"x\"}]}\n\ndata: [DONE]\n\nevent: error\ndata: ignored after done\n\n"
+text ac_donew "\t [DONE] "
+text ac_bad "HTTP/1.1 200 OK\n\ndata: {\"choices\":[],\"usage\":{\"completion_tokens\":18446744073709551615,\"prompt_tokens\":18446744073709551616}}\n\ndata: [DONE]\n\n"
+fn ac_ck ok bool code int to void
+if not ok
+exit code
+end
+end
+fn main to int
+sinit
+ac_init
+ac_reset 0 200
+for i ulong len ac_wire
+put sf_fi i get ac_wire i
+end
+ac_feed 0 len ac_wire 100
+ac_ck eq ac_finish 0 1
+ac_ck eq get ac_s 13 0 2
+ac_ck eq get ac_s 26 2 3
+ac_ck eq get ac_s 20 0 4
+ac_ck eq get ac_s 5 1 5
+ac_feed 0 1 300
+ac_ck eq get ac_s 5 1 6
+note Capacity refusal is explicit and excludes observations.
+ac_reset 0 0
+put ac_s 26 len ac_at
+for i ulong len ac_wire
+put sf_fi i get ac_wire i
+end
+ac_feed 0 len ac_wire 10
+ac_ck eq ac_finish 5 7
+ac_ck eq get ac_s 32 8 8
+note Classifier ignores event:error for the DONE sentinel, matching canonical precedence.
+sf_sreset
+put sf_sa 0 0
+put sf_sz 0 len ac_donew
+for i ulong len ac_donew
+put sf_so i get ac_donew i
+end
+put sf_so len ac_donew 194
+put sf_so add len ac_donew 1 160
+put sf_sz 0 add len ac_donew 2
+put sf_sk 0 1
+put sf_sn 0 5
+for i ulong len ac_ename
+put sf_so add get sf_sz 0 i get ac_ename i
+end
+ac_ck ac_classify 0 9
+ac_ck eq get ac_c 0 2 10
+note Full u64 usage is retained; out-of-range usage is absent.
+ac_reset 0 0
+for i ulong len ac_bad
+put sf_fi i get ac_bad i
+end
+ac_feed 0 len ac_bad 10
+ac_ck eq ac_finish 12 11
+ac_ck eq get ac_s 22 1 12
+ac_ck eq get ac_s 23 ulong 18446744073709551615 13
+ac_ck eq get ac_s 24 0 14
+ret 0
+end

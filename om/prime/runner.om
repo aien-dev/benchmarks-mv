@@ -1,0 +1,692 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Sequential audit, warmup, round-robin trials. Fixed capacities fail explicitly.
+note rrconf: impl count, trials, warmup, limit, minimum bits, audit count, evidence,
+note runner commit, quiet path, timeout nanoseconds, failure code, record count, seconds text.
+global rcargv ulong 256
+global rcstate ulong 5
+global rrconf ulong 13
+global rrname ulong 16
+global rrpath ulong 16
+global rrdecl ulong 16
+global rrsrc ulong 16
+global rrbld ulong 16
+global rrhash ulong 16
+global rrenv ulong 16
+global rrbuild ulong 16
+global rrn ulong 16
+global rrsample ulong 4096
+global rrrecord ulong 8192
+global rrline ulong 4096
+global rrmeta ulong 5
+note rrmeta: upstream count, first loadavg, last loadavg, current implementation, error detail.
+global rrblobs ulong 4
+fn rrprepare index ulong audit ulong to bool
+if ne tgparse get rrdecl index 0
+ret false
+end
+put pvexpect 0 get rrname index
+put pvexpect 1 get rrconf 3
+put pvexpect 2 get rrconf 4
+put pvexpect 3 audit
+for i ulong 5
+put pvexpect add i 4 get tgstate i
+end
+ret true
+end
+fn rrrecordjson index ulong kind ulong seqnum ulong code ulong before ulong after ulong to ulong
+wall = dfdiv df_from_u64 get pxstate 5 df_from_u64 1000000000
+ratio = ulong 0
+if and eq code 0 eq kind 48
+ratio = dfdiv df_from_u64 get pvresult 0 get pvresult 1
+end
+report = rrloadreport
+reason = rrreject code
+p = get sp 0
+sbyte 123
+prstr 27 get rrname index
+sbyte 44
+prstr 28 prlit kind
+sbyte 44
+prnum 29 seqnum
+sbyte 44
+prnum 30 get rrconf 3
+sbyte 44
+prstr 31 before
+sbyte 44
+prstr 32 after
+sbyte 44
+prkey 33
+if lt get pxcode 0 0
+sappend prlit 3
+else
+digits = suint ulong get pxcode 0
+end
+sbyte 44
+prfloat 34 wall
+sbyte 44
+prstr 35 get pvresult 2
+for i ulong 4
+if ne get rrblobs i 0
+sbyte 44
+prstr add i 36 get rrblobs i
+end
+end
+if ne report 0
+sbyte 44
+prkey 40
+sappend report
+end
+sbyte 44
+if eq code 0
+prstr 10 prlit 4
+sbyte 44
+prnum 41 get pvresult 0
+sbyte 44
+prfloat 42 get pvresult 1
+if eq kind 48
+sbyte 44
+prfloat 43 ratio
+end
+else
+prstr 10 prlit 5
+sbyte 44
+prstr 44 pvkind code
+sbyte 44
+prstr 45 reason
+end
+sbyte 125
+ret sdone p
+end
+global rrrstate ulong 4
+fn rrstep index ulong kind ulong seqnum ulong audit ulong to bool
+put rrrstate 0 index
+put rrrstate 1 kind
+put rrrstate 2 seqnum
+put rrrstate 3 audit
+ret rrstepbody
+end
+fn rrstepbody to bool
+if not rrprepare get rrrstate 0 get rrrstate 3
+put rrconf 10 7
+ret false
+end
+before = prloadavg
+if eq get rrconf 11 0
+put rrmeta 1 before
+end
+spawned = rrlaunch get rrrstate 0 get rrrstate 3
+after = prloadavg
+put rrmeta 2 after
+code = ulong 1
+if spawned
+code = pvvalidate
+else
+for i ulong 9
+put pvresult i 0
+end
+end
+for i ulong 4
+put rrblobs i 0
+path = get pxstate add i 1
+if and ne path 0 fexists path
+digest = prblob path
+if eq digest 0
+put rrconf 10 99
+ret false
+end
+put rrblobs i digest
+end
+end
+row = rrrecordjson get rrrstate 0 get rrrstate 1 get rrrstate 2 code before after
+n = get rrconf 11
+if ge n len rrrecord
+put rrconf 10 99
+ret false
+end
+put rrrecord n row
+put rrconf 11 add n 1
+if ne code 0
+put rrconf 10 code
+put rrmeta 4 rrreject code
+ret false
+end
+if eq get rrenv get rrrstate 0 0
+put rrenv get rrrstate 0 get pvresult 3
+put rrbuild get rrrstate 0 get pvresult 4
+end
+if eq get rrrstate 1 48
+n = get rrn get rrrstate 0
+if ge n 256
+put rrconf 10 99
+ret false
+end
+ratio = dfdiv df_from_u64 get pvresult 0 get pvresult 1
+if not df_finite ratio
+put rrconf 10 99
+ret false
+end
+put rrsample add mul get rrrstate 0 256 n ratio
+put rrn get rrrstate 0 add n 1
+n = get rrmeta 0
+put rrline n get pvresult 2
+put rrmeta 0 add n 1
+end
+ret true
+end
+fn rrprotocol to bool
+for i ulong get rrconf 0
+if not rrstep i 46 0 get rrconf 5
+ret false
+end
+end
+for w ulong get rrconf 2
+for i ulong get rrconf 0
+if not rrstep i 47 w 0
+ret false
+end
+end
+end
+for t ulong get rrconf 1
+for i ulong get rrconf 0
+if not rrstep i 48 t 0
+ret false
+end
+end
+end
+ret true
+end
+fn rrverify to int
+failures = ulong 0
+for i ulong get swstate 0
+put rrconf 3 get swvalues i
+if not rrprepare 0 get rrconf 5
+ret 64
+end
+ok = rrlaunch 0 get rrconf 5
+code = ulong 1
+if ok
+code = pvvalidate
+end
+if ne code 0
+failures = add failures 1
+swrite 2 rrreject code
+swrite 2 L_colon
+swrite 2 suint get rrconf 3
+swrite 2 L_newline
+end
+end
+rvsummary failures
+if ne failures 0
+ret 1
+end
+ret 0
+end
+fn rrimpljson i ulong to ulong
+ok = rrprepare i get rrconf 5
+label = scat pvlit 17 get rrname i
+p = get sp 0
+sbyte 123
+prstr 49 get rrname i
+sbyte 44
+prkey 50
+sbyte 123
+prstr 51 label
+sbyte 44
+prstr 52 get tgstate 0
+sbyte 44
+prstr 53 get tgstate 1
+sbyte 44
+prnum 54 get tgstate 2
+sbyte 44
+prkey 55
+if eq get tgstate 4 0
+sappend prlit 3
+else
+digits = suint get tgstate 3
+end
+sbyte 125
+sbyte 44
+prmaybe 56 get rrenv i
+sbyte 44
+prmaybe 15 get rrhash i
+sbyte 44
+prmaybe 57 get rrsrc i
+sbyte 44
+prmaybe 58 get rrbld i
+sbyte 44
+prkey 59
+if eq get rrbuild i 0
+sappend prlit 3
+else
+sappend get rrbuild i
+end
+sbyte 125
+ret sdone p
+end
+fn rrsummary to ulong
+entries = new ulong 16 0
+if eq get rrconf 10 0
+for i ulong get rrconf 0
+put entries i rrsamplestats i
+end
+end
+p = get sp 0
+if ne get rrconf 10 0
+sappend prlit 3
+else
+sbyte 123
+first = true
+for i ulong get rrconf 0
+if ne get entries i 0
+if not first
+sbyte 44
+end
+first = false
+prquoted get rrname i
+sbyte 58
+sappend get entries i
+end
+end
+sbyte 125
+end
+ret sdone p
+end
+global rrhead ulong 10
+global rrimpls ulong 16
+text rrself "/proc/self/exe"
+text rrutc "created_utc"
+fn rrtextself to ulong
+p = get sp 0
+for i ulong len rrself
+sbyte get rrself i
+end
+ret sdone p
+end
+fn rrpad value ulong digits ulong to void
+power = ulong 1
+for i ulong sub digits 1
+power = mul power 10
+end
+while ne power 0
+sbyte uchar add div value power 48
+value = rem value power
+power = div power 10
+end
+end
+fn rrdate to ulong
+now = ulong realns
+seconds = div now 1000000000
+days = div seconds 86400
+year = ulong 1970
+more = true
+while more
+span = ulong 365
+if rrleap year
+span = ulong 366
+end
+if lt days span
+more = false
+else
+days = sub days span
+year = add year 1
+end
+end
+month = ulong 1
+more = true
+while more
+span = ulong 31
+if or eq month 4 or eq month 6 or eq month 9 eq month 11
+span = ulong 30
+end
+if eq month 2
+span = ulong 28
+if rrleap year
+span = ulong 29
+end
+end
+if lt days span
+more = false
+else
+days = sub days span
+month = add month 1
+end
+end
+p = get sp 0
+rrpad year 4
+sbyte 45
+rrpad month 2
+sbyte 45
+rrpad add days 1 2
+sbyte 84
+rrpad rem div seconds 3600 24 2
+sbyte 58
+rrpad rem div seconds 60 60 2
+sbyte 58
+rrpad rem seconds 60 2
+sbyte 46
+rrpad rem now 1000000000 9
+sbyte 90
+ret sdone p
+end
+fn rrheaders to void
+put rrhead 0 rrsummary
+for i ulong get rrconf 0
+put rrimpls i rrimpljson i
+end
+put rrhead 1 prload get rrconf 8
+put rrhead 2 prload prlit 87
+put rrhead 3 prload prlit 88
+put rrhead 4 prload prlit 89
+r = fhash rrtextself
+put rrhead 5 0
+if ge r 0
+put rrhead 5 ulong r
+end
+put rrhead 6 rrdate
+put rrhead 7 prgovernors
+end
+fn rrhardware to void
+sbyte 123
+prkey 90
+sbyte 91
+sbyte 93
+sbyte 44
+prmaybe 91 0
+sbyte 44
+prmaybe 92 get rrhead 3
+sbyte 44
+prmaybe 93 get rrhead 2
+sbyte 44
+prmaybe 94 get rrhead 4
+sbyte 44
+prstr 95 prlit 96
+sbyte 125
+end
+fn rrconditions to void
+sbyte 123
+prstr 60 get rrconf 8
+sbyte 44
+prmaybe 61 get rrhead 1
+sbyte 44
+prkey 62
+sappend get rrhead 7
+sbyte 44
+prmaybe 63 get rrmeta 1
+sbyte 44
+prmaybe 64 get rrmeta 2
+sbyte 125
+end
+fn rrcorrect to void
+sbyte 123
+prstr 65 prlit 66
+sbyte 44
+prnum 30 get rrconf 3
+sbyte 44
+prnum 67 get rrconf 5
+sbyte 44
+prstr 68 prlit 69
+sbyte 125
+end
+fn rrprotocoljson to void
+sbyte 123
+prnum 20 get rrconf 1
+sbyte 44
+prnum 70 get rrconf 2
+sbyte 44
+prfloat 71 get rrconf 4
+sbyte 44
+prstr 72 prlit 73
+sbyte 125
+end
+fn rrreceipt to ulong
+rrheaders
+p = get sp 0
+sbyte 123
+prstr 6 prlit 7
+sbyte 44
+prstr 8 prlit 9
+sbyte 44
+verdict = prlit 4
+reason = prlit 85
+if ne get rrconf 10 0
+verdict = prlit 5
+reason = get rrmeta 4
+end
+prstr 10 verdict
+sbyte 44
+prstr 11 reason
+sbyte 44
+sbyte 34
+for i ulong len rrutc
+sbyte get rrutc i
+end
+sbyte 34
+sbyte 58
+prquoted get rrhead 6
+sbyte 44
+prkey 12
+sbyte 123
+for i ulong get rrconf 0
+if ne i 0
+sbyte 44
+end
+prquoted get rrname i
+sbyte 58
+sappend get rrimpls i
+end
+sbyte 125
+sbyte 44
+prkey 13
+sbyte 123
+prmaybe 14 get rrconf 7
+sbyte 44
+prmaybe 15 get rrhead 5
+sbyte 125
+sbyte 44
+prkey 16
+rrhardware
+sbyte 44
+prkey 17
+rrconditions
+sbyte 44
+prkey 18
+rrcorrect
+sbyte 44
+prkey 19
+rrprotocoljson
+sbyte 44
+prkey 20
+sbyte 91
+for i ulong get rrconf 11
+if ne i 0
+sbyte 44
+end
+sappend get rrrecord i
+end
+sbyte 93
+sbyte 44
+prkey 21
+sappend get rrhead 0
+sbyte 44
+prkey 22
+sbyte 91
+for i ulong get rrmeta 0
+if ne i 0
+sbyte 44
+end
+prquoted get rrline i
+end
+sbyte 93
+sbyte 44
+prkey 23
+sbyte 123
+prkey 24
+sbyte 91
+for i ulong get rcstate 0
+if ne i 0
+sbyte 44
+end
+prquoted get rcargv i
+end
+sbyte 93
+sbyte 125
+sbyte 44
+prstr 25 prlit 26
+sbyte 125
+sbyte 10
+ret sdone p
+end
+fn rrrun to int
+if not prsetup get rrconf 6
+swrite 2 get rrconf 6
+swrite 2 L_newline
+ret 64
+end
+for i ulong get rrconf 0
+r = fhash get rrpath i
+if lt r 0
+put rrconf 10 1
+put rrmeta 4 pvkind 1
+else
+put rrhash i ulong r
+end
+end
+if eq get rrconf 10 0
+ok = rrprotocol
+end
+if eq get rrconf 10 99
+swrite 2 prlit 84
+swrite 2 L_newline
+ret 74
+end
+receipt = rrreceipt
+digest = prstore receipt true
+if eq digest 0
+ret 74
+end
+for i ulong get rrmeta 0
+swrite 1 get rrline i
+swrite 1 L_newline
+end
+swrite 1 get rrhead 0
+swrite 1 L_newline
+swrite 1 get prstate 2
+swrite 1 L_newline
+if ne get rrconf 10 0
+ret 1
+end
+ret 0
+end
+text rvwords "verify ~: ~ limits, audit passes ~, ~ failures~ -> PASS\n~ -> FAIL\n~reference pi(1000000) = ~"
+fn rvlit index ulong to ulong
+p = get sp 0
+n = ulong 0
+for i ulong len rvwords
+c = get rvwords i
+if eq c 126
+if eq n index
+ret sdone p
+end
+n = add n 1
+else
+if eq n index
+sbyte c
+end
+end
+end
+ret sdone p
+end
+fn rvsummary failures ulong to void
+swrite 1 rvlit 0
+swrite 1 get rrname 0
+swrite 1 rvlit 1
+swrite 1 suint get swstate 0
+swrite 1 rvlit 2
+swrite 1 suint get rrconf 5
+swrite 1 rvlit 3
+swrite 1 suint failures
+swrite 1 rvlit 4
+if eq failures 0
+swrite 1 rvlit 5
+else
+swrite 1 rvlit 6
+end
+for i ulong get swstate 0
+if eq get swvalues i 1000000
+size = makebits 1000000
+swrite 1 rvlit 7
+swrite 1 suint countbits size 1000000
+swrite 1 L_newline
+end
+end
+end
+fn rrloadreport to ulong
+if not fexists get pxstate 3
+ret 0
+end
+r = ftext get pxstate 3
+if lt r 0
+ret 0
+end
+s = ulong r
+for i ulong slen s
+put jb i schar s i
+end
+if not jparse slen s
+ret 0
+end
+ret s
+end
+fn rrlaunch index ulong audit ulong to bool
+path = get rrpath index
+limit = get rrconf 3
+seconds = get rrconf 12
+timeout = get rrconf 9
+ret pxrun path limit seconds audit timeout
+end
+fn rrsamplestats index ulong to ulong
+n = get rrn index
+if eq n 0
+ret 0
+end
+start = mul index 256
+for j ulong n
+v = get rrsample add start j
+put prsample j v
+end
+if not prstatistics n
+ret 0
+end
+ret prstatsjson
+end
+fn rrleap year ulong to bool
+if ne rem year 4 0
+ret false
+end
+ret or ne rem year 100 0 eq rem year 400 0
+end
+text rrwhy " pass ~ odd ~ tail ~ expected_prime ~"
+fn rrwhytext index ulong to void
+n = ulong 0
+for i ulong len rrwhy
+c = get rrwhy i
+if eq c 126
+n = add n 1
+else
+if eq n index
+sbyte c
+end
+end
+end
+end
+fn rrreject code ulong to ulong
+p = get sp 0
+sappend pvkind code
+if or eq code 16 eq code 17
+for i ulong 4
+rrwhytext i
+digits = suint get pvresult add i 5
+end
+end
+ret sdone p
+end

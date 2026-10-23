@@ -1,0 +1,244 @@
+note Native dataset model validation. Missing optional collections and environment retain historical defaults.
+global dspools ulong 3
+global dsout uchar 1000000
+global dsused ulong 1
+text dskeys "benchmark_suite\nversion\ntimestamp\nhardware\nenvironment\nmemory_rss\nlatency_concurrency\nneural_inference\nconcurrency_pressure\ncontext_scaling\nmulti_model_breadth\ncross_surface\nsystem\nprocessor\narchitecture\nmemory_unified_gb\nos\nrustc_version\nkernel_version\npage_size_kb\nconcurrency_tested\nrequests_per_endpoint\nwarmup_requests\nmeasurement_id\nservice\nrole\nrss_mb\nendpoint\ndescription\nengine\nrequests_per_sec\np50_ms\np95_ms\np99_ms\nconcurrency\nsample_size\nworkload\nmodel\n"
+text dschemas "sbenchmark_suite,sversion,tschema_version,tbenchmark_commit,tcore_commit,stimestamp,ohardware,eenvironment,amemory_rss,alatency_concurrency,aneural_inference,bconcurrency_pressure,bcontext_scaling,bmulti_model_breadth,bcross_surface\nssystem,sprocessor,sarchitecture,umemory_unified_gb,sos\nsrustc_version,skernel_version,upage_size_kb,uconcurrency_tested,urequests_per_endpoint,uwarmup_requests\ntmeasurement_id,sservice,srole,sarchitecture,drss_mb\ntmeasurement_id,sservice,sendpoint,sdescription,sengine,drequests_per_sec,dp50_ms,dp95_ms,dp99_ms,uconcurrency,usample_size\ntmeasurement_id,sworkload,smodel,sengine,dp50_ms,fp95_ms\ntmeasurement_id,uconcurrency,daien_ttft_p50_ms,daien_ttft_p95_ms,daien_itl_p50_ms,daien_itl_p95_ms,dtokens_per_sec,dttft_speedup,ditl_speedup,dpower_watts,djoules_per_token\ntmeasurement_id,ucontext_length,dttft_p50_ms,dprefix_cache_hit_pct,dkv_memory_mb,dscheduler_latency_us\nsmodel_name,sarchitectural_topology,squantization,dttft_p50_ms,ditl_p50_ms,dkv_footprint_gb,sstatus\nssurface,sprocessor,sexecution_pipeline,sstatus\n"
+text dserror "Invalid benchmark dataset field: "
+fn dsline pool ulong index ulong to ulong
+start = ulong 0
+row = ulong 0
+for i ulong add slen pool 1
+split = eq i slen pool
+if not split
+split = eq schar pool i 10
+end
+if split
+if eq row index
+ret ssub pool start sub i start
+end
+row = add row 1
+start = add i 1
+end
+end
+ret 0
+end
+fn dsinit to void
+p = get sp 0
+for i ulong len dskeys
+sbyte get dskeys i
+end
+put dspools 0 sdone p
+p = get sp 0
+for i ulong len dschemas
+sbyte get dschemas i
+end
+put dspools 1 sdone p
+end
+fn dkey i ulong to ulong
+ret dsline get dspools 0 i
+end
+fn dfield object long i ulong to long
+ret jlookup object dkey i
+end
+fn dstr object long i ulong to ulong
+ret jstringval dfield object i
+end
+fn dnum token long to ulong
+if not jkind token 4
+exit 65
+end
+if not df_parse jraw token
+exit 65
+end
+ret get dfstate 0
+end
+fn dval object long i ulong to ulong
+ret dnum dfield object i
+end
+fn duint object long i ulong to ulong
+t = dfield object i
+if lt t 0
+ret 0
+end
+if not junsigned t
+exit 65
+end
+ret get js 5
+end
+fn dbad key ulong to bool
+r = write 2 dserror 0 len dserror
+swrite 2 key
+swrite 2 L_newline
+ret false
+end
+fn dvalid object long item ulong to bool
+kind = schar item 0
+key = ssub item 1 sub slen item 1
+t = jlookup object key
+optional = or or or eq kind 116 eq kind 102 eq kind 98 eq kind 101
+if lt t 0
+if optional
+ret true
+end
+ret dbad key
+end
+note Recognized struct fields reject duplicates, matching historical model deserialization.
+n = ulong 0
+i = add ulong object 1
+while lt i get jn ulong object
+if jsame long i key
+n = add n 1
+end
+i = get jn add i 1
+end
+if ne n 1
+ret dbad key
+end
+if or eq kind 116 eq kind 102
+if jkind t 7
+ret true
+end
+end
+if or eq kind 115 eq kind 116
+if jkind t 3
+ret true
+end
+end
+if or eq kind 111 eq kind 101
+if jkind t 1
+ret true
+end
+end
+if or eq kind 97 eq kind 98
+if jkind t 2
+ret true
+end
+end
+if eq kind 117
+if junsigned t
+if le get js 5 4294967295
+ret true
+end
+end
+end
+if or eq kind 100 eq kind 102
+if jkind t 4
+if df_parse jraw t
+if df_finite get dfstate 0
+ret true
+end
+end
+end
+end
+ret dbad key
+end
+fn dschema object long number ulong to bool
+if not jkind object 1
+ret false
+end
+spec = dsline get dspools 1 number
+start = ulong 0
+for i ulong add slen spec 1
+split = eq i slen spec
+if not split
+split = eq schar spec i 44
+end
+if split
+if not dvalid object ssub spec start sub i start
+ret false
+end
+start = add i 1
+end
+end
+ret true
+end
+fn dmodel to bool
+if not dschema 0 0
+ret false
+end
+if not dschema dfield 0 3 1
+ret false
+end
+env = dfield 0 4
+if ge env 0
+if not dschema env 2
+ret false
+end
+end
+for k ulong 7
+list = dfield 0 add k 5
+if ge list 0
+i = add ulong list 1
+while lt i get jn ulong list
+if not dschema long i add k 3
+ret false
+end
+i = get jn i
+end
+end
+end
+ret true
+end
+fn doreset to void
+put dsused 0 0
+end
+fn dobyte c uchar to void
+n = get dsused 0
+if eq n len dsout
+exit 66
+end
+put dsout n c
+put dsused 0 add n 1
+end
+fn doadd s ulong to void
+for i ulong slen s
+dobyte schar s i
+end
+end
+fn donum value ulong digits ulong to void
+doadd df_to_fixed value digits
+end
+fn doint value ulong to void
+doadd suint value
+end
+fn doresult to ulong
+p = get sp 0
+for i ulong get dsused 0
+sbyte get dsout i
+end
+ret sdone p
+end
+fn docount s ulong to ulong
+n = ulong 0
+for i ulong slen s
+if ne and schar s i 192 128
+n = add n 1
+end
+end
+ret n
+end
+fn dopad s ulong width ulong right bool to void
+n = docount s
+spaces = ulong 0
+if lt n width
+spaces = sub width n
+end
+if not right
+doadd s
+end
+for i ulong spaces
+dobyte 32
+end
+if right
+doadd s
+end
+end
+fn doseparator to void
+dobyte 32
+dobyte 124
+dobyte 32
+end
+fn donewline to void
+dobyte 10
+end

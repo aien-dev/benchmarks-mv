@@ -1,0 +1,126 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Finite binary64 range check without binary conversion or rounding loss.
+note Overflow rounds to infinity at abs(value) >= 2^1024 - 2^970.
+note Compute that exact decimal integer locally; all smaller finite JSON magnitudes qualify.
+global nbound uchar 310
+global nsmall uchar 310
+global ndigits uchar 309
+global nready uchar 1
+
+fn ninit to void
+if ne get nready 0 0
+ret
+end
+put nbound 0 1
+put nsmall 0 1
+for step ulong 1024
+carry = uint 0
+for i ulong 310
+v = add mul uint get nbound i 2 carry
+put nbound i uchar rem v 10
+carry = div v 10
+end
+if lt step 970
+carry = uint 0
+for i ulong 310
+v = add mul uint get nsmall i 2 carry
+put nsmall i uchar rem v 10
+carry = div v 10
+end
+end
+end
+borrow = int 0
+for i ulong 310
+v = sub sub int get nbound i int get nsmall i borrow
+borrow = int 0
+if lt v 0
+v = add v 10
+borrow = int 1
+end
+put nbound i uchar v
+end
+put nready 0 1
+end
+
+fn nexponent p ulong stop ulong to long
+sign = long 1
+if lt p stop
+if eq get jb p 45
+sign = long -1
+p = add p 1
+else
+if eq get jb p 43
+p = add p 1
+end
+end
+end
+value = long 0
+while lt p stop
+if lt value 1000000000
+value = add mul value 10 long sub get jb p 48
+end
+p = add p 1
+end
+ret mul sign value
+end
+
+fn jfinite token long to bool
+if not jkind token 4
+ret false
+end
+ninit
+p = get ja ulong token
+stop = get jz ulong token
+sig = long 0
+frac = long 0
+after = false
+expo = long 0
+while lt p stop
+c = get jb p
+p = add p 1
+if or eq c 101 eq c 69
+expo = nexponent p stop
+p = stop
+else
+if eq c 46
+after = true
+else
+if ne c 45
+if after
+frac = add frac 1
+end
+if or gt sig 0 ne c 48
+if lt sig 309
+put ndigits ulong sig sub c 48
+end
+sig = add sig 1
+end
+end
+end
+end
+end
+if eq sig 0
+ret true
+end
+order = add sub sig frac expo
+if lt order 309
+ret true
+end
+if gt order 309
+ret false
+end
+for i ulong 309
+digit = uchar 0
+if lt long i sig
+digit = get ndigits i
+end
+limit = get nbound sub 308 i
+if lt digit limit
+ret true
+end
+if gt digit limit
+ret false
+end
+end
+ret false
+end

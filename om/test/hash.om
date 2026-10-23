@@ -1,0 +1,42 @@
+note Frozen zero-byte SHA-256 boundary vectors, independently obtained with sha256sum during migration.
+note Runtime qualification uses only native binaries and these immutable expected digests.
+text hcases "1 6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d\n55 02779466cdec163811d078815c633f21901413081449002f24aa3e80f0b88ef7\n56 d4817aa5497628e7c77e6b606107042bbba3130888c5f47a375e6179be789fbb\n63 c7723fa1e0127975e49e62e753db53924c1bd84b8ac1ac08df78d09270f3d971\n64 f5a5fd42d16a20302798ef6ed309979b43003d2320d9f0e8ea9831a92759fb4b\n65 98ce42deef51d40269d542f5314bef2c7468d401ad5d85168bfab4c0108f75f7\n119 f616b0d54e78571a9611f343c9f8e022e859e920381ab0e4d3da01e193a7bd7e\n120 6edd9f6f9cc92cded36e6c4a580933f9c9f1b90562b46903b806f21902a1a54f\n127 15dae5979058bfbf4f9166029b6e340ea3ca374fef578a11dc9e6e923860d7ae\n128 38723a2e5e8a17aa7950dc008209944e898f69a7bd10a23c839d341e935fd5ca\n129 2c80619d7e7c58257293cda3a878c13e5856f4e06f6f90601276f7b9179c9e07\n65535 9f797b60edaf440d5831da53c35f4d4847a2f55adc64cfe887a7bcfcd9eca495\n65536 de2f256064a0af797747c2b97505dc0b9f3df0de4f489eac731c23ae9ca9cc31\n65537 3266304f31be278d06c3bd3eb9aa3e00c59bedec0a890de466568b0b90b0e01f\n"
+fn thashcase line ulong to bool
+size = ulong 0
+p = ulong 0
+while ne schar line p 32
+size = add mul size 10 ulong sub schar line p 48
+p = add p 1
+end
+want = scat ssub line add p 1 64 L_newline
+start = get sp 0
+for i ulong size
+sbyte 0
+end
+data = sdone start
+if not twrite tpath tconstant 3 data
+ret false
+end
+preset
+parg tbin tconstant 10
+if ne trun tpath tconstant 3 tpath tconstant 2 false 0
+ret false
+end
+ret seq tload tpath tconstant 2 want
+end
+fn thashes to bool
+p = get sp 0
+for i ulong len hcases
+sbyte get hcases i
+end
+pool = sdone p
+for i ulong 14
+mark = get sp 0
+ok = thashcase tline pool i
+put sp 0 mark
+if not ok
+ret false
+end
+end
+ret true
+end

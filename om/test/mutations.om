@@ -1,0 +1,60 @@
+note Compile deliberately incorrect implementations and require their named runtime failures.
+text mwords "om/data/sha256.om\ntests/om/sha256.om\n428a2f98\n428b2f98\nom/data/stats.om\ntests/om/stats.om\nmul n 95\nmul n 94\nom/data/json.om\ntests/om/json-grammar.om\nif and ge cp 56320 le cp 57343\nif false\nhash-mutant\nstats-mutant\njson-mutant\nom/data/json-write.om\nom/data/json-file.om\nom/prime/reference.om\ntests/om/measurement.om\nmeasured.json\nput mpath 0\nput mpath \nmeasurement\n"
+global mpool ulong 1
+fn minit to void
+p = get sp 0
+for i ulong len mwords
+sbyte get mwords i
+end
+put mpool 0 sdone p
+end
+fn mword i ulong to ulong
+ret tline get mpool 0 i
+end
+fn tmutant offset ulong name ulong code long to bool
+body = treplace tload mword offset mword add offset 2 mword add offset 3
+source = scat3 body L_newline tload mword add offset 1
+binary = tpath name
+if not tcompile source binary
+ret false
+end
+preset
+parg binary
+ret eq trun tnullpath tpath tconstant 2 false code
+end
+fn tmutants to bool
+if not tmutant 0 mword 12 2
+ret false
+end
+if not tmutant 4 mword 13 17
+ret false
+end
+ret tmutant 8 mword 14 1
+end
+fn measurement_source to ulong
+body = treplace tload mword 18 mword 19 tpath mword 19
+replace = scat mword 21 suint add slen get tstate 0 1
+for i ulong 3
+body = treplace body mword 20 replace
+end
+source = scat3 tload mword 8 L_newline tload mword 15
+source = scat3 source L_newline tload mword 16
+source = scat3 source L_newline tload mword 4
+source = scat3 source L_newline tload mword 0
+source = scat3 source L_newline tload mword 17
+ret scat3 source L_newline body
+end
+fn tmeasurement to bool
+minit
+binary = tpath mword 22
+if not tcompile measurement_source binary
+ret false
+end
+preset
+parg binary
+if ne trun tnullpath tpath tconstant 2 false 0
+ret false
+end
+mode = fmode tpath mword 19
+ret and ge mode 0 eq and mode 511 292
+end

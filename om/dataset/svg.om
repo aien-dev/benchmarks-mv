@@ -1,0 +1,279 @@
+note SVG charts retain the historical scales and layout. Dynamic labels are XML escaped.
+text dxwords "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1100 \n\" width=\"100%\" height=\"100%\">\n</svg>\nMemory Resident Set Size (RSS): AIEN Services\nMeasured on NVIDIA DGX Spark (Grace Blackwell GB10, aarch64) via /proc/[pid]/status VmRSS\nHTTP Gateway Latency (p50 TTFB) and Throughput\nLocalhost multi-threaded sweep: concurrency=10, 500 requests per endpoint on Grace Blackwell\n<text x=\"30\" y=\"48\" class=\"title\">\n<text x=\"30\" y=\"74\" class=\"subtitle\">\n</text>\n<text x=\"30\" y=\"\n\" class=\"label-service\">\n\" class=\"label-role\">\n<rect x=\"\n\" y=\"\n\" width=\"\n\" height=\"\n\" rx=\"4\" fill=\"\n\" />\n<text x=\"\n\" class=\"label-val\">\n MB\n ms <tspan class=\"throughput\">(\n req/s)</tspan>\n#d7755d\n#d3a85b\n#7fb8a6\n<g class=\"bar-row\">\n</g>\n&amp;\n&lt;\n&gt;\n&quot;\n&apos;\n<line x1=\"\n\" y1=\"95\" x2=\"\n\" y2=\"\n\" class=\"grid\" />\nmemory_comparison.svg\nlatency_comparison.svg\n  [OK] Rendered \nAll SVG benchmark charts successfully updated in \n.\n"
+text dxstyle "  <defs>\n    <style>\n      .bg { fill: #18111f; }\n      .title { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 20px; font-weight: 700; fill: #fff8ee; }\n      .subtitle { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 13px; fill: #bca9c2; }\n      .label-service { font-family: ui-monospace, monospace; font-size: 14px; font-weight: 700; fill: #ded3df; }\n      .label-role { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 11px; fill: #8eac78; }\n      .label-val { font-family: ui-monospace, monospace; font-size: 13px; font-weight: 700; fill: #fff8ee; }\n      .throughput { font-size: 12px; font-weight: 600; fill: #ef8b67; }\n      .grid { stroke: rgba(222, 211, 223, 0.12); stroke-width: 1; }\n    </style>\n  </defs>\n  <rect width=\"100%\" height=\"100%\" rx=\"12\" class=\"bg\" />\n"
+global dxpool ulong 2
+fn dxinit to void
+p = get sp 0
+for i ulong len dxwords
+sbyte get dxwords i
+end
+put dxpool 0 sdone p
+p = get sp 0
+for i ulong len dxstyle
+sbyte get dxstyle i
+end
+put dxpool 1 sdone p
+end
+fn dxword i ulong to ulong
+ret dsline get dxpool 0 i
+end
+fn dxadd i ulong to void
+doadd dxword i
+end
+fn dxline i ulong to void
+dxadd i
+donewline
+end
+fn dxescape s ulong to void
+for i ulong slen s
+c = schar s i
+if and lt c 32 not or or eq c 9 eq c 10 eq c 13
+exit 65
+end
+if eq c 38
+dxadd 29
+else
+if eq c 60
+dxadd 30
+else
+if eq c 62
+dxadd 31
+else
+if eq c 34
+dxadd 32
+else
+if eq c 39
+dxadd 33
+else
+dobyte c
+end
+end
+end
+end
+end
+end
+end
+fn dxnumber bits ulong to void
+if not df_finite bits
+exit 65
+end
+doadd df_to_json bits
+end
+fn dxgrid x ulong bottom ulong to void
+dxadd 34
+doint x
+dxadd 35
+doint x
+dxadd 36
+doint bottom
+dxline 37
+end
+fn dxheader latency bool to void
+dxadd 0
+height = ulong 520
+if latency
+height = ulong 500
+end
+doint height
+dxline 1
+doadd get dxpool 1
+dxadd 7
+if latency
+dxadd 5
+else
+dxadd 3
+end
+dxline 9
+dxadd 8
+if latency
+dxadd 6
+else
+dxadd 4
+end
+dxline 9
+if latency
+dxgrid 360 470
+dxgrid 640 470
+dxgrid 920 470
+else
+dxgrid 280 480
+dxgrid 580 480
+dxgrid 880 480
+end
+end
+fn dxlabels item long y ulong latency bool to void
+dxadd 10
+doint y
+dxadd 11
+dxescape dstr item 24
+if latency
+dobyte 32
+dxescape dstr item 27
+end
+dxline 9
+dxadd 10
+if latency
+doint add y 16
+else
+doint add y 15
+end
+dxadd 12
+if latency
+dxescape dstr item 28
+else
+dxescape dstr item 25
+end
+doadd L_spacebracket
+if latency
+dxescape dstr item 29
+else
+dxescape dstr item 14
+end
+dobyte 93
+dxline 9
+end
+fn dxwidth item long latency bool to ulong
+if latency
+value = dfmul dfdiv dval item 31 df_from_u64 45 df_from_u64 560
+minimum = df_from_u64 6
+if lt dfcmp value minimum 0
+ret minimum
+end
+ret value
+end
+value = dfmul dfdiv dval item 26 df_from_u64 3800 df_from_u64 600
+minimum = df_from_u64 4
+if lt dfcmp value minimum 0
+ret minimum
+end
+ret value
+end
+fn dxcolor item long latency bool to ulong
+if latency
+if gt dfcmp dval item 31 df_from_u64 20 0
+ret dxword 24
+end
+ret dxword 26
+end
+rss = dval item 26
+if gt dfcmp rss df_from_u64 500 0
+ret dxword 24
+end
+if gt dfcmp rss df_from_u64 40 0
+ret dxword 25
+end
+ret dxword 26
+end
+fn dxrect item long y ulong width ulong latency bool to void
+dxadd 13
+if latency
+doint 360
+else
+doint 280
+end
+dxadd 14
+doint sub y 16
+dxadd 15
+dxnumber width
+dxadd 16
+if latency
+doint 28
+else
+doint 26
+end
+dxadd 17
+doadd dxcolor item latency
+dxline 18
+end
+fn dxvalue item long y ulong width ulong latency bool to void
+dxadd 19
+if latency
+dxnumber dfadd dfadd df_from_u64 370 width df_from_u64 12
+else
+dxnumber dfadd dfadd df_from_u64 290 width df_from_u64 12
+end
+dxadd 14
+if latency
+doint add y 3
+else
+doint add y 2
+end
+dxadd 20
+if latency
+donum dval item 31 2
+dxadd 22
+donum dval item 30 1
+dxadd 23
+else
+donum dval item 26 2
+dxadd 21
+end
+dxline 9
+end
+fn dsvg latency bool to ulong
+doreset
+dxheader latency
+key = ulong 5
+row = ulong 58
+if latency
+key = ulong 6
+row = ulong 68
+end
+list = dfield 0 key
+i = add ulong list 1
+y = ulong 120
+while lt i get jn ulong list
+dxline 27
+dxlabels long i y latency
+width = dxwidth long i latency
+dxrect long i y width latency
+dxvalue long i y width latency
+dxline 28
+y = add y row
+i = get jn i
+end
+dxadd 2
+ret doresult
+end
+fn dmkdir path ulong to bool
+if eq slen path 0
+ret false
+end
+for i ulong add slen path 1
+boundary = eq i slen path
+if not boundary
+boundary = eq schar path i 47
+end
+if and boundary ne i 0
+part = ssub path 0 i
+r = makedir sb soff part slen part 493
+if and ne r 0 ne r -17
+ret false
+end
+if ne and fmode part 61440 16384
+ret false
+end
+end
+end
+ret true
+end
+fn dgenerate dest ulong to bool
+if not dmkdir dest
+ret false
+end
+for i ulong 2
+path = spath dest dxword add 38 i
+svg = dsvg eq i 1
+if not dsave path svg
+ret false
+end
+swrite 1 dxword 40
+swrite 1 path
+swrite 1 L_newline
+end
+swrite 1 dxword 41
+swrite 1 dest
+swrite 1 dxword 42
+swrite 1 L_newline
+ret true
+end

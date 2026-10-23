@@ -1,0 +1,723 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Incremental pure HTTP and SSE framing. One parser state per process.
+note Input sf_fi range is supplied to sf_hfeed or sf_sfeed; sf_hfeed appends decoded bytes to sf_ho.
+note Caller copies sf_ho to sf_fi for sf_sfeed then clears sf_hs[8] between reads.
+note sf_hs: error, head bytes, head ready, status, framing (0 close 1 length 2 chunk),
+note remaining, chunk state (0 size 1 data 2 end 3 trailers 4 done), complete,
+note output bytes, chunk line bytes, content type start, content type length, has length.
+note Errors: 1 head limit, 2 status, 3 length, 4 chunk size, 5 terminator,
+note 6 chunk line limit, 7 SSE line limit, 8 capacity/range. Errors are sticky.
+global sf_fi uchar 1000000
+global sf_hb uchar 65536
+global sf_hl uchar 4096
+global sf_ho uchar 1000000
+global sf_hs ulong 13
+note sf_ss: error, line bytes, data bytes, has data, event bytes, has event,
+note comments, ignored, invalid UTF8, empty dispatches, event count, output bytes.
+global sf_sl uchar 1048576
+global sf_sd uchar 2097152
+global sf_se uchar 1048576
+global sf_so uchar 4194304
+global sf_ss ulong 12
+global sf_sa ulong 65536
+global sf_sz ulong 65536
+global sf_st ulong 65536
+global sf_si ulong 65536
+global sf_sn ulong 65536
+global sf_sk ulong 65536
+
+fn sf_hfail code ulong to bool
+put sf_hs 0 code
+ret false
+end
+fn sf_sfail code ulong to bool
+put sf_ss 0 code
+ret false
+end
+fn sf_hreset to void
+for i ulong len sf_hs
+put sf_hs i 0
+end
+end
+fn sf_sreset to void
+for i ulong len sf_ss
+put sf_ss i 0
+end
+end
+fn sf_hspace c uchar to bool
+ret or or eq c 32 eq c 9 or eq c 13 eq c 10
+end
+fn sf_hlower c uchar to uchar
+if and ge c 65 le c 90
+ret add c 32
+end
+ret c
+end
+fn sf_hnum a ulong z ulong to bool
+v = ulong 0
+i = a
+if lt i z
+if eq get sf_hb i 43
+i = add i 1
+end
+end
+if eq i z
+ret false
+end
+while lt i z
+c = get sf_hb i
+if or lt c 48 gt c 57
+ret false
+end
+d = ulong sub c 48
+if gt v div sub ulong 18446744073709551615 d 10
+ret false
+end
+v = add mul v 10 d
+i = add i 1
+end
+put sf_hs 5 v
+ret true
+end
+fn sf_hstatus z ulong to bool
+if lt z 9
+ret sf_hfail 2
+end
+if ne get sf_hb 0 72
+ret sf_hfail 2
+end
+if ne get sf_hb 1 84
+ret sf_hfail 2
+end
+if ne get sf_hb 2 84
+ret sf_hfail 2
+end
+if ne get sf_hb 3 80
+ret sf_hfail 2
+end
+if ne get sf_hb 4 47
+ret sf_hfail 2
+end
+if ne get sf_hb 5 49
+ret sf_hfail 2
+end
+if ne get sf_hb 6 46
+ret sf_hfail 2
+end
+i = ulong 7
+while and lt i z not sf_hspace get sf_hb i
+i = add i 1
+end
+while and lt i z sf_hspace get sf_hb i
+i = add i 1
+end
+a = i
+while and lt i z not sf_hspace get sf_hb i
+i = add i 1
+end
+if not sf_hnum a i
+ret sf_hfail 2
+end
+if gt get sf_hs 5 65535
+ret sf_hfail 2
+end
+put sf_hs 3 get sf_hs 5
+put sf_hs 5 0
+ret true
+end
+note Header matching does not borrow input; direct literal byte comparisons via text pools.
+text sf_hncl "content-length"
+text sf_hnte "transfer-encoding"
+text sf_hnct "content-type"
+text sf_hnch "chunked"
+fn sf_hname a ulong n ulong kind ulong to bool
+if eq kind 0
+if ne n len sf_hncl
+ret false
+end
+for i ulong n
+if ne sf_hlower get sf_hb add a i get sf_hncl i
+ret false
+end
+end
+ret true
+end
+if eq kind 1
+if ne n len sf_hnte
+ret false
+end
+for i ulong n
+if ne sf_hlower get sf_hb add a i get sf_hnte i
+ret false
+end
+end
+ret true
+end
+if ne n len sf_hnct
+ret false
+end
+for i ulong n
+if ne sf_hlower get sf_hb add a i get sf_hnct i
+ret false
+end
+end
+ret true
+end
+fn sf_hchunk a ulong z ulong to bool
+i = a
+found = false
+while lt i z
+while and lt i z sf_hspace get sf_hb i
+i = add i 1
+end
+b = i
+while and lt i z ne get sf_hb i 44
+i = add i 1
+end
+e = i
+while and gt e b sf_hspace get sf_hb sub e 1
+e = sub e 1
+end
+same = eq sub e b 7
+if same
+for k ulong 7
+if ne sf_hlower get sf_hb add b k get sf_hnch k
+same = false
+end
+end
+end
+found = or found same
+i = add i 1
+end
+ret found
+end
+fn sf_hheader a ulong z ulong to bool
+i = a
+while and lt i z ne get sf_hb i 58
+i = add i 1
+end
+if eq i z
+ret true
+end
+b = add i 1
+while and gt i a sf_hspace get sf_hb sub i 1
+i = sub i 1
+end
+while and lt a i sf_hspace get sf_hb a
+a = add a 1
+end
+while and lt b z sf_hspace get sf_hb b
+b = add b 1
+end
+while and gt z b sf_hspace get sf_hb sub z 1
+z = sub z 1
+end
+n = sub i a
+if sf_hname a n 0
+if not sf_hnum b z
+ret sf_hfail 3
+end
+put sf_hs 12 1
+end
+if sf_hname a n 1
+if sf_hchunk b z
+put sf_hs 4 2
+else
+put sf_hs 4 0
+end
+end
+if sf_hname a n 2
+put sf_hs 10 b
+put sf_hs 11 sub z b
+end
+ret true
+end
+fn sf_hhead to bool
+i = ulong 0
+while and lt i get sf_hs 1 ne get sf_hb i 10
+i = add i 1
+end
+if not sf_hstatus i
+ret false
+end
+a = add i 1
+while lt a get sf_hs 1
+i = a
+while and lt i get sf_hs 1 ne get sf_hb i 10
+i = add i 1
+end
+if not sf_hheader a i
+ret false
+end
+a = add i 1
+end
+if and ne get sf_hs 4 2 eq get sf_hs 12 1
+put sf_hs 4 1
+if eq get sf_hs 5 0
+put sf_hs 7 1
+end
+end
+put sf_hs 2 1
+ret true
+end
+fn sf_hend to bool
+n = get sf_hs 1
+if ge n 2
+if and eq get sf_hb sub n 2 10 eq get sf_hb sub n 1 10
+ret true
+end
+end
+if ge n 4
+if ne get sf_hb sub n 4 13
+ret false
+end
+if ne get sf_hb sub n 3 10
+ret false
+end
+ret and eq get sf_hb sub n 2 13 eq get sf_hb sub n 1 10
+end
+ret false
+end
+fn sf_hout c uchar to bool
+n = get sf_hs 8
+if ge n len sf_ho
+ret sf_hfail 8
+end
+put sf_ho n c
+put sf_hs 8 add n 1
+ret true
+end
+fn sf_hexval c uchar to ulong
+if and ge c 48 le c 57
+ret ulong sub c 48
+end
+c = sf_hlower c
+if and ge c 97 le c 102
+ret ulong sub c 87
+end
+ret 16
+end
+fn sf_hsize n ulong to bool
+i = ulong 0
+while and lt i n sf_hspace get sf_hl i
+i = add i 1
+end
+z = i
+while and lt z n ne get sf_hl z 59
+z = add z 1
+end
+while and gt z i sf_hspace get sf_hl sub z 1
+z = sub z 1
+end
+if lt i z
+if eq get sf_hl i 43
+i = add i 1
+end
+end
+if eq i z
+ret sf_hfail 4
+end
+v = ulong 0
+while lt i z
+d = sf_hexval get sf_hl i
+if or eq d 16 gt v div sub ulong 18446744073709551615 d 16
+ret sf_hfail 4
+end
+v = add mul v 16 d
+i = add i 1
+end
+put sf_hs 5 v
+put sf_hs 6 1
+if eq v 0
+put sf_hs 6 3
+end
+ret true
+end
+fn sf_hbody c uchar to bool
+if eq get sf_hs 4 0
+ret sf_hout c
+end
+if eq get sf_hs 7 1
+ret true
+end
+if or eq get sf_hs 4 1 eq get sf_hs 6 1
+if not sf_hout c
+ret false
+end
+put sf_hs 5 sub get sf_hs 5 1
+if eq get sf_hs 5 0
+if eq get sf_hs 4 1
+put sf_hs 7 1
+else
+put sf_hs 6 2
+end
+end
+ret true
+end
+n = get sf_hs 9
+if ne c 10
+if ge n len sf_hl
+ret sf_hfail 6
+end
+put sf_hl n c
+put sf_hs 9 add n 1
+ret true
+end
+if gt n 0
+if eq get sf_hl sub n 1 13
+n = sub n 1
+end
+end
+put sf_hs 9 0
+if eq get sf_hs 6 0
+ret sf_hsize n
+end
+if eq get sf_hs 6 2
+if ne n 0
+ret sf_hfail 5
+end
+put sf_hs 6 0
+ret true
+end
+if eq n 0
+put sf_hs 6 4
+put sf_hs 7 1
+end
+ret true
+end
+fn sf_hfeed off ulong count ulong to bool
+if ne get sf_hs 0 0
+ret false
+end
+if or gt count len sf_fi gt off sub len sf_fi count
+ret sf_hfail 8
+end
+for i ulong count
+c = get sf_fi add off i
+if eq get sf_hs 2 0
+n = get sf_hs 1
+if ge n len sf_hb
+ret sf_hfail 1
+end
+put sf_hb n c
+put sf_hs 1 add n 1
+if sf_hend
+if not sf_hhead
+ret false
+end
+end
+else
+if not sf_hbody c
+ret false
+end
+end
+end
+ret true
+end
+fn sf_heof to bool
+if ne get sf_hs 0 0
+ret false
+end
+if ne get sf_hs 2 1
+ret false
+end
+ret or eq get sf_hs 4 0 eq get sf_hs 7 1
+end
+fn sf_hsuccess to bool
+ret and ge get sf_hs 3 200 lt get sf_hs 3 300
+end
+note Strict UTF8 line validation: reject overlongs, surrogates and above U+10FFFF.
+fn sf_sutf n ulong to bool
+i = ulong 0
+while lt i n
+for step ulong 500000
+if ge i n
+ret true
+end
+c = get sf_sl i
+i = add i 1
+if ge c 128
+k = ulong 0
+v = ulong 0
+low = ulong 0
+if and ge c 194 le c 223
+k = 1
+v = ulong and c 31
+low = 128
+end
+if and ge c 224 le c 239
+k = 2
+v = ulong and c 15
+low = 2048
+end
+if and ge c 240 le c 244
+k = 3
+v = ulong and c 7
+low = 65536
+end
+if or eq k 0 gt k sub n i
+ret false
+end
+for j ulong k
+c = get sf_sl i
+if or lt c 128 gt c 191
+ret false
+end
+v = add mul v 64 ulong and c 63
+i = add i 1
+end
+if or lt v low gt v 1114111
+ret false
+end
+if and ge v 55296 le v 57343
+ret false
+end
+end
+end
+end
+ret true
+end
+text sf_snd "data"
+text sf_sne "event"
+text sf_sni "id"
+text sf_snr "retry"
+fn sf_sfield n ulong to ulong
+if eq n 4
+same = true
+for i ulong n
+if ne get sf_sl i get sf_snd i
+same = false
+end
+end
+if same
+ret 1
+end
+end
+if eq n 5
+same = true
+other = true
+for i ulong n
+if ne get sf_sl i get sf_sne i
+same = false
+end
+if ne get sf_sl i get sf_snr i
+other = false
+end
+end
+if same
+ret 2
+end
+if other
+ret 3
+end
+end
+if eq n 2
+if and eq get sf_sl 0 105 eq get sf_sl 1 100
+ret 3
+end
+end
+ret 0
+end
+fn sf_sdispatch at ulong ri ulong to bool
+if eq get sf_ss 3 0
+put sf_ss 9 add get sf_ss 9 1
+put sf_ss 4 0
+put sf_ss 5 0
+ret true
+end
+n = get sf_ss 10
+p = get sf_ss 11
+d = get sf_ss 2
+e = get sf_ss 4
+if or ge n len sf_sa gt add d e sub len sf_so p
+ret sf_sfail 8
+end
+put sf_sa n p
+put sf_sz n d
+put sf_st n at
+put sf_si n ri
+put sf_sn n e
+put sf_sk n get sf_ss 5
+sf_sdcopy p d
+p = add p d
+sf_secopy p e
+put sf_ss 11 add p e
+put sf_ss 10 add n 1
+put sf_ss 2 0
+put sf_ss 3 0
+put sf_ss 4 0
+put sf_ss 5 0
+ret true
+end
+fn sf_sdata a ulong n ulong to bool
+p = get sf_ss 2
+extra = get sf_ss 3
+if gt add sub n a extra sub len sf_sd p
+ret sf_sfail 8
+end
+if eq extra 1
+put sf_sd p 10
+p = add p 1
+end
+i = a
+while lt i n
+z = sub n i
+if gt z 500000
+z = 500000
+end
+for j ulong z
+put sf_sd add p j get sf_sl add i j
+end
+p = add p z
+i = add i z
+end
+put sf_ss 2 p
+put sf_ss 3 1
+ret true
+end
+fn sf_sevent a ulong n ulong to bool
+n = sub n a
+i = ulong 0
+while lt i n
+z = sub n i
+if gt z 500000
+z = 500000
+end
+for j ulong z
+put sf_se add i j get sf_sl add a add i j
+end
+i = add i z
+end
+put sf_ss 4 n
+put sf_ss 5 1
+ret true
+end
+fn sf_sline n ulong at ulong ri ulong to bool
+if eq n 0
+ret sf_sdispatch at ri
+end
+if not sf_sutf n
+put sf_ss 8 add get sf_ss 8 1
+ret true
+end
+if eq get sf_sl 0 58
+put sf_ss 6 add get sf_ss 6 1
+ret true
+end
+i = sf_scolon n
+field = sf_sfield i
+if eq field 0
+put sf_ss 7 add get sf_ss 7 1
+ret true
+end
+a = i
+if lt a n
+a = add a 1
+if lt a n
+if eq get sf_sl a 32
+a = add a 1
+end
+end
+end
+if eq field 1
+ret sf_sdata a n
+end
+if eq field 2
+ret sf_sevent a n
+end
+ret true
+end
+fn sf_sfeed off ulong count ulong at ulong ri ulong to bool
+if ne get sf_ss 0 0
+ret false
+end
+if or gt count len sf_fi gt off sub len sf_fi count
+ret sf_sfail 8
+end
+for i ulong count
+c = get sf_fi add off i
+n = get sf_ss 1
+if ne c 10
+if ge n len sf_sl
+ret sf_sfail 7
+end
+put sf_sl n c
+put sf_ss 1 add n 1
+else
+if gt n 0
+if eq get sf_sl sub n 1 13
+n = sub n 1
+end
+end
+put sf_ss 1 0
+if not sf_sline n at ri
+ret false
+end
+end
+end
+ret true
+end
+fn sf_spending to bool
+ret or gt get sf_ss 1 0 eq get sf_ss 3 1
+end
+fn sf_sdcopy p ulong n ulong to void
+i = ulong 0
+while lt i n
+z = sub n i
+if gt z 500000
+z = 500000
+end
+for j ulong z
+put sf_so add p add i j get sf_sd add i j
+end
+i = add i z
+end
+end
+fn sf_secopy p ulong n ulong to void
+i = ulong 0
+while lt i n
+z = sub n i
+if gt z 500000
+z = 500000
+end
+for j ulong z
+put sf_so add p add i j get sf_se add i j
+end
+i = add i z
+end
+end
+fn sf_scolon n ulong to ulong
+i = ulong 0
+while lt i n
+for step ulong 500000
+if ge i n
+ret n
+end
+if eq get sf_sl i 58
+ret i
+end
+i = add i 1
+end
+end
+ret n
+end
+note Caller must consume output before clearing it. Partial frame state is preserved.
+fn sf_hclear to void
+put sf_hs 8 0
+end
+fn sf_sclear to void
+put sf_ss 10 0
+put sf_ss 11 0
+end
+note Decode body bytes from the latest HTTP feed into SSE events at the same read time.
+note This consumes sf_ho and overwrites sf_fi, so call only after hfeed finishes.
+fn sf_body_to_sse at ulong ri ulong to bool
+for i ulong get sf_hs 8
+put sf_fi i get sf_ho i
+end
+if not sf_sfeed 0 get sf_hs 8 at ri
+ret false
+end
+sf_hclear
+ret true
+end

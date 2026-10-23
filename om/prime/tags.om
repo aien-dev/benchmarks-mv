@@ -1,0 +1,121 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note tgparse returns 0 success, 1 bad tag, 2 unknown key, 3 bad bits,
+note 4 bad threads, 5 missing algorithm, 6 missing faithful, 7 missing bits.
+note tgstate: algorithm handle, faithful handle, bits, threads, threads-present,
+note error detail handle. Result fields are only valid on success. Duplicate keys overwrite.
+text tgkeys "algorithmfaithfulbitsthreads"
+global tgstate ulong 6
+global tgnum ulong 1
+fn tgkey start ulong size ulong to ulong
+p = get sp 0
+for i ulong size
+sbyte get tgkeys add start i
+end
+ret sdone p
+end
+fn tgdecimal s ulong to bool
+n = ulong 0
+p = ulong 0
+if eq slen s 0
+ret false
+end
+if eq schar s 0 43
+p = ulong 1
+end
+if eq p slen s
+ret false
+end
+while lt p slen s
+c = schar s p
+if or lt c 48 gt c 57
+ret false
+end
+d = ulong sub c 48
+if gt n div sub ulong 18446744073709551615 d 10
+ret false
+end
+n = add mul n 10 d
+p = add p 1
+end
+put tgnum 0 n
+ret true
+end
+global tgseen ulong 1
+fn tgpart part ulong to ulong
+split = slen part
+j = ulong 0
+while and lt j slen part eq split slen part
+if eq schar part j 61
+split = j
+end
+j = add j 1
+end
+put tgstate 5 part
+if eq split slen part
+ret 1
+end
+key = ssub part 0 split
+value = ssub part add split 1 sub slen part add split 1
+if seq key tgkey 0 9
+put tgstate 0 value
+put tgseen 0 or get tgseen 0 1
+ret 0
+end
+if seq key tgkey 9 8
+put tgstate 1 value
+put tgseen 0 or get tgseen 0 2
+ret 0
+end
+if seq key tgkey 17 4
+put tgstate 5 value
+if not tgdecimal value
+ret 3
+end
+put tgstate 2 get tgnum 0
+put tgseen 0 or get tgseen 0 4
+ret 0
+end
+if seq key tgkey 21 7
+put tgstate 5 value
+if not tgdecimal value
+ret 4
+end
+put tgstate 3 get tgnum 0
+put tgstate 4 1
+ret 0
+end
+put tgstate 5 key
+ret 2
+end
+fn tgparse txt ulong to ulong
+for i ulong 6
+put tgstate i 0
+end
+put tgseen 0 0
+start = ulong 0
+for i ulong add slen txt 1
+boundary = eq i slen txt
+if not boundary
+boundary = eq schar txt i 44
+end
+if boundary
+r = tgpart ssub txt start sub i start
+if ne r 0
+ret r
+end
+start = add i 1
+end
+end
+put tgstate 5 0
+seen = get tgseen 0
+if eq and seen 1 0
+ret 5
+end
+if eq and seen 2 0
+ret 6
+end
+if eq and seen 4 0
+ret 7
+end
+ret 0
+end

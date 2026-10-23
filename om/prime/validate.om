@@ -1,0 +1,446 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note pvexpect: name, limit, min-seconds binary64, audit passes (0 timed), algorithm,
+note faithful, bits, threads, threads-present. pvresult: passes, elapsed bits, raw line,
+note environment, build JSON, differing pass, odd, tail flag, expected-prime flag.
+note Error codes match pvkind; numeric conversion depends on native double.om.
+text pvwords "schema~aien-prime-race/impl-report/v1~status~COMPLETE~impl~label~algorithm~faithful~bits~threads~limit~mode~passes~elapsed_s~environment~min_seconds~build~aien-~audit~timed~yes~no~algorithm=~faithful=~bits=~exit_code~audit_stdout_line~no_stdout_line~multiple_stdout_lines~malformed_line~report_missing~bad_report~status_not_complete~label_mismatch~line_report_mismatch~passes_zero~elapsed_below_min~audit_pass_count~bitmap_missing~bitmap_length~bitmap_diff~audit_pass_diff~5.1e-7~1e-9~"
+global pvcache ulong 44
+global pvexpect ulong 9
+global pvresult ulong 9
+global pvline ulong 8
+global pvparts ulong 5
+global pvtemp ulong 1
+fn pvinit to void
+p = get sp 0
+n = ulong 0
+for i ulong len pvwords
+c = get pvwords i
+if eq c 126
+put pvcache n sdone p
+n = add n 1
+p = get sp 0
+else
+sbyte c
+end
+end
+end
+fn pvlit n ulong to ulong
+ret get pvcache n
+end
+fn pvkind code ulong to ulong
+if or lt code 1 gt code 17
+ret pvlit 31
+end
+ret pvlit add code 24
+end
+fn pvuint s ulong to bool
+if eq slen s 0
+ret false
+end
+if and gt slen s 1 eq schar s 0 48
+ret false
+end
+for i ulong slen s
+if or lt schar s i 48 gt schar s i 57
+ret false
+end
+end
+ret tgdecimal s
+end
+fn pvtag s ulong prefix ulong to ulong
+if not sstarts s prefix
+ret 0
+end
+v = ssub s slen prefix sub slen s slen prefix
+if eq slen v 0
+ret 0
+end
+for i ulong slen v
+if eq schar v i 61
+ret 0
+end
+end
+ret v
+end
+fn pvtime s ulong to bool
+point = slen s
+for i ulong slen s
+c = schar s i
+if eq c 46
+if ne point slen s
+ret false
+end
+point = i
+else
+if or lt c 48 gt c 57
+ret false
+end
+end
+end
+if or eq point 0 ne add point 7 slen s
+ret false
+end
+ret df_parse s
+end
+fn pvparseline s ulong to bool
+n = ulong 0
+start = ulong 0
+for i ulong add slen s 1
+split = eq i slen s
+if not split
+split = eq schar s i 59
+end
+if split
+if ge n 5
+ret false
+end
+put pvparts n ssub s start sub i start
+n = add n 1
+start = add i 1
+end
+end
+if ne n 5
+ret false
+end
+label = get pvparts 0
+if eq slen label 0
+ret false
+end
+for i ulong slen label
+c = schar label i
+if or ne swhitebytes label i 0 or eq c 44 eq c 61
+ret false
+end
+end
+put pvline 0 label
+if not pvuint get pvparts 1
+ret false
+end
+put pvline 1 get tgnum 0
+if not pvtime get pvparts 2
+ret false
+end
+put pvline 2 get dfstate 0
+put pvline 7 get pvparts 2
+if not pvuint get pvparts 3
+ret false
+end
+put pvline 3 get tgnum 0
+ret pvlinetags get pvparts 4
+end
+fn pvlinetags s ulong to bool
+n = ulong 0
+start = ulong 0
+for i ulong add slen s 1
+split = eq i slen s
+if not split
+split = eq schar s i 44
+end
+if split
+if ge n 3
+ret false
+end
+v = pvtag ssub s start sub i start pvlit add n 22
+if eq v 0
+ret false
+end
+put pvline add n 4 v
+n = add n 1
+start = add i 1
+end
+end
+if ne n 3
+ret false
+end
+if not or seq get pvline 5 pvlit 20 seq get pvline 5 pvlit 21
+ret false
+end
+if not pvuint get pvline 6
+ret false
+end
+put pvline 6 get tgnum 0
+ret true
+end
+fn pvfield key ulong kind uchar to long
+t = jlookup 0 pvlit key
+if not jkind t kind
+ret -1
+end
+ret t
+end
+fn pvstr key ulong to ulong
+t = pvfield key 3
+if lt t 0
+ret 0
+end
+ret jstringval t
+end
+fn pvnum key ulong to bool
+t = jlookup 0 pvlit key
+if not junsigned t
+ret false
+end
+put pvtemp 0 get js 5
+ret true
+end
+fn pvfloat key ulong to bool
+t = pvfield key 4
+if lt t 0
+ret false
+end
+ret df_parse jraw t
+end
+fn pvfaith to ulong
+t = jlookup 0 pvlit 7
+if jkind t 5
+ret pvlit 20
+end
+if jkind t 6
+ret pvlit 21
+end
+ret jstringval t
+end
+fn pvreport to ulong
+if not seq pvstr 0 pvlit 1
+ret 7
+end
+status = pvstr 2
+if eq status 0
+ret 7
+end
+if not seq status pvlit 3
+ret 8
+end
+if not seq pvstr 4 get pvexpect 0
+ret 9
+end
+label = scat pvlit 17 get pvexpect 0
+if not seq pvstr 5 label
+ret 9
+end
+if not seq pvstr 6 get pvexpect 4
+ret 9
+end
+if not seq pvfaith get pvexpect 5
+ret 9
+end
+if not pvnum 8
+ret 7
+end
+if ne get pvtemp 0 get pvexpect 6
+ret 9
+end
+if not pvnum 9
+ret 7
+end
+threads = get pvtemp 0
+if ne get pvexpect 8 0
+if ne threads get pvexpect 7
+ret 9
+end
+end
+if not pvnum 10
+ret 7
+end
+if ne get pvtemp 0 get pvexpect 1
+ret 7
+end
+mode = pvlit 19
+if ne get pvexpect 3 0
+mode = pvlit 18
+end
+if not seq pvstr 11 mode
+ret 7
+end
+if not pvnum 12
+ret 7
+end
+put pvresult 0 get pvtemp 0
+if not pvfloat 13
+ret 7
+end
+put pvresult 1 get dfstate 0
+if not df_finite get pvresult 1
+ret 7
+end
+env = pvstr 14
+if eq env 0
+ret 7
+end
+put pvresult 3 env
+put pvresult 4 jraw jlookup 0 pvlit 16
+if ne get pvexpect 3 0
+if ne get pvresult 0 get pvexpect 3
+ret 13
+end
+else
+r = pvcompare threads
+if ne r 0
+ret r
+end
+end
+if eq get pvresult 0 0
+ret 11
+end
+ret 0
+end
+fn pvcompare threads ulong to ulong
+if not seq get pvline 0 scat pvlit 17 get pvexpect 0
+ret 9
+end
+if not seq get pvline 4 get pvexpect 4
+ret 9
+end
+if not seq get pvline 5 get pvexpect 5
+ret 9
+end
+if ne get pvline 6 get pvexpect 6
+ret 9
+end
+if or ne get pvline 1 get pvresult 0 ne get pvline 3 threads
+ret 10
+end
+ok = df_parse pvlit 42
+if gt dfcmp df_abs dfsub get pvline 2 get pvresult 1 get dfstate 0 0
+ret 10
+end
+if lt dfcmp get pvresult 1 get pvexpect 2 0
+ret 12
+end
+if not pvfloat 15
+ret 7
+end
+actual = get dfstate 0
+ok = df_parse pvlit 43
+if gt dfcmp df_abs dfsub actual get pvexpect 2 get dfstate 0 0
+ret 7
+end
+ret 0
+end
+fn pvbitmap to ulong
+pvbm = new uchar 625000 0
+fd = fopenread get pxstate 4
+if lt fd 0
+ret 14
+end
+size = makebits get pvexpect 1
+count = get pvexpect 3
+if eq count 0
+count = ulong 1
+end
+result = ulong 0
+for pass ulong count
+p = ulong 0
+while and lt p size eq result 0
+r = read int fd pvbm p sub size p
+if ne r -4
+if le r 0
+result = ulong 15
+else
+p = add p ulong r
+end
+end
+end
+if eq result 0
+r = comparebits pvbm size get pvexpect 1
+if ne r 0
+result = ulong 16
+if ne get pvexpect 3 0
+result = ulong 17
+end
+put pvresult 5 pass
+for i ulong 3
+put pvresult add i 6 get diff i
+end
+end
+end
+end
+if eq result 0
+r = read int fd fi 0 1
+if ne r 0
+result = ulong 15
+end
+end
+closed = fclose int fd
+if ne closed 0
+ret 15
+end
+ret result
+end
+fn pvvalidate to ulong
+for i ulong 9
+put pvresult i 0
+end
+if ne get pxcode 0 0
+ret 1
+end
+raw = ftext get pxstate 1
+if lt raw 0
+ret 5
+end
+s = ulong raw
+put pvresult 2 s
+if not pvutf8 s
+ret 5
+end
+if ne get pvexpect 3 0
+if ne slen s 0
+ret 2
+end
+else
+if eq slen s 0
+ret 3
+end
+if eq schar s sub slen s 1 10
+s = ssub s 0 sub slen s 1
+end
+put pvresult 2 s
+for i ulong slen s
+if eq schar s i 10
+ret 4
+end
+end
+if not pvparseline s
+ret 5
+end
+end
+raw = ftext get pxstate 3
+if lt raw 0
+ret 6
+end
+s = ulong raw
+for i ulong slen s
+put jb i schar s i
+end
+for i ulong len jcache
+put jcache i 0
+end
+if not jparse slen s
+ret 7
+end
+r = pvreport
+if ne r 0
+ret r
+end
+ret pvbitmap
+end
+
+fn pvutf8 s ulong to bool
+for i ulong slen s
+put jb i schar s i
+end
+put js 0 slen s
+put js 1 0
+put js 3 0
+put js 4 0
+while lt get js 1 get js 0
+c = jpeek
+jstep
+if ge c 128
+if not jutf8 c
+ret false
+end
+end
+end
+ret true
+end

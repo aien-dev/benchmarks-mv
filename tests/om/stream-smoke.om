@@ -1,0 +1,27 @@
+text wire "HTTP/1.1 200 OK\nContent-Type: text/event-stream\nTransfer-Encoding: chunked\n\n6\ndata: \n7;ext=1\nhello\n\n\n0\nX-Trailer: y\n\n"
+fn main to int
+sf_hreset
+sf_sreset
+for i ulong len wire
+put sf_fi i get wire i
+end
+if not sf_hfeed 0 len wire
+ret int add 10 get sf_hs 0
+end
+if not sf_heof
+ret 2
+end
+if ne get sf_hs 8 13
+ret 3
+end
+if not sf_body_to_sse 91 7
+ret 4
+end
+if ne get sf_ss 10 1
+ret 5
+end
+if or ne get sf_sz 0 5 ne get sf_st 0 91
+ret 6
+end
+ret 0
+end

@@ -1,0 +1,937 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note IPv4 literal TCP client. Nonblocking sockets, checked monotonic deadlines.
+note Configuration lr_cfg slots are defined in cli.om. Request bytes in lr_req.
+global lr_addr uchar 28
+global lr_opt uchar 4
+global lr_req uchar 65536
+global lr_net ulong 8
+note lr_net: request length, measured request finish ns, last errno magnitude.
+fn lr_ipv4 host ulong port ulong to bool
+for i ulong len lr_addr
+put lr_addr i 0
+end
+put lr_addr 0 2
+put lr_addr 2 uchar shr port 8
+put lr_addr 3 uchar and port 255
+part = ulong 0
+v = ulong 0
+digits = ulong 0
+for i ulong add slen host 1
+c = uchar 46
+if lt i slen host
+c = lr_char host i
+end
+if eq c 46
+if or eq digits 0 ge part 4
+ret false
+end
+put lr_addr add part 4 uchar v
+part = add part 1
+v = 0
+digits = 0
+else
+if or lt c 48 gt c 57
+ret false
+end
+v = add mul v 10 ulong sub c 48
+digits = add digits 1
+if or gt v 255 gt digits 3
+ret false
+end
+end
+end
+put lr_net 3 16
+put lr_net 4 2
+ret eq part 4
+end
+fn lr_ready fd int events int deadline long to long
+while true
+left = sub deadline monons
+if le left 0
+ret 0
+end
+r = waitio fd events left
+if ne r -4
+ret r
+end
+end
+ret -4
+end
+fn lr_open to long
+fd = socknew int get lr_net 4 526337 0
+if lt fd 0
+put lr_net 2 ulong neg fd
+ret -1
+end
+deadline = add monons long get lr_cfg 12
+r = connect int fd lr_addr 0 get lr_net 3
+if eq r -115
+r = lr_ready int fd 4 deadline
+if le r 0
+put lr_net 2 110
+closed = fclose int fd
+ret -1
+end
+note A second connect distinguishes a refused connection without getsockopt support.
+r = connect int fd lr_addr 0 get lr_net 3
+end
+if and ne r 0 ne r -106
+put lr_net 2 ulong neg r
+closed = fclose int fd
+ret -1
+end
+put lr_opt 0 1
+r = sockopt int fd 6 1 lr_opt 0 len lr_opt
+if ne r 0
+put lr_net 2 ulong neg r
+closed = fclose int fd
+ret -1
+end
+ret fd
+end
+fn lr_send fd int to bool
+p = ulong 0
+deadline = add monons long get lr_cfg 13
+while lt p get lr_net 0
+r = send fd lr_req p sub get lr_net 0 p 0
+if gt r 0
+p = add p ulong r
+deadline = add monons long get lr_cfg 13
+else
+if or eq r -11 eq r -4
+ready = lr_ready fd 4 deadline
+if le ready 0
+put lr_net 2 110
+ret false
+end
+else
+if lt r 0
+put lr_net 2 ulong neg r
+else
+put lr_net 2 32
+end
+ret false
+end
+end
+end
+ret true
+end
+fn lr_read fd int to void
+deadline = add monons long get lr_cfg 13
+while eq get ac_s 2 0
+r = recv fd sf_fi 0 16384 0
+at = monons
+if gt r 0
+ac_feed 0 ulong r ulong at
+deadline = add at long get lr_cfg 13
+else
+if eq r 0
+ac_eof
+else
+if or eq r -11 eq r -4
+ready = lr_ready fd 1 deadline
+if eq ready 0
+ac_fail 4 110
+end
+if lt ready 0
+ac_fail 3 ulong neg ready
+end
+else
+ac_fail 3 ulong neg r
+end
+end
+end
+end
+end
+fn lr_measure index ulong to void
+begin = monons
+fd = long -1
+if lr_resolve get lr_cfg 0 get lr_cfg 1
+fd = lr_open
+else
+put lr_net 2 2
+end
+start = monons
+ac_reset index ulong start
+if lt fd 0
+ac_fail 1 get lr_net 2
+else
+put ac_s 34 1
+put ac_s 35 ulong sub start begin
+if not lr_send int fd
+ac_fail 2 get lr_net 2
+else
+lr_read int fd
+end
+closed = fclose int fd
+end
+put lr_net 1 ulong monons
+outcome = ac_finish
+end
+global lr_v6 ushort 8
+fn lr_ipv6 host ulong port ulong to bool
+for j ulong 8
+put lr_v6 j 0
+end
+i = ulong 0
+n = slen host
+group = ulong 0
+hole = long -1
+if lt n 2
+ret false
+end
+if eq lr_char host 0 58
+if ne lr_char host 1 58
+ret false
+end
+hole = 0
+i = 2
+end
+while lt i n
+if ge group 8
+ret false
+end
+start = i
+while and lt i n ne lr_char host i 58
+i = add i 1
+end
+part = ssub host start sub i start
+if ge sfind part L_dot 0
+if gt group 6
+ret false
+end
+if not lr_ipv4 part port
+ret false
+end
+lr_v4tail group
+group = add group 2
+if ne i n
+ret false
+end
+else
+value = lr_hexgroup part
+if lt value 0
+ret false
+end
+put lr_v6 group ushort value
+group = add group 1
+end
+if lt i n
+i = add i 1
+if eq i n
+ret false
+end
+if eq lr_char host i 58
+if ge hole 0
+ret false
+end
+hole = long group
+i = add i 1
+end
+end
+end
+if ge hole 0
+if ge group 8
+ret false
+end
+shift = sub 8 group
+for j ulong sub group ulong hole
+src = sub sub group j 1
+put lr_v6 add src shift get lr_v6 src
+end
+for j ulong shift
+put lr_v6 add ulong hole j 0
+end
+else
+if ne group 8
+ret false
+end
+end
+lr_v6addr port
+ret true
+end
+fn lr_hexgroup part ulong to long
+if or eq slen part 0 gt slen part 4
+ret -1
+end
+v = ulong 0
+for i ulong slen part
+d = sf_hexval lr_char part i
+if eq d 16
+ret -1
+end
+v = add mul v 16 d
+end
+ret long v
+end
+fn lr_v6addr port ulong to void
+for i ulong len lr_addr
+put lr_addr i 0
+end
+put lr_addr 0 10
+put lr_addr 2 uchar shr port 8
+put lr_addr 3 uchar and port 255
+for i ulong 8
+v = get lr_v6 i
+put lr_addr add 8 mul i 2 uchar shr v 8
+put lr_addr add 9 mul i 2 uchar and v 255
+end
+put lr_net 3 28
+put lr_net 4 10
+end
+fn lr_literal host ulong port ulong to bool
+for i ulong slen host
+if eq lr_char host i 58
+ret lr_scoped6 host port
+end
+end
+ret lr_ipv4 host port
+end
+text lr_hosts "/etc/hosts"
+text lr_rconf "/etc/resolv.conf"
+text lr_ns "nameserver"
+text lr_dot "."
+text lr_colon ":"
+global lr_dns uchar 65536
+global lr_query uchar 512
+global lr_dnst ulong 8
+global lr_nserv ulong 3
+global lr_srch ulong 6
+global lr_opts ulong 5
+note DNS state: query bytes0, reply bytes1, transaction2, question-end3, answer address start4,
+note answer type5, nameserver count6, errno7. UDP responses retry with TCP when truncated.
+fn lr_text s view uchar 512 n ulong to ulong
+p = get sp 0
+for i ulong n
+sbyte get s i
+end
+ret sdone p
+end
+fn lr_ci a ulong b ulong to bool
+if ne slen a slen b
+ret false
+end
+for i ulong slen a
+if ne sf_hlower lr_char a i sf_hlower lr_char b i
+ret false
+end
+end
+ret true
+end
+fn lr_hostline line ulong host ulong port ulong to bool
+i = ulong 0
+while and lt i slen line swhite lr_char line i
+i = add i 1
+end
+start = i
+while and lt i slen line not swhite lr_char line i
+i = add i 1
+end
+addr = ssub line start sub i start
+while lt i slen line
+while and lt i slen line swhite lr_char line i
+i = add i 1
+end
+start = i
+while and lt i slen line not swhite lr_char line i
+if eq lr_char line i 35
+ret false
+end
+i = add i 1
+end
+if lr_ci ssub line start sub i start host
+ret lr_literal addr port
+end
+end
+ret false
+end
+fn lr_hosts_lookup host ulong port ulong to bool
+p = get sp 0
+file = fopen lr_hosts 0 len lr_hosts 524288 0
+if lt file 0
+ret false
+end
+n = read int file lr_dns 0 len lr_dns
+closed = fclose int file
+if le n 0
+ret false
+end
+for i ulong ulong n
+sbyte get lr_dns i
+end
+textval = sdone p
+start = ulong 0
+for i ulong add slen textval 1
+split = eq i slen textval
+if not split
+split = eq lr_char textval i 10
+end
+if split
+line = ssub textval start sub i start
+if lr_hostline line host port
+ret true
+end
+start = add i 1
+end
+end
+ret false
+end
+fn lr_nameservers to bool
+put lr_dnst 6 0
+put lr_opts 0 0
+put lr_opts 1 1
+put lr_opts 2 2
+put lr_opts 3 get lr_cfg 12
+put lr_opts 4 0
+file = fopen lr_rconf 0 len lr_rconf 524288 0
+if lt file 0
+ret false
+end
+n = read int file lr_dns 0 len lr_dns
+closed = fclose int file
+if le n 0
+ret false
+end
+p = get sp 0
+for i ulong ulong n
+sbyte get lr_dns i
+end
+s = sdone p
+start = ulong 0
+for i ulong add slen s 1
+split = eq i slen s
+if not split
+split = eq lr_char s i 10
+end
+if split
+lr_resolvline strim ssub s start sub i start
+start = add i 1
+end
+end
+ret gt get lr_dnst 6 0
+end
+fn lr_nsline line ulong to void
+if lt slen line 11
+ret
+end
+for i ulong len lr_ns
+if ne lr_char line i get lr_ns i
+ret
+end
+end
+if not swhite lr_char line 10
+ret
+end
+i = ulong 11
+while and lt i slen line swhite lr_char line i
+i = add i 1
+end
+start = i
+while and lt i slen line not swhite lr_char line i
+i = add i 1
+end
+n = get lr_dnst 6
+if lt n len lr_nserv
+put lr_nserv n ssub line start sub i start
+put lr_dnst 6 add n 1
+end
+end
+fn lr_qbuild host ulong kind ulong to bool
+if or eq slen host 0 gt slen host 253
+ret false
+end
+for i ulong 12
+put lr_query i 0
+end
+id = and ulong monons 65535
+put lr_dnst 2 id
+put lr_query 0 uchar shr id 8
+put lr_query 1 uchar and id 255
+put lr_query 2 1
+put lr_query 5 1
+p = ulong 12
+start = ulong 0
+for i ulong add slen host 1
+split = eq i slen host
+if not split
+split = eq lr_char host i 46
+end
+if split
+n = sub i start
+if eq n 0
+if ne i slen host
+ret false
+end
+else
+if gt n 63
+ret false
+end
+put lr_query p uchar n
+p = add p 1
+if not lr_qlabel host start n p
+ret false
+end
+p = add p n
+end
+start = add i 1
+end
+end
+put lr_query p 0
+put lr_query add p 1 0
+put lr_query add p 2 uchar kind
+put lr_query add p 3 0
+put lr_query add p 4 1
+put lr_dnst 0 add p 5
+put lr_dnst 3 add p 5
+ret true
+end
+fn lr_dns_udp ns ulong to bool
+if not lr_literal ns 53
+ret false
+end
+fd = socknew int get lr_net 4 526338 0
+if lt fd 0
+ret false
+end
+r = connect int fd lr_addr 0 get lr_net 3
+if ne r 0
+closed = fclose int fd
+ret false
+end
+ok = lr_dns_udp_fd int fd
+closed = fclose int fd
+ret ok
+end
+fn lr_dn16 p ulong to ulong
+ret or shl ulong get lr_dns p 8 ulong get lr_dns add p 1
+end
+fn lr_dns_skip p ulong to long
+for step ulong 128
+if ge p get lr_dnst 1
+ret -1
+end
+c = get lr_dns p
+p = add p 1
+if eq c 0
+ret long p
+end
+if eq and c 192 192
+if ge p get lr_dnst 1
+ret -1
+end
+ret long add p 1
+end
+if or gt c 63 gt ulong c sub get lr_dnst 1 p
+ret -1
+end
+p = add p ulong c
+end
+ret -1
+end
+fn lr_dns_parse kind ulong port ulong to bool
+if ne lr_dn16 0 get lr_dnst 2
+ret false
+end
+if eq and get lr_dns 2 128 0
+ret false
+end
+if ne and get lr_dns 3 15 0
+ret false
+end
+if ne lr_dn16 4 1
+ret false
+end
+if ne and get lr_dns 2 122 0
+ret false
+end
+if lt get lr_dnst 1 get lr_dnst 0
+ret false
+end
+for i ulong sub get lr_dnst 0 12
+if ne get lr_dns add i 12 get lr_query add i 12
+ret false
+end
+end
+q = lr_dns_skip 12
+if lt q 0
+ret false
+end
+p = add ulong q 4
+if gt p get lr_dnst 1
+ret false
+end
+if ne lr_dn16 ulong q kind
+ret false
+end
+for ans ulong lr_dn16 6
+q = lr_dns_skip p
+if lt q 0
+ret false
+end
+p = ulong q
+if gt add p 10 get lr_dnst 1
+ret false
+end
+size = lr_dn16 add p 8
+start = add p 10
+if gt add start size get lr_dnst 1
+ret false
+end
+if and eq lr_dn16 p kind eq lr_dn16 add p 2 1
+if and eq kind 1 eq size 4
+for i ulong len lr_addr
+put lr_addr i 0
+end
+put lr_addr 0 2
+put lr_addr 2 uchar shr port 8
+put lr_addr 3 uchar and port 255
+for i ulong 4
+put lr_addr add i 4 get lr_dns add start i
+end
+put lr_net 3 16
+put lr_net 4 2
+ret true
+end
+if and eq kind 28 eq size 16
+for i ulong 8
+put lr_v6 i ushort lr_dn16 add start mul i 2
+end
+lr_v6addr port
+ret true
+end
+end
+p = add start size
+end
+ret false
+end
+fn lr_resolve host ulong port ulong to bool
+for i ulong slen host
+if eq lr_char host i 58
+ret lr_scoped6 host port
+end
+end
+if lr_literal host port
+ret true
+end
+if lr_hosts_lookup host port
+ret true
+end
+if not lr_nameservers
+ret false
+end
+ret lr_search_dns host port
+end
+fn lr_dnsname host ulong port ulong to bool
+for retry ulong get lr_opts 2
+if lr_dns_type host port 1
+ret true
+end
+if lr_dns_type host port 28
+ret true
+end
+end
+ret false
+end
+fn lr_dns_type host ulong port ulong kind ulong to bool
+if not lr_qbuild host kind
+ret false
+end
+start = ulong 0
+if eq get lr_opts 4 1
+start = rem ulong monons get lr_dnst 6
+end
+for server ulong get lr_dnst 6
+idx = rem add start server get lr_dnst 6
+if lr_dns_server get lr_nserv idx kind port
+ret true
+end
+end
+ret false
+end
+fn lr_dns_server ns ulong kind ulong port ulong to bool
+if not lr_dns_udp ns
+ret false
+end
+if ne and get lr_dns 2 2 0
+if not lr_dns_tcp ns
+ret false
+end
+end
+ret lr_dns_parse kind port
+end
+fn lr_dns_tcp ns ulong to bool
+ret lr_dns_tcp_at ns 53
+end
+fn lr_dns_tcp_at ns ulong port ulong to bool
+if not lr_literal ns port
+ret false
+end
+fd = lr_open
+if lt fd 0
+ret false
+end
+n = get lr_dnst 0
+for i ulong n
+j = sub sub n i 1
+put lr_dns add j 2 get lr_query j
+end
+put lr_dns 0 uchar shr n 8
+put lr_dns 1 uchar and n 255
+deadline = add monons lr_dnsto
+ok = lr_dns_write int fd add n 2 deadline
+if ok
+ok = lr_dns_read int fd 0 2 deadline
+end
+if ok
+n = lr_dn16 0
+if lt n 12
+ok = false
+else
+ok = lr_dns_read int fd 0 n deadline
+if ok
+put lr_dnst 1 n
+end
+end
+end
+closed = fclose int fd
+ret ok
+end
+fn lr_dns_write fd int n ulong deadline long to bool
+p = ulong 0
+while lt p n
+r = send fd lr_dns p sub n p 0
+if gt r 0
+p = add p ulong r
+else
+if not or eq r -4 eq r -11
+ret false
+end
+if le lr_ready fd 4 deadline 0
+ret false
+end
+end
+end
+ret true
+end
+fn lr_dns_read fd int off ulong n ulong deadline long to bool
+p = ulong 0
+while lt p n
+r = recv fd lr_dns add off p sub n p 0
+if gt r 0
+p = add p ulong r
+else
+if not or eq r -4 eq r -11
+ret false
+end
+if le lr_ready fd 1 deadline 0
+ret false
+end
+end
+end
+ret true
+end
+fn lr_v4tail group ulong to void
+put lr_v6 group or shl ushort get lr_addr 4 8 ushort get lr_addr 5
+put lr_v6 add group 1 or shl ushort get lr_addr 6 8 ushort get lr_addr 7
+end
+fn lr_qlabel host ulong start ulong n ulong p ulong to bool
+for j ulong n
+c = lr_char host add start j
+if or le c 32 ge c 127
+ret false
+end
+put lr_query add p j c
+end
+ret true
+end
+fn lr_char s ulong i ulong to uchar
+if ge i slen s
+ret 0
+end
+ret schar s i
+end
+text lr_ifdir "/sys/class/net/"
+text lr_ifidx "/ifindex"
+fn lr_scoped6 host ulong port ulong to bool
+for i ulong slen host
+if eq lr_char host i 37
+if not lr_ipv6 ssub host 0 i port
+ret false
+end
+zone = ssub host add i 1 sub slen host add i 1
+if not lr_zonevalid zone
+ret false
+end
+idx = lr_number zone
+if lt idx 0
+p = get sp 0
+for j ulong len lr_ifdir
+sbyte get lr_ifdir j
+end
+sappend zone
+for j ulong len lr_ifidx
+sbyte get lr_ifidx j
+end
+path = sdone p
+file = ftext path
+if lt file 0
+ret false
+end
+idx = lr_number strim ulong file
+end
+if or le idx 0 gt idx 4294967295
+ret false
+end
+lr_scope_set ulong idx
+ret true
+end
+end
+ret lr_ipv6 host port
+end
+fn lr_scope_set idx ulong to void
+for j ulong 4
+put lr_addr add 24 j uchar and shr idx mul j 8 255
+end
+end
+fn lr_dns_udp_fd fd int to bool
+r = send fd lr_query 0 get lr_dnst 0 0
+if ne r long get lr_dnst 0
+ret false
+end
+deadline = add monons lr_dnsto
+r = lr_ready fd 1 deadline
+if gt r 0
+r = recv fd lr_dns 0 len lr_dns 0
+end
+if lt r 12
+ret false
+end
+put lr_dnst 1 ulong r
+ret true
+end
+fn lr_word line ulong want ulong to ulong
+i = ulong 0
+idx = ulong 0
+while lt i slen line
+while and lt i slen line swhite lr_char line i
+i = add i 1
+end
+start = i
+while and lt i slen line not swhite lr_char line i
+if eq lr_char line i 35
+ret ssub line 0 0
+end
+i = add i 1
+end
+if eq idx want
+ret ssub line start sub i start
+end
+idx = add idx 1
+end
+ret ssub line 0 0
+end
+fn lr_resolvline line ulong to void
+lr_nsline line
+key = lr_word line 0
+if or seq key lr_L 202 seq key lr_L 203
+put lr_opts 0 0
+for i ulong 6
+word = lr_word line add i 1
+if eq slen word 0
+ret
+end
+put lr_srch i word
+put lr_opts 0 add i 1
+if seq key lr_L 203
+ret
+end
+end
+end
+if seq key lr_L 204
+for i ulong 32
+word = lr_word line add i 1
+if eq slen word 0
+ret
+end
+lr_resolvopt word
+end
+end
+end
+fn lr_resolvopt word ulong to void
+for i ulong 3
+prefix = lr_L add 205 i
+if sstarts word prefix
+n = lr_number ssub word slen prefix sub slen word slen prefix
+if lt n 0
+ret
+end
+if eq i 0
+if gt n 15
+n = 15
+end
+put lr_opts 1 ulong n
+end
+if eq i 1
+if and gt n 0 le n 5
+put lr_opts 2 ulong n
+end
+end
+if eq i 2
+if and gt n 0 le n 30
+put lr_opts 3 mul ulong n 1000000000
+end
+end
+ret
+end
+end
+if seq word lr_L 208
+put lr_opts 4 1
+end
+end
+fn lr_search_dns host ulong port ulong to bool
+if eq lr_char host sub slen host 1 46
+ret lr_dnsname host port
+end
+dots = ulong 0
+for i ulong slen host
+if eq lr_char host i 46
+dots = add dots 1
+end
+end
+first = ge dots get lr_opts 1
+if first
+if lr_dnsname host port
+ret true
+end
+end
+for i ulong get lr_opts 0
+cand = scat3 host L_dot get lr_srch i
+if lr_dnsname cand port
+ret true
+end
+end
+if not first
+ret lr_dnsname host port
+end
+ret false
+end
+fn lr_dnsto to long
+if eq get lr_opts 3 0
+ret long get lr_cfg 12
+end
+ret long get lr_opts 3
+end
+fn lr_zonevalid zone ulong to bool
+if or eq slen zone 0 gt slen zone 15
+ret false
+end
+for i ulong slen zone
+c = lr_char zone i
+if not or and ge c 48 le c 57 and ge sf_hlower c 97 le sf_hlower c 122
+if not or eq c 95 or eq c 45 eq c 46
+ret false
+end
+end
+end
+ret true
+end

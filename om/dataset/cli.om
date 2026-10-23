@@ -1,0 +1,165 @@
+note Offline dataset CLI. Each command validates the complete model before rendering or writing.
+text dcwords "data/benchmarks_latest.json\nassets\nreport\nverify\ngenerate\nsync-docs\n--input\n-i\n--output\n-o\n--target\n-t\n--check\n--help\n-h\n"
+text dcusage "Usage: bench-dataset [-i FILE] [report|verify|generate [-o DIR]|sync-docs [-t FILE]... [--check]]\n"
+global dcpool ulong 1
+global dconfig ulong 5
+global dtargets ulong 1024
+fn dcword i ulong to ulong
+ret dsline get dcpool 0 i
+end
+fn dcinit to void
+for i ulong len dconfig
+put dconfig i 0
+end
+p = get sp 0
+for i ulong len dcwords
+sbyte get dcwords i
+end
+put dcpool 0 sdone p
+put dconfig 0 dcword 0
+put dconfig 1 dcword 1
+put dconfig 2 2
+end
+fn dcset option ulong value ulong to bool
+if or seq option dcword 6 seq option dcword 7
+put dconfig 0 value
+ret true
+end
+if or seq option dcword 8 seq option dcword 9
+if ne get dconfig 2 4
+ret false
+end
+put dconfig 1 value
+ret true
+end
+if or seq option dcword 10 seq option dcword 11
+if ne get dconfig 2 5
+ret false
+end
+n = get dconfig 4
+if eq n len dtargets
+ret false
+end
+put dtargets n value
+put dconfig 4 add n 1
+ret true
+end
+ret false
+end
+fn dcargs start ulong to bool
+i = start
+seen = false
+while lt i ulong argcnt
+arg = sarg i
+if or seq arg dcword 13 seq arg dcword 14
+r = write 1 dcusage 0 len dcusage
+exit 0
+end
+matched = false
+for c ulong 4
+if seq arg dcword add c 2
+if seen
+ret false
+end
+put dconfig 2 add c 2
+seen = true
+matched = true
+end
+end
+if not matched
+if seq arg dcword 12
+if ne get dconfig 2 5
+ret false
+end
+put dconfig 3 1
+else
+split = long -1
+for k ulong slen arg
+if and lt split 0 eq schar arg k 61
+split = long k
+end
+end
+if ge split 0
+option = ssub arg 0 ulong split
+value = ssub arg add ulong split 1 sub slen arg add ulong split 1
+if not dcset option value
+ret false
+end
+else
+i = add i 1
+if ge i ulong argcnt
+ret false
+end
+if not dcset arg sarg i
+ret false
+end
+end
+end
+end
+i = add i 1
+end
+ret true
+end
+fn dcdispatch to int
+command = get dconfig 2
+if eq command 2
+swrite 1 dreport
+ret 0
+end
+if eq command 3
+if not dverify
+ret 1
+end
+swrite 1 drword 32
+swrite 1 L_newline
+ret 0
+end
+if eq command 4
+if not dgenerate get dconfig 1
+ret 74
+end
+ret 0
+end
+table = dmarkdown
+n = get dconfig 4
+if eq n 0
+put dtargets 0 dmword 19
+put dtargets 1 dmword 20
+n = ulong 2
+end
+ok = true
+for i ulong n
+if not dsync get dtargets i table ne get dconfig 3 0
+ok = false
+end
+end
+if not ok
+ret 1
+end
+ret 0
+end
+note Caller initializes the shared string arena with sinit once before calling.
+note start is the first relevant argv index, including the subcommand when present.
+note input is an optional existing arena handle; zero selects the historical default path.
+fn ds_main start ulong input ulong to int
+put fr 0 L_dot
+dsinit
+drinit
+dminit
+dxinit
+dcinit
+if ne input 0
+put dconfig 0 input
+end
+if not dcargs start
+r = write 2 dcusage 0 len dcusage
+ret 64
+end
+if not jread get dconfig 0
+ret 65
+end
+if not dmodel
+ret 65
+end
+ret dcdispatch
+end

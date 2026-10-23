@@ -1,0 +1,415 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Pure request accounting. One active request; caller preserves completed samples.
+note Uses sf_ framing, JSON tree and jlookup/jkind/junsigned helpers.
+note Call ac_init after string arena initialization once; ac_reset per request.
+note ac_s slots: 0 index, 1 start ns, 2 finished, 3 outcome, 4 failure present,
+note 5 reads, 6 bytes, 7 first-byte present, 8 first-byte offset ns,
+note 9 head present, 10 head offset ns, 11 HTTP status,
+note 12 first-content present, 13 first-content offset, 14 last-content offset,
+note 15 completion present, 16 completion offset, 17 done seen,
+note 18 content count, 19 noncontent count, 20 error count, 21 malformed count,
+note 22 completion-usage present, 23 completion tokens, 24 prompt-usage present,
+note 25 prompt tokens, 26 event count, 27 raw error-body bytes,
+note 28 SSE comments, 29 ignored lines, 30 invalid UTF8 lines, 31 empty dispatches,
+note 32 detail code (framing error on malformed failure), 33 finalized,
+note 34 connect-time present, 35 connect offset ns, 36 coalesced content events,
+note 37 prior-content read, 38 prior-content offset ns.
+note Outcomes mirror Rust enum ordinal: 0 complete, 1 connect, 2 write, 3 read,
+note 4 timeout, 5 malformed, 6 truncated head, 7 HTTP status, 8 stream error,
+note 9 truncated body, 10 zero events, 11 missing done, 12 no content.
+note Event kinds: 0 content, 1 noncontent, 2 done, 3 error, 4 malformed.
+note ac_c classification: kind, completion present/value, prompt present/value.
+global ac_s ulong 39
+global ac_c ulong 5
+global ac_key ulong 10
+global ac_at ulong 65536
+global ac_ri ulong 65536
+global ac_kind uchar 65536
+global ac_gap ulong 65536
+global ac_err uchar 65536
+text ac_keys "error~usage~completion_tokens~prompt_tokens~choices~delta~content~reasoning_content~text~"
+text ac_done "[DONE]"
+text ac_ename "error"
+fn ac_init to void
+p = get sp 0
+k = ulong 0
+for i ulong len ac_keys
+c = get ac_keys i
+if eq c 126
+put ac_key k sdone p
+k = add k 1
+p = get sp 0
+else
+sbyte c
+end
+end
+end
+fn ac_reset index ulong start ulong to void
+for i ulong len ac_s
+put ac_s i 0
+end
+put ac_s 0 index
+put ac_s 1 start
+put ac_s 3 3
+sf_hreset
+sf_sreset
+end
+fn ac_offset at ulong to ulong
+if lt at get ac_s 1
+ret 0
+end
+ret sub at get ac_s 1
+end
+fn ac_fail outcome ulong detail ulong to void
+if eq get ac_s 4 0
+put ac_s 4 1
+put ac_s 3 outcome
+put ac_s 32 detail
+end
+put ac_s 2 1
+end
+fn ac_eof to void
+put ac_s 2 1
+end
+fn ac_nonempty token long to bool
+if not jkind token 3
+ret false
+end
+ret gt get jl ulong token 0
+end
+fn ac_choices choices long to bool
+if not jkind choices 2
+ret false
+end
+t = add ulong choices 1
+while lt t get jn ulong choices
+d = jlookup long t get ac_key 5
+if ac_nonempty jlookup d get ac_key 6
+ret true
+end
+if ac_nonempty jlookup d get ac_key 7
+ret true
+end
+if ac_nonempty jlookup long t get ac_key 8
+ret true
+end
+t = get jn t
+end
+ret false
+end
+fn ac_isdone p ulong n ulong to bool
+z = add p n
+k = ac_ws p z
+while gt k 0
+p = add p k
+k = ac_ws p z
+end
+if lt sub z p len ac_done
+ret false
+end
+for i ulong len ac_done
+if ne get sf_so add p i get ac_done i
+ret false
+end
+end
+p = add p len ac_done
+while lt p z
+k = ac_ws p z
+if eq k 0
+ret false
+end
+p = add p k
+end
+ret true
+end
+fn ac_iserror ev ulong to bool
+if eq get sf_sk ev 0
+ret false
+end
+if ne get sf_sn ev len ac_ename
+ret false
+end
+p = add get sf_sa ev get sf_sz ev
+for i ulong len ac_ename
+if ne get sf_so add p i get ac_ename i
+ret false
+end
+end
+ret true
+end
+fn ac_usage to void
+u = jlookup 0 get ac_key 1
+t = jlookup u get ac_key 2
+if junsigned t
+put ac_c 1 1
+put ac_c 2 get js 5
+end
+t = jlookup u get ac_key 3
+if junsigned t
+put ac_c 3 1
+put ac_c 4 get js 5
+end
+end
+fn ac_classify ev ulong to bool
+for i ulong len ac_c
+put ac_c i 0
+end
+put ac_c 0 4
+p = get sf_sa ev
+n = get sf_sz ev
+if gt n len jb
+ret false
+end
+if ac_isdone p n
+put ac_c 0 2
+ret true
+end
+err = ac_iserror ev
+if err
+put ac_c 0 3
+end
+for i ulong n
+put jb i get sf_so add p i
+end
+if not jparse n
+ret true
+end
+if not jkind 0 1
+ret true
+end
+t = jlookup 0 get ac_key 0
+if ge t 0
+if not jkind t 7
+err = true
+end
+end
+if err
+put ac_c 0 3
+ret true
+end
+ac_usage
+put ac_c 0 1
+if ac_choices jlookup 0 get ac_key 4
+put ac_c 0 0
+end
+ret true
+end
+fn ac_content at ulong ri ulong to void
+n = get ac_s 18
+if eq n 0
+put ac_s 12 1
+put ac_s 13 at
+else
+gap = ulong 0
+if ge at get ac_s 38
+gap = sub at get ac_s 38
+end
+put ac_gap sub n 1 gap
+if eq ri get ac_s 37
+put ac_s 36 add get ac_s 36 1
+end
+end
+put ac_s 18 add n 1
+put ac_s 14 at
+put ac_s 37 ri
+put ac_s 38 at
+end
+fn ac_record ev ulong to bool
+n = get ac_s 26
+if ge n len ac_at
+ac_fail 5 8
+ret false
+end
+if not ac_classify ev
+ac_fail 5 8
+ret false
+end
+at = ac_offset get sf_st ev
+ri = get sf_si ev
+kind = get ac_c 0
+put ac_at n at
+put ac_ri n ri
+put ac_kind n uchar kind
+put ac_s 26 add n 1
+if eq get ac_c 1 1
+put ac_s 22 1
+put ac_s 23 get ac_c 2
+end
+if eq get ac_c 3 1
+put ac_s 24 1
+put ac_s 25 get ac_c 4
+end
+if eq kind 0
+ac_content at ri
+end
+if eq kind 1
+put ac_s 19 add get ac_s 19 1
+end
+if eq kind 3
+put ac_s 20 add get ac_s 20 1
+end
+if eq kind 4
+put ac_s 21 add get ac_s 21 1
+end
+if eq kind 2
+put ac_s 17 1
+put ac_s 15 1
+put ac_s 16 at
+put ac_s 2 1
+end
+ret true
+end
+fn ac_errorbody to void
+p = get ac_s 27
+room = sub len ac_err p
+n = get sf_hs 8
+if gt n room
+n = room
+end
+for i ulong n
+put ac_err add p i get sf_ho i
+end
+put ac_s 27 add p n
+if or eq get sf_hs 7 1 eq room 0
+put ac_s 2 1
+end
+end
+fn ac_feed off ulong count ulong at ulong to void
+if eq get ac_s 2 1
+ret
+end
+ri = get ac_s 5
+put ac_s 5 add ri 1
+put ac_s 6 add get ac_s 6 count
+if and eq get ac_s 7 0 gt count 0
+put ac_s 7 1
+put ac_s 8 ac_offset at
+end
+sf_hclear
+if not sf_hfeed off count
+ac_fail 5 get sf_hs 0
+ret
+end
+if eq get sf_hs 2 0
+ret
+end
+if eq get ac_s 9 0
+put ac_s 9 1
+put ac_s 10 ac_offset at
+put ac_s 11 get sf_hs 3
+end
+if not sf_hsuccess
+ac_errorbody
+ret
+end
+sf_sclear
+if not sf_body_to_sse at ri
+ac_fail 5 get sf_ss 0
+ret
+end
+i = ulong 0
+while and lt i get sf_ss 10 eq get ac_s 2 0
+if not ac_record i
+ret
+end
+i = add i 1
+end
+if eq get sf_hs 7 1
+put ac_s 2 1
+end
+end
+fn ac_outcome to ulong
+if eq get ac_s 4 1
+ret get ac_s 3
+end
+if eq get ac_s 9 0
+ret 6
+end
+if not sf_hsuccess
+ret 7
+end
+if gt get ac_s 20 0
+ret 8
+end
+if eq get ac_s 17 1
+if eq get ac_s 18 0
+ret 12
+end
+ret 0
+end
+if or not sf_heof sf_spending
+ret 9
+end
+if eq get ac_s 26 0
+ret 10
+end
+ret 11
+end
+fn ac_finish to ulong
+put ac_s 28 get sf_ss 6
+put ac_s 29 get sf_ss 7
+put ac_s 30 get sf_ss 8
+put ac_s 31 get sf_ss 9
+outcome = ac_outcome
+put ac_s 3 outcome
+if ne outcome 0
+put ac_s 15 0
+put ac_s 16 0
+end
+put ac_s 33 1
+put ac_s 2 1
+ret outcome
+end
+fn ac_complete to bool
+ret and eq get ac_s 33 1 eq get ac_s 3 0
+end
+note Unicode White_Space accepted by Rust str::trim on the DONE sentinel.
+fn ac_ws p ulong z ulong to ulong
+if ge p z
+ret 0
+end
+c = get sf_so p
+if or eq c 32 and ge c 9 le c 13
+ret 1
+end
+n = sub z p
+if lt n 2
+ret 0
+end
+b = get sf_so add p 1
+if eq c 194
+if or eq b 133 eq b 160
+ret 2
+end
+end
+if lt n 3
+ret 0
+end
+d = get sf_so add p 2
+if and eq c 225 eq b 154
+if eq d 128
+ret 3
+end
+end
+if eq c 226
+if eq b 128
+if or and ge d 128 le d 138 or eq d 168 or eq d 169 eq d 175
+ret 3
+end
+end
+if and eq b 129 eq d 159
+ret 3
+end
+end
+if and eq c 227 eq b 128
+if eq d 128
+ret 3
+end
+end
+ret 0
+end
+note Optional observation provided by network caller after connection establishment.
+fn ac_connected at ulong to void
+put ac_s 34 1
+put ac_s 35 ac_offset at
+end

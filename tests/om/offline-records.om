@@ -1,0 +1,80 @@
+note Native checker unit-case qualification. Fixture numbers are parser test inputs only.
+text cases "tests/fixtures/native-records"
+text txtend ".txt"
+fn casepath to ulong
+p = get sp 0
+for i ulong len cases
+sbyte get cases i
+end
+ret sdone p
+end
+fn textext to ulong
+p = get sp 0
+for i ulong len txtend
+sbyte get txtend i
+end
+ret sdone p
+end
+fn expected path ulong raw ulong to ulong
+p = get sp 0
+start = ulong 0
+for i ulong slen raw
+if eq schar raw i 10
+sappend path
+sappend L_colon
+sappend ssub raw start sub i start
+sappend L_newline
+start = add i 1
+end
+end
+ret sdone p
+end
+fn checkcase checker ulong path ulong to bool
+wantfile = scat ssub path 0 sub slen path 5 textext
+raw = ftext wantfile
+if lt raw 0
+ret false
+end
+want = expected path ulong raw
+preset
+parg checker
+parg path
+r = pcapture
+code = long 0
+if ne slen want 0
+code = long 1
+end
+if ne get pmeta 0 code
+ret false
+end
+if not seq want ulong get pmeta 1
+swrite 2 path
+swrite 2 L_newline
+swrite 2 ulong get pmeta 1
+ret false
+end
+ret true
+end
+fn main to int
+sinit
+put fr 0 L_dot
+if not fwalk casepath
+ret 2
+end
+fsort
+checker = sarg 1
+count = ulong 0
+for i ulong get fcounts 0
+path = get ffiles i
+if sends path L_json
+if not checkcase checker path
+ret 1
+end
+count = add count 1
+end
+end
+if ne count 16
+ret 3
+end
+ret 0
+end

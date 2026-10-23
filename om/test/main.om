@@ -1,0 +1,152 @@
+note Complete native qualification coordinator. Failed stages are retained for diagnosis.
+text twords "build/om/om-build\nbuild/om/\noutput\ninput\nfirst\nsecond\ntests/om/reference.sha256\ntest-reference\nreference.out\nprime-reference\nom-sha256\n.json\ntest-json\n"
+text suites "test-sha256\ntest-json-api\ntest-json-grammar\ntest-json-write\ntest-stats\ntest-finite\ntest-double-ops\ntest-decimal\ntest-decimal-fixed\n"
+text passmsg "Native qualification passed.\n"
+text failmsg "Native qualification failed; retained test files: "
+fn tinit to void
+p = get sp 0
+for i ulong len twords
+sbyte get twords i
+end
+put tstate 2 sdone p
+end
+fn tbin name ulong to ulong
+ret scat tconstant 1 name
+end
+fn tbuild to bool
+preset
+parg tconstant 0
+parg get tstate 1
+ret eq trun tnullpath tpath tconstant 2 false 0
+end
+fn tsuites to bool
+p = get sp 0
+for i ulong len suites
+sbyte get suites i
+end
+pool = sdone p
+for i ulong 9
+name = tline pool i
+preset
+parg tbin name
+if ne trun tnullpath tpath tconstant 2 false 0
+swrite 2 name
+swrite 2 L_newline
+ret false
+end
+end
+ret true
+end
+fn troundtrip path ulong to bool
+preset
+parg tbin tconstant 12
+if ne trun path tpath tconstant 4 false 0
+ret false
+end
+preset
+parg tbin tconstant 12
+if ne trun tpath tconstant 4 tpath tconstant 5 false 0
+ret false
+end
+a = fhash tpath tconstant 4
+b = fhash tpath tconstant 5
+ret and and ge a 0 ge b 0 seq ulong a ulong b
+end
+fn tjsons paths ulong to bool
+start = ulong 0
+count = ulong 0
+for i ulong slen paths
+if eq schar paths i 0
+path = ssub paths start sub i start
+if sends path tconstant 11
+mark = get sp 0
+if not troundtrip path
+swrite 2 path
+swrite 2 L_newline
+ret false
+end
+put sp 0 mark
+count = add count 1
+end
+start = add i 1
+end
+end
+ret and gt count 0 eq start slen paths
+end
+fn treference to bool
+preset
+parg tbin tconstant 7
+if ne trun tnullpath tpath tconstant 8 false 0
+ret false
+end
+actual = fhash tpath tconstant 8
+if lt actual 0
+ret false
+end
+want = tload tconstant 6
+ret seq ulong actual ssub want 0 64
+end
+fn tfail code int to int
+r = write 2 failmsg 0 len failmsg
+swrite 2 get tstate 0
+swrite 2 L_newline
+ret code
+end
+fn main to int
+if ne argcnt 2
+ret 64
+end
+sinit
+put fr 0 L_dot
+put tstate 1 sarg 1
+tinit
+ginit
+if not tstage
+ret 74
+end
+if not tbuild
+ret tfail 1
+end
+if not tsuites
+ret tfail 2
+end
+if not thashes
+ret tfail 3
+end
+if not and tguardnames tguardshebang
+ret tfail 4
+end
+paths = gtracked
+if not gcheck paths
+ret tfail 4
+end
+if not tjsons paths
+ret tfail 5
+end
+if not tmeasurement
+ret tfail 6
+end
+if not tmutants
+ret tfail 7
+end
+if not treference
+ret tfail 8
+end
+if not tprimes
+ret tfail 9
+end
+if not tprimefiles
+ret tfail 10
+end
+if not tprocess
+ret tfail 11
+end
+if not toffline
+ret tfail 12
+end
+if not tcleanup
+ret tfail 13
+end
+r = write 1 passmsg 0 len passmsg
+ret 0
+end

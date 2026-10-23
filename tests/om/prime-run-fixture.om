@@ -1,0 +1,114 @@
+note Native contract test fixture. Fixed timing fields are test data, never benchmark measurements.
+text pfwords "--limit~--min-seconds~--bitmap-out~--report-out~--audit-passes~audit~timed~aien-fixture;2;0.002000;1;algorithm=base,faithful=yes,bits=1\n~{\"schema\":\"aien-prime-race/impl-report/v1\",\"impl\":\"fixture\",\"label\":\"aien-fixture\",\"algorithm\":\"base\",\"faithful\":\"yes\",\"bits\":1,\"threads\":1,\"environment\":\"contract-test-fixture\",\"status\":\"COMPLETE\",\"elapsed_s\":0.002,\"min_seconds\":0.001,\"build\":{},\"detail\":{\"test_fixture\":true},\"limit\":~ ,\"passes\":~ ,\"mode\":\"~\"}\n~bad~"
+global pfcache ulong 13
+global pfargs ulong 5
+global pfbitmap uchar 1024
+fn pfinit to void
+p = get sp 0
+n = ulong 0
+for i ulong len pfwords
+c = get pfwords i
+if eq c 126
+put pfcache n sdone p
+n = add n 1
+p = get sp 0
+else
+sbyte c
+end
+end
+end
+fn pflit i ulong to ulong
+ret get pfcache i
+end
+fn pfprime n ulong to bool
+if lt n 2
+ret false
+end
+d = ulong 2
+while le d div n d
+if eq rem n d 0
+ret false
+end
+d = add d 1
+end
+ret true
+end
+fn pffile path ulong to int
+fd = fopen sb soff path slen path 524481 384
+if lt fd 0
+exit 74
+end
+ret int fd
+end
+fn main to int
+sinit
+pfinit
+for i ulong div sub ulong argcnt 1 2
+key = sarg add mul i 2 1
+value = sarg add mul i 2 2
+for j ulong 5
+if seq key pflit j
+put pfargs j value
+end
+end
+end
+if not tgdecimal get pfargs 0
+ret 64
+end
+limit = get tgnum 0
+if gt limit 10000
+ret 64
+end
+odds = div add limit 1 2
+size = mul div add odds 63 64 8
+for k ulong odds
+if pfprime add mul k 2 1
+old = get pfbitmap div k 8
+put pfbitmap div k 8 or old uchar shl ulong 1 rem k 8
+end
+end
+if ge sfind sarg 0 pflit 12 0
+put pfbitmap 0 xor get pfbitmap 0 1
+end
+passes = ulong 2
+audit = ne get pfargs 4 0
+if audit
+if not tgdecimal get pfargs 4
+ret 64
+end
+passes = get tgnum 0
+end
+fd = pffile get pfargs 2
+count = ulong 1
+if audit
+count = passes
+end
+for pass ulong count
+p = ulong 0
+while lt p size
+w = write fd pfbitmap p sub size p
+if le w 0
+ret 74
+end
+p = add p ulong w
+end
+end
+r = fclose fd
+fd = pffile get pfargs 3
+swrite fd pflit 8
+swrite fd suint limit
+swrite fd pflit 9
+swrite fd suint passes
+swrite fd pflit 10
+mode = pflit 6
+if audit
+mode = pflit 5
+end
+swrite fd mode
+swrite fd pflit 11
+r = fclose fd
+if not audit
+swrite 1 pflit 7
+end
+ret 0
+end

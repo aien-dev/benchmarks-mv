@@ -1,0 +1,368 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Native prime_race CLI. Limits: 16 implementations, 256 trials/warmups, 4096 audit passes.
+text rcwords "verify~run~--impl~--name~--declare~--limits~--audit-passes~--trials~--warmup~--limit~--min-seconds~--evidence-dir~--runner-commit~--quiet-flag-file~--source~--build~--help~-h~prime_race verify --impl PATH --name NAME --declare TAGS [--limits LIST] [--audit-passes K]\nprime_race run --impl NAME=PATH --declare NAME=TAGS --evidence-dir DIR [--source NAME=REPO@COMMIT] [--build NAME=COMMAND] [--trials N] [--warmup N] [--limit N] [--min-seconds S] [--audit-passes K] [--runner-commit COMMIT] [--quiet-flag-file PATH]\n~invalid or unsupported arguments\n~/proc/self/environ~HOME=~workspace/.spark-quiet~"
+global rccache ulong 23
+note rcstate: argc, mode 0 verify 1 run, declaration count, source count, build count.
+global rcimps ulong 16
+global rcdecls ulong 64
+global rcsrcs ulong 64
+global rcbuilds ulong 64
+global rckv ulong 2
+global rcopts ulong 3
+note rcopts: verify name, verify tags, limits text.
+fn rcinit to void
+p = get sp 0
+n = ulong 0
+for i ulong len rcwords
+c = get rcwords i
+if eq c 126
+put rccache n sdone p
+n = add n 1
+p = get sp 0
+else
+sbyte c
+end
+end
+end
+fn rclit i ulong to ulong
+ret get rccache i
+end
+fn rcsplit s ulong to bool
+for i ulong slen s
+if eq schar s i 61
+put rckv 0 ssub s 0 i
+put rckv 1 ssub s add i 1 sub slen s add i 1
+ret true
+end
+end
+ret false
+end
+fn rchome to ulong
+r = ftext rclit 20
+if lt r 0
+ret 0
+end
+s = ulong r
+start = ulong 0
+for i ulong add slen s 1
+split = eq i slen s
+if not split
+split = eq schar s i 0
+end
+if split
+part = ssub s start sub i start
+if sstarts part rclit 21
+ret ssub part 5 sub slen part 5
+end
+start = add i 1
+end
+end
+ret 0
+end
+fn rcdefaults to void
+put rrconf 0 0
+put rrconf 1 10
+put rrconf 2 1
+put rrconf 3 1000000
+put rrconf 4 df_from_u64 5
+put rrconf 5 5
+put rrconf 8 spath rchome rclit 22
+put rrconf 9 600000000000
+if eq get rcstate 1 0
+put rrconf 4 0
+put rrconf 5 3
+end
+end
+fn rcmap name ulong kind ulong to ulong
+value = ulong 0
+count = get rcstate kind
+for i ulong count
+entry = get rcdecls i
+if eq kind 3
+entry = get rcsrcs i
+end
+if eq kind 4
+entry = get rcbuilds i
+end
+if not rcsplit entry
+ret 0
+end
+if seq name get rckv 0
+value = get rckv 1
+end
+end
+ret value
+end
+fn rcoption key ulong value ulong to bool
+mode = get rcstate 1
+if seq key rclit 2
+n = get rrconf 0
+if ge n 16
+ret false
+end
+put rcimps n value
+put rrconf 0 add n 1
+ret true
+end
+if seq key rclit 3
+if ne mode 0
+ret false
+end
+put rcopts 0 value
+ret true
+end
+if seq key rclit 4
+if eq mode 0
+put rcopts 1 value
+else
+if not rcsplit value
+ret false
+end
+n = get rcstate 2
+if ge n 64
+ret false
+end
+put rcdecls n value
+put rcstate 2 add n 1
+end
+ret true
+end
+if seq key rclit 5
+if ne mode 0
+ret false
+end
+put rcopts 2 value
+ret true
+end
+if seq key rclit 6
+if not tgdecimal value
+ret false
+end
+n = get tgnum 0
+if or eq n 0 gt n 4096
+ret false
+end
+put rrconf 5 n
+ret true
+end
+if eq mode 0
+ret false
+end
+ret rcrunopt key value
+end
+fn rcrunopt key ulong value ulong to bool
+if seq key rclit 7
+if not tgdecimal value
+ret false
+end
+if gt get tgnum 0 256
+ret false
+end
+put rrconf 1 get tgnum 0
+ret true
+end
+if seq key rclit 8
+if not tgdecimal value
+ret false
+end
+if gt get tgnum 0 256
+ret false
+end
+put rrconf 2 get tgnum 0
+ret true
+end
+if seq key rclit 9
+if not tgdecimal value
+ret false
+end
+if gt get tgnum 0 10000000
+ret false
+end
+put rrconf 3 get tgnum 0
+ret true
+end
+if seq key rclit 10
+if not df_parse value
+ret false
+end
+bits = get dfstate 0
+if not df_finite bits
+ret false
+end
+if or le dfcmp bits 0 0 gt dfcmp bits df_from_u64 86400 0
+ret false
+end
+put rrconf 4 bits
+ret true
+end
+if seq key rclit 11
+put rrconf 6 value
+ret true
+end
+if seq key rclit 12
+put rrconf 7 value
+ret true
+end
+if seq key rclit 13
+put rrconf 8 value
+ret true
+end
+if or seq key rclit 14 seq key rclit 15
+if not rcsplit value
+ret false
+end
+kind = ulong 3
+if seq key rclit 15
+kind = ulong 4
+end
+n = get rcstate kind
+if ge n 64
+ret false
+end
+if eq kind 3
+put rcsrcs n value
+else
+put rcbuilds n value
+end
+put rcstate kind add n 1
+ret true
+end
+ret false
+end
+fn rcfinish to bool
+if eq get rrconf 0 0
+ret false
+end
+if eq get rcstate 1 0
+if ne get rrconf 0 1
+ret false
+end
+if or eq get rcopts 0 0 eq get rcopts 1 0
+ret false
+end
+put rrpath 0 get rcimps 0
+put rrname 0 get rcopts 0
+put rrdecl 0 get rcopts 1
+if ne tgparse get rrdecl 0 0
+ret false
+end
+if eq get rcopts 2 0
+if ne swdefault 0
+ret false
+end
+else
+if ne swparse get rcopts 2 0
+ret false
+end
+end
+for i ulong get swstate 0
+if gt get swvalues i 10000000
+ret false
+end
+end
+else
+if eq get rrconf 6 0
+ret false
+end
+for i ulong get rrconf 0
+if not rcsplit get rcimps i
+ret false
+end
+name = get rckv 0
+path = get rckv 1
+if or eq slen name 0 eq slen path 0
+ret false
+end
+for j ulong i
+if seq name get rrname j
+ret false
+end
+end
+put rrname i name
+put rrpath i path
+put rrdecl i rcmap name 2
+if eq get rrdecl i 0
+ret false
+end
+if ne tgparse get rrdecl i 0
+ret false
+end
+put rrsrc i rcmap name 3
+put rrbld i rcmap name 4
+end
+end
+put rrconf 12 df_to_json get rrconf 4
+rounded = df_to_fixed dfadd get rrconf 4 df_from_u64 1 0
+if not tgdecimal rounded
+ret false
+end
+seconds = add mul get tgnum 0 10 120
+if lt seconds 600
+seconds = ulong 600
+end
+put rrconf 9 mul seconds 1000000000
+ret true
+end
+fn rcparse to bool
+count = ulong argcnt
+if or lt count 2 gt count len rcargv
+ret false
+end
+put rcstate 0 count
+for i ulong count
+put rcargv i sarg i
+end
+command = get rcargv 1
+if or seq command rclit 16 seq command rclit 17
+swrite 1 rclit 18
+exit 0
+end
+if seq command rclit 0
+put rcstate 1 0
+else
+if not seq command rclit 1
+ret false
+end
+put rcstate 1 1
+end
+rcdefaults
+i = ulong 2
+while lt i count
+key = get rcargv i
+if or seq key rclit 16 seq key rclit 17
+swrite 1 rclit 18
+exit 0
+end
+value = ulong 0
+if rcsplit key
+key = get rckv 0
+value = get rckv 1
+else
+i = add i 1
+if ge i count
+ret false
+end
+value = get rcargv i
+end
+if not rcoption key value
+ret false
+end
+i = add i 1
+end
+ret rcfinish
+end
+fn main to int
+sinit
+pxinit
+pvinit
+prinit
+rcinit
+if not rcparse
+swrite 2 rclit 19
+ret 64
+end
+if eq get rcstate 1 0
+ret rrverify
+end
+ret rrrun
+end

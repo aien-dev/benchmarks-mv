@@ -89,10 +89,10 @@ cargo run --release -- verify
 cargo run --release -- report
 
 # Check records and artifact bundles offline (one line per defect)
-cargo run --release --bin bench_verify_records -- records artifacts tests/fixtures/records/good
+build/om/bench_verify_records records artifacts tests/fixtures/records/good
 
 # Check that docs/PERF_INDEX.md matches the generator (drop --check to rewrite it)
-cargo run --release --bin bench_index -- --check
+build/om/bench_index --check
 
 # Fail if any tracked file is Python
 sh scripts/check-no-python.sh
@@ -173,7 +173,7 @@ cargo run --release -- sync-docs --target <file> --check
 
 New benchmark records follow the `aien-bench-record/1` format: source commit and whether the tree was dirty, build, workload, hardware, backend, one definition per metric, metrics, evidence file paths and limitations. They live as JSON files under `records/`. The older run bundles under `artifacts/` keep their own format and are checked against their `SHA256SUMS` files, never rewritten.
 
-`cargo run --release --bin bench_verify_records` (default paths `records` and `artifacts`) checks them offline and prints one `path: field: reason` line per defect. It rejects placeholder values, short commit ids, missing evidence files and percentiles from too few samples. `cargo run --release --bin bench_index` regenerates [docs/PERF_INDEX.md](docs/PERF_INDEX.md), a list of records, sources and studies copied from the files; it is an index, not an authority.
+`build/om/bench_verify_records` (default paths `records` and `artifacts`) checks them offline and prints one `path: field: reason` line per defect. It rejects placeholder values, short commit ids, missing evidence files and percentiles from too few samples. `build/om/bench_index` regenerates [docs/PERF_INDEX.md](docs/PERF_INDEX.md), a list of records, sources and studies copied from the files; it is an index, not an authority.
 
 Status words in a record (source: `src/evidence.rs`):
 

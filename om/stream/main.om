@@ -1,0 +1,5 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Standalone llm-stream native command entry point.
+fn main to int
+ret lr_main
+end

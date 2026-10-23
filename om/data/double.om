@@ -1,0 +1,304 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Native IEEE-754 binary64 arithmetic using checked Omega integer operations.
+note Values are ulong bit patterns. Round-to-nearest, ties-to-even, gradual underflow.
+note No foreign runtime, compiler primitive, native-code injection or hardware mode dependency.
+global dfstate ulong 2
+global dfparts long 3
+note parts: sign, unbiased exponent, normalized 53-bit significand; zero has significand 0.
+
+fn df_finite bits ulong to bool
+ret ne and shr bits 52 2047 2047
+end
+fn df_abs bits ulong to ulong
+ret and bits 9223372036854775807
+end
+fn df_nan bits ulong to bool
+ret gt df_abs bits 9218868437227405312
+end
+fn df_neg bits ulong to ulong
+ret xor bits 9223372036854775808
+end
+fn df_unpack bits ulong to void
+put dfparts 0 long shr bits 63
+exponent = and shr bits 52 2047
+mantissa = and bits 4503599627370495
+e = long -1022
+if ne exponent 0
+mantissa = or mantissa 4503599627370496
+e = sub long exponent 1023
+else
+if ne mantissa 0
+while lt mantissa 4503599627370496
+mantissa = shl mantissa 1
+e = sub e 1
+end
+end
+end
+put dfparts 1 e
+put dfparts 2 long mantissa
+end
+fn df_jam value ulong shift ulong to ulong
+if eq shift 0
+ret value
+end
+if ge shift 64
+if ne value 0
+ret 1
+end
+ret 0
+end
+lost = and value sub shl ulong 1 shift 1
+out = shr value shift
+if ne lost 0
+out = or out 1
+end
+ret out
+end
+fn df_pack sign ulong exponent long sig ulong to ulong
+if eq sig 0
+ret shl sign 63
+end
+if lt exponent -1022
+sig = df_jam sig ulong sub -1022 exponent
+exponent = long -1022
+end
+tail = and sig 7
+mantissa = shr sig 3
+if or gt tail 4 and eq tail 4 ne and mantissa 1 0
+mantissa = add mantissa 1
+end
+if ge mantissa 9007199254740992
+mantissa = shr mantissa 1
+exponent = add exponent 1
+end
+if gt exponent 1023
+ret or shl sign 63 9218868437227405312
+end
+encoded = ulong 0
+if ge mantissa 4503599627370496
+encoded = shl ulong add exponent 1023 52
+end
+ret or or shl sign 63 encoded and mantissa 4503599627370495
+end
+fn dfadd a ulong b ulong to ulong
+if or df_nan a df_nan b
+ret 9221120237041090560
+end
+if not df_finite a
+if and not df_finite b ne shr a 63 shr b 63
+ret 9221120237041090560
+end
+ret a
+end
+if not df_finite b
+ret b
+end
+if lt df_abs a df_abs b
+temp = a
+a = b
+b = temp
+end
+df_unpack a
+sign = ulong get dfparts 0
+expo = get dfparts 1
+ma = shl ulong get dfparts 2 3
+df_unpack b
+mb = shl ulong get dfparts 2 3
+if eq ma 0
+ret and a b
+end
+if eq mb 0
+ret a
+end
+mb = df_jam mb ulong sub expo get dfparts 1
+if eq sign ulong get dfparts 0
+ma = add ma mb
+if ge ma 72057594037927936
+ma = df_jam ma 1
+expo = add expo 1
+end
+else
+ma = sub ma mb
+if eq ma 0
+ret 0
+end
+while lt ma 36028797018963968
+ma = shl ma 1
+expo = sub expo 1
+end
+end
+ret df_pack sign expo ma
+end
+fn dfsub a ulong b ulong to ulong
+ret dfadd a df_neg b
+end
+global dfwide ulong 2
+fn df_product a ulong b ulong to void
+al = and a 4294967295
+ah = shr a 32
+bl = and b 4294967295
+bh = shr b 32
+lo = mul al bl
+x = mul al bh
+y = mul ah bl
+carry = add add shr lo 32 and x 4294967295 and y 4294967295
+put dfwide 0 or and lo 4294967295 shl carry 32
+hi = add add mul ah bh shr x 32 shr y 32
+put dfwide 1 add hi shr carry 32
+end
+fn dfmul a ulong b ulong to ulong
+sign = shr xor a b 63
+if or df_nan a df_nan b
+ret 9221120237041090560
+end
+if or not df_finite a not df_finite b
+if or eq df_abs a 0 eq df_abs b 0
+ret 9221120237041090560
+end
+ret or shl sign 63 9218868437227405312
+end
+if or eq df_abs a 0 eq df_abs b 0
+ret shl sign 63
+end
+df_unpack a
+expo = get dfparts 1
+ma = ulong get dfparts 2
+df_unpack b
+expo = add expo get dfparts 1
+df_product ma ulong get dfparts 2
+shift = ulong 49
+if ge get dfwide 1 2199023255552
+shift = ulong 50
+expo = add expo 1
+end
+sig = shl get dfwide 1 sub 64 shift
+sig = or sig shr get dfwide 0 shift
+ma = sub shl ulong 1 shift 1
+if ne and get dfwide 0 ma 0
+sig = or sig 1
+end
+ret df_pack sign expo sig
+end
+fn dfdiv a ulong b ulong to ulong
+sign = shr xor a b 63
+if or df_nan a df_nan b
+ret 9221120237041090560
+end
+if or and not df_finite a not df_finite b and eq df_abs a 0 eq df_abs b 0
+ret 9221120237041090560
+end
+if or not df_finite a eq df_abs b 0
+ret or shl sign 63 9218868437227405312
+end
+if or not df_finite b eq df_abs a 0
+ret shl sign 63
+end
+df_unpack a
+expo = get dfparts 1
+remain = ulong get dfparts 2
+df_unpack b
+expo = sub expo get dfparts 1
+denom = ulong get dfparts 2
+if lt remain denom
+remain = shl remain 1
+expo = sub expo 1
+end
+q = ulong 0
+for i ulong 56
+q = shl q 1
+if ge remain denom
+remain = sub remain denom
+q = or q 1
+end
+remain = shl remain 1
+end
+if ne remain 0
+q = or q 1
+end
+ret df_pack sign expo q
+end
+fn dfsqrt a ulong to ulong
+if df_nan a
+ret 9221120237041090560
+end
+if eq df_abs a 0
+ret a
+end
+if ne shr a 63 0
+ret 9221120237041090560
+end
+if not df_finite a
+ret a
+end
+df_unpack a
+expo = get dfparts 1
+mantissa = ulong get dfparts 2
+if ne rem expo 2 0
+mantissa = shl mantissa 1
+expo = sub expo 1
+end
+q = ulong 0
+remain = ulong 0
+for i ulong 56
+pos = mul sub 55 i 2
+pair = ulong 0
+if ge pos 58
+pair = and shr mantissa sub pos 58 3
+end
+remain = or shl remain 2 pair
+trial = or shl q 2 1
+q = shl q 1
+if ge remain trial
+remain = sub remain trial
+q = or q 1
+end
+end
+if ne remain 0
+q = or q 1
+end
+ret df_pack 0 div expo 2 q
+end
+fn dfcmp a ulong b ulong to long
+if or df_nan a df_nan b
+ret 2
+end
+if or eq a b and eq df_abs a 0 eq df_abs b 0
+ret 0
+end
+sa = shr a 63
+sbv = shr b 63
+if ne sa sbv
+if eq sa 1
+ret -1
+end
+ret 1
+end
+if eq sa 0
+if lt a b
+ret -1
+end
+ret 1
+end
+if gt a b
+ret -1
+end
+ret 1
+end
+fn df_from_u64 n ulong to ulong
+if eq n 0
+ret 0
+end
+expo = long 0
+v = n
+while gt v 1
+v = shr v 1
+expo = add expo 1
+end
+sig = ulong 0
+if le expo 55
+sig = shl n ulong sub 55 expo
+else
+sig = df_jam n ulong sub expo 55
+end
+ret df_pack 0 expo sig
+end

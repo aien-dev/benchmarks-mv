@@ -1,0 +1,32 @@
+note Fresh child behaviors for the coordinator process boundary tests.
+global choose uchar 8
+global chunk uchar 65536
+text message "child output\n"
+fn main to int
+n = argread 1 choose 0 len choose
+if ne n 1
+ret 64
+end
+mode = get choose 0
+if eq mode 49
+r = write 1 message 0 len message
+if ne r long len message
+ret 74
+end
+ret 7
+end
+if eq mode 50
+for i ulong 16
+r = write 1 chunk 0 len chunk
+if ne r long len chunk
+ret 74
+end
+end
+ret 0
+end
+if eq mode 51
+r = sleepns 11000000000
+ret 0
+end
+ret 64
+end

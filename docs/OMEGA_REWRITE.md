@@ -54,37 +54,45 @@ reference utility, not a replacement for the `prime_race run` interface.
 ## Build and check
 
 The compiler is pinned to the native host extension at
-[`42f89c3b`](https://github.com/aien-dev/omega-mv/commit/42f89c3bf04265ac40384687cffb109e541c6ebe).
-That commit exists on GitHub but is not the default branch of `omega-mv`.
+[`f0499f41`](https://github.com/aien-dev/omega-mv/commit/f0499f41).
+That commit is on the native-host development branch, not the default branch of `omega-mv`.
 The build therefore requires an explicitly supplied compiler; it does not
 pretend a fresh checkout of the current public default branch provides one.
 
 Compiler SHA-256:
-`9c655bb98bc651f5dbada342df48eb9ef25a5aa19b4dec2a34c50174a8db26be`.
+`e5d60db892c8f21cc8c9128af26d8bded0e96d7f92946f5a549397c43a872649`.
 
 From a checkout of the pinned Omega source, `sh seed/omega-from-seed.sh` produces
 `seed/out/omc`. From this repository on Linux ARM64:
 
+The native coordinator is `om/build/main.om`, with compilation units in
+`om/build.plan`. Its initial executable can be built using the pinned compiler:
+
 ```sh
-OMC=/absolute/path/to/omega/seed/out/omc sh scripts/build-om.sh
-printf 'c 1000000\n' | build/om/prime-reference
-build/om/prime-reference c 1000000
-build/om/prime-reference b 1000000 /path/to/new-bitmap.bin
-OMC=/absolute/path/to/omega/seed/out/omc quiet-build sh scripts/test-om.sh
+mkdir -p build/om
+cat om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/build/main.om > build/om/bootstrap.om
+/path/to/omc < build/om/bootstrap.om > build/om/om-build
+chmod +x build/om/om-build
+build/om/om-build /path/to/omc
+build/om/om-test /path/to/omc
+build/om/bench_verify_records records artifacts tests/fixtures/records/good
+build/om/bench_index --check
 ```
 
-`quiet-build` is the Spark build coordinator. On another Linux ARM64 host, run
-the test script directly. The default tests now use native Omega only, with
-shell orchestration and file/hash checks. No Rust compiler or test helper is
-invoked. The build checks the compiler hash and rejects executables
-with a dynamic loader or shared-library dependencies.
+The native coordinator checks the pinned compiler digest, concatenates declared
+sources, invokes the compiler directly, verifies static ARM64 executable headers,
+and installs outputs atomically. The test coordinator runs native test programs,
+frozen hash/oracle checks and compiled negative controls. Neither coordinator
+invokes a shell, Rust compiler, Python or JavaScript. Git remains the source
+identity and tracked-file inventory interface. Old scripts still present in this
+migration branch are pending deletion after final gate cutover.
 
 The build also emits `build/om/om-sha256`: native SHA-256 of standard input,
 with a declared 1 GiB input limit. It emits 64 lowercase hexadecimal digits and
 a newline, exits 65 for oversized input, and 74 for I/O failure. Input failures
 produce no digest. This executable has no helper process or shared library.
 The installed checksum utility is used only to qualify padding/read boundaries
-and to check the compiler identity during the still-unported shell build step.
+outside the delivered implementation. The native build checks compiler identity with its own SHA-256.
 
 The test checks the fixed digest of the previously verified reference corpus:
 100,001 small primality decisions, 100 values near the 64-bit maximum, 10,000
@@ -122,8 +130,7 @@ per process; they are not concurrent shared parser/hash state.
   the last duplicate direct key, matching the existing map behavior.
 - Numeric spellings are preserved exactly. Unsigned integer conversion checks
   the full 64-bit range. The syntax reader accepts JSON numbers such as `1e9999`;
-  this is not a claim that they fit a finite metric. Schema checks and decimal
-  arithmetic remain consumer work. Negative, fractional and exponent spellings
+  this is not a claim that they fit a finite metric. Native record schema checks and bounded decimal arithmetic now enforce metric requirements. Negative, fractional and exponent spellings
   are explicitly refused by the unsigned-integer accessor.
 - The writer emits compact JSON and preserves key order, duplicates and number
   spelling. It does not implement serde's pretty layout or claim byte-for-byte
@@ -134,8 +141,7 @@ per process; they are not concurrent shared parser/hash state.
 - Timing samples retain integer nanoseconds. Up to 8,192 observations yield
   exact min/max, mean quotient/remainder, median whole/half and nearest-rank
   p50/p95. P95 requires at least 20 samples, as in the streaming implementation.
-  The caller must exclude failed requests. Rates, standard deviation, coefficient
-  of variation and final metric formatting remain unported.
+  The caller must exclude failed requests. Binary64 arithmetic and decimal formatting now support rates, variance and final metrics.
 - SHA-256 is incremental, with checked message length and explicit finalize/reset
   state. The native checksum utility now checks the frozen prime reference corpus.
 
@@ -158,8 +164,7 @@ the frozen Prime Drag Race receipt or a published performance result.
 
 Three compiled mutants (wrong hash constant, wrong percentile, accepted unpaired
 surrogate) must fail specific runtime assertions. Build failures do not count as
-caught mutants. All tests are compiled `.om`; `scripts/test-om.sh` still coordinates
-them and is itself an outstanding replacement task.
+caught mutants. All tests are compiled `.om`; `om/test/` now coordinates them natively.
 
 The compiler's same-lineage self-rebuild and regression checks establish the
 reported reproducibility results. Independent compiler ancestry correspondence
@@ -176,24 +181,43 @@ remains with its existing compiler/runtime owners.
 | `llm-stream` | Port HTTP/SSE parsing and accounting; provide sockets, monotonic timing, deadlines and concurrency. Preserve usage-only token counting and failure exclusion. |
 | `measure` | Port system/memory sampling and endpoint workloads; replace in-process Rust runtime dependencies at an explicit boundary. |
 | `verify`, `report`, `generate`, `sync-docs` | Integrate native JSON; port schema and budget validation, decimal metrics, tables, SVGs and document updates. |
-| `bench_verify_records`, `bench_index` | Port schema and hash checks, directory traversal, source identity and Markdown generation. |
+| `bench_verify_records`, `bench_index` | Native commands qualified; old Rust implementations and corresponding Rust tests deleted. Shared dependencies await their last other consumer. |
 | `bench_branching_neutral`, `bench_canonical_suite` | Replace direct use of the five sibling Rust crates without changing measured work. |
 | Build and verification gates | Port scripts and project-owned tests to `.om`; switch qualified consumers, then delete superseded code and dependencies. Existing gates still test Rust. |
 
-Omega now supplies 32 native host operations for files, directories, clocks,
+Omega now supplies 35 native host operations for files, directories, clocks,
 sockets, polling, process launch/wait, pipes and command-line arguments. The
 implementation is in its own `seed/omc/omc.om`; the seed chain builds it and
 proves byte-identical self-reproduction. Native tests cover success and failure
-paths, TCP loopback, 18 negative controls and preservation of 70 original
+paths, TCP loopback, 41 negative controls and preservation of 70 original
 compiler fixtures. See the pinned compiler's `seed/host/README.md` and
 `docs/one_layer/OMEGESE.md` section 10 for exact contracts and limits.
 
-No temporary host adapter was added. Remaining work includes JSON schema checks,
-decimal metrics, the command implementations, and the boundary to the
-sibling runtime. The compiler still has integer types only; floating-point
+No temporary host adapter was added. Remaining work includes consumer integration and qualification, active measurement commands, and the boundary to the sibling runtime. The compiler still has integer types only; floating-point
 types and direct Rust calls are not claimed as implemented.
 
 No historical records, benchmark claims, runtime services or frozen contracts
 are changed by this port. The host-extension decision is settled; the remaining
 benchmark commands still require implementation, consumer qualification and
 deletion of the superseded implementation and dependencies.
+
+## Numeric qualification
+
+`om/data/double.om`, `decimal.om` and `single.om` implement software
+binary64/binary32 arithmetic using Omega integer operations. These do not claim
+hardware floating-point or SIMD throughput. Arithmetic rounds to nearest with
+ties to even and supports subnormals.
+
+Decimal input accepts finite values with up to 1,100 significant digits.
+Overflow and capacity violations are refused. JSON output uses 17 significant
+digits in scientific notation, preserving the binary64 value on readback;
+shortest spelling and historical serialization byte equality are not promised.
+Fixed decimal output supports 0 through 18 fractional digits.
+
+Qualification data is frozen in `tests/fixtures/numerics/`: independent V8
+binary64/binary32 results and exact BigInt rational decimal rounding. No foreign
+implementation or generator is shipped or invoked by native programs.
+The native tests cover 1,044 binary64 operations, 316 decimal parse/round-trip
+cases, 163 fixed-format cases and 1,024 binary32 operations. Boundary cases
+include negative zero, subnormals, halfway rounding and maximum finite values.
+These are development tests, not an untouched model evaluation set.

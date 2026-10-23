@@ -1,0 +1,97 @@
+note Strict declaration cases, duplicate overwrite, exact strings, integer boundaries and failures.
+text tgtdata "algorithm=base,faithful=yes,bits=1|algorithm=base,faithful=yes,bits=1,threads=+2,bits=64,algorithm=other|algorithm=,faithful=a=b,bits=18446744073709551615,threads=0||x=y|algorithm=x,faithful=y,bits=x|algorithm=x,faithful=y,bits=1,threads=-1|faithful=y,bits=1|algorithm=x,bits=1|algorithm=x,faithful=y|algorithm=x,faithful=y,bits=1,| algorithm=x,faithful=y,bits=1|algorithm=x,faithful=y,bits=18446744073709551616|algorithm=x,faithful=y,bits=1,threads=18446744073709551616|algorithm=x,faithful=y,bits= 1|algorithm=x,faithful=y,bits=+|algorithm=x,faithful=y,bits=1,bits=bad|algorithm=x,faithful=y,bits=1,threads=7,threads=9|algorithm=x,faithful=y,bits=+1|algorithm=x,faithful=y,bits=1,threads="
+text tgtexp "baseyesothera=b"
+fn tgtinput index ulong to ulong
+p = get sp 0
+part = ulong 0
+for i ulong len tgtdata
+c = get tgtdata i
+if eq c 124
+if eq part index
+ret sdone p
+end
+part = add part 1
+else
+if eq part index
+sbyte c
+end
+end
+end
+ret sdone p
+end
+fn tgtvalue start ulong size ulong to ulong
+p = get sp 0
+for i ulong size
+sbyte get tgtexp add start i
+end
+ret sdone p
+end
+fn main to int
+sinit
+if ne tgparse tgtinput 0 0
+ret 1
+end
+if not seq get tgstate 0 tgtvalue 0 4
+ret 2
+end
+if not seq get tgstate 1 tgtvalue 4 3
+ret 3
+end
+if or ne get tgstate 2 1 ne get tgstate 4 0
+ret 4
+end
+if ne tgparse tgtinput 1 0
+ret 5
+end
+if not seq get tgstate 0 tgtvalue 7 5
+ret 6
+end
+if or ne get tgstate 2 64 or ne get tgstate 3 2 ne get tgstate 4 1
+ret 7
+end
+if ne tgparse tgtinput 2 0
+ret 8
+end
+if or ne slen get tgstate 0 0 not seq get tgstate 1 tgtvalue 12 3
+ret 9
+end
+if or ne get tgstate 2 ulong 18446744073709551615 or ne get tgstate 3 0 ne get tgstate 4 1
+ret 10
+end
+errors = new ulong 14 0
+put errors 0 1
+put errors 1 2
+put errors 2 3
+put errors 3 4
+put errors 4 5
+put errors 5 6
+put errors 6 7
+put errors 7 1
+put errors 8 2
+put errors 9 3
+put errors 10 4
+put errors 11 3
+put errors 12 3
+put errors 13 3
+for i ulong 14
+if ne tgparse tgtinput add i 3 get errors i
+ret int add i 20
+end
+end
+if ne tgparse tgtinput 17 0
+ret 40
+end
+if ne get tgstate 3 9
+ret 41
+end
+if ne tgparse tgtinput 18 0
+ret 42
+end
+if or ne get tgstate 2 1 ne get tgstate 4 0
+ret 43
+end
+if ne tgparse tgtinput 19 4
+ret 44
+end
+ret 0
+end

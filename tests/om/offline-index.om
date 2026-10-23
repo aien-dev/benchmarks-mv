@@ -1,0 +1,114 @@
+note Native index qualification: original issue grammar, sorted deduplication, repeatability and drift.
+text study "docs/STUDY.md"
+text doctext "# Study\nSee aien-spark/omega#308, https://github.com/aien-dev/benchmarks/issues/12 and aien-spark/aienos.\n## Owning issue\n\nTracked in #233 and aien-spark/aien-architecture#233.\n## Next\n#9 is not owned here\nRepeated aien-spark/omega#308 and https://github.com/aien-dev/benchmarks/pull/12.\n"
+text rows "| #233 (repository not named) | `docs/STUDY.md` |\n| aien-dev/benchmarks#12 | `docs/STUDY.md` |\n| aien-spark/aien-architecture#233 | `docs/STUDY.md` |\n| aien-spark/omega#308 | `docs/STUDY.md` |\n"
+fn studypath to ulong
+p = get sp 0
+for i ulong len study
+sbyte get study i
+end
+ret sdone p
+end
+fn studytext to ulong
+p = get sp 0
+for i ulong len doctext
+sbyte get doctext i
+end
+ret sdone p
+end
+fn issuerows to ulong
+p = get sp 0
+for i ulong len rows
+sbyte get rows i
+end
+ret sdone p
+end
+fn savedata path ulong value ulong to bool
+fd = fopen sb soff path slen path 524865 420
+if lt fd 0
+ret false
+end
+r = write int fd sb soff value slen value
+c = fclose int fd
+ret and eq r long slen value eq c 0
+end
+fn makedirtest path ulong to bool
+r = makedir sb soff path slen path 493
+ret or eq r 0 eq r -17
+end
+fn runindex index ulong root ulong check bool to long
+preset
+parg index
+parg L_root
+parg root
+if check
+parg L_check
+end
+ret pcapture
+end
+fn main to int
+sinit
+put fr 0 L_dot
+index = sarg 1
+root = sarg 2
+if not makedirtest root
+ret 2
+end
+if not makedirtest spath root L_docs
+ret 3
+end
+if not savedata spath root studypath studytext
+ret 4
+end
+r = runindex index root false
+if lt r 0
+ret 5
+end
+path = spath root L_indexpath
+first = ftext path
+if lt first 0
+ret 6
+end
+if not sends ulong first issuerows
+swrite 2 ulong first
+ret 7
+end
+r = runindex index root false
+if lt r 0
+ret 8
+end
+second = ftext path
+if lt second 0
+ret 9
+end
+if not seq ulong first ulong second
+ret 10
+end
+r = runindex index root true
+if lt r 0
+ret 11
+end
+if not savedata path scat ulong first L_newline
+ret 12
+end
+r = runindex index root true
+if ne get pmeta 0 1
+ret 13
+end
+third = ftext path
+if lt third 0
+ret 14
+end
+if not seq ulong third scat ulong first L_newline
+ret 15
+end
+r = runindex index root false
+if lt r 0
+ret 16
+end
+r = runindex index root true
+if lt r 0
+ret 17
+end
+ret 0
+end

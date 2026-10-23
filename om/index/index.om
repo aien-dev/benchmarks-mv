@@ -1,0 +1,323 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Native performance discovery index. Values come from repository files and Git metadata.
+global irows ulong 32768
+global icount ulong 1
+global ipicked ulong 5
+global studies ulong 4096
+global nstudies ulong 1
+global issuekey ulong 8192
+global ipaths ulong 8192
+global nissues ulong 1
+global ioutput ulong 1
+global icells ulong 5
+
+fn icell s ulong to ulong
+p = get sp 0
+for i ulong slen s
+c = schar s i
+if eq c 124
+sbyte 92
+end
+if eq c 10
+c = uchar 32
+end
+sbyte c
+end
+ret sdone p
+end
+fn iadd s ulong to void
+n = get icount 0
+if eq n len irows
+exit 70
+end
+put irows n s
+put icount 0 add n 1
+end
+fn isort to void
+for i ulong get icount 0
+v = get irows i
+p = i
+more = true
+while and more gt p 0
+if gt scmp get irows sub p 1 v 0
+put irows p get irows sub p 1
+p = sub p 1
+else
+more = false
+end
+end
+put irows p v
+end
+end
+fn ifirst fields ulong to ulong
+start = ulong 0
+for i ulong add slen fields 1
+split = eq i slen fields
+if not split
+split = eq schar fields i 44
+end
+if split
+field = ssub fields start sub i start
+t = jpath 0 field
+if or or jkind t 3 jkind t 4 or jkind t 5 jkind t 6
+s = jraw t
+if jkind t 3
+s = jstringval t
+end
+ret scat scat3 s L_spacebracket field L_rbracket
+end
+start = add i 1
+end
+end
+ret 0
+end
+fn ipick to void
+if eq get ipicked 0 0
+put ipicked 0 ifirst L_schemafields
+end
+if eq get ipicked 1 0
+put ipicked 1 ifirst L_status
+end
+if eq get ipicked 2 0
+put ipicked 2 ifirst L_workfields
+end
+if eq get ipicked 3 0
+put ipicked 3 ifirst L_commitfields
+end
+if eq get ipicked 4 0
+put ipicked 4 ifirst L_datefields
+end
+end
+fn iclear to void
+for i ulong 5
+put ipicked i 0
+end
+end
+fn igitdate path ulong to ulong
+preset
+parg L_gitbin
+parg L_C
+parg get fr 0
+parg L_log
+parg L_difffilter
+parg L_dateformat
+parg L_dashdash
+parg path
+r = pcapture
+if lt r 0
+ret L_nohistory
+end
+s = strim ulong r
+if eq slen s 0
+ret L_nocommit
+end
+last = ulong 0
+for i ulong slen s
+if eq schar s i 10
+last = add i 1
+end
+end
+ret scat ssub s last sub slen s last L_firstcommit
+end
+fn imarkcommit s ulong to ulong
+pos = sfind s L_spacebracket
+value = s
+if ge pos 0
+value = ssub s 0 ulong pos
+end
+if ecommit value
+ret s
+end
+ret scat s L_notfull
+end
+fn irow path ulong kind ulong to ulong
+kindcell = icell kind
+for i ulong 5
+s = get ipicked i
+if eq s 0
+s = L_dash
+else
+if eq i 3
+s = imarkcommit s
+end
+end
+put icells i icell s
+end
+p = get sp 0
+sappend L_piperow
+sappend path
+sappend L_ticksep
+sappend kindcell
+for i ulong 5
+sappend L_separator
+sappend get icells i
+end
+sappend L_rowend
+ret sdone p
+end
+fn ilines textval ulong to ulong
+count = ulong 0
+start = ulong 0
+for i ulong add slen textval 1
+split = eq i slen textval
+if not split
+split = eq schar textval i 10
+end
+if split
+if ne slen strim ssub textval start sub i start 0
+count = add count 1
+end
+start = add i 1
+end
+end
+ret count
+end
+fn ibundle dir ulong kind ulong to void
+iclear
+manifest = spath dir L_manifest
+if jread manifest
+ipick
+end
+for i ulong get fcounts 0
+path = get ffiles i
+if and seq sparent path dir and sends path L_json not seq path manifest
+if jread path
+ipick
+end
+end
+end
+sums = spath dir L_sums
+raw = ftext ffull sums
+count = ulong 0
+if ge raw 0
+count = ilines ulong raw
+end
+label = scat3 kind L_bundlekind suint count
+label = scat label L_sumfiles
+if eq get ipicked 4 0
+put ipicked 4 igitdate sums
+end
+iadd irow scat dir L_slash label
+end
+fn ievidence dir ulong kind ulong to void
+if not fwalk dir
+if eq get ferr 0 -2
+ret
+end
+exit 74
+end
+fsort
+put ebcount 0 0
+for i ulong get fcounts 0
+path = get ffiles i
+if seq sbase path L_sums
+n = get ebcount 0
+if eq n len ebundles
+exit 70
+end
+put ebundles n sparent path
+put ebcount 0 add n 1
+end
+end
+for i ulong get ebcount 0
+ibundle get ebundles i kind
+end
+for i ulong get fcounts 0
+path = get ffiles i
+if and sends path L_json not einbundle path
+iclear
+label = kind
+if jread path
+ipick
+else
+label = scat label L_invalidkind
+end
+if eq get ipicked 4 0
+put ipicked 4 igitdate path
+end
+iadd irow path label
+end
+end
+end
+fn ifirstline textval ulong prefix ulong to ulong
+start = ulong 0
+for i ulong add slen textval 1
+split = eq i slen textval
+if not split
+split = eq schar textval i 10
+end
+if split
+line = strim ssub textval start sub i start
+if sstarts line prefix
+ret strim ssub line slen prefix sub slen line slen prefix
+end
+start = add i 1
+end
+end
+ret 0
+end
+fn isimplerow path ulong value ulong to ulong
+cell = icell value
+ret scat scat3 L_piperow path L_ticksep scat cell L_rowend
+end
+fn isources dir ulong to void
+if not fwalk dir
+if eq get ferr 0 -2
+ret
+end
+exit 74
+end
+fsort
+for i ulong get fcounts 0
+path = get ffiles i
+if or sends path L_om sends path L_rs
+raw = ftext ffull path
+doc = ulong 0
+if ge raw 0
+if sends path L_om
+doc = ifirstline ulong raw L_note
+else
+doc = ifirstline ulong raw L_docmodule
+if eq slen doc 0
+doc = ifirstline ulong raw L_docitem
+if ne slen doc 0
+doc = scat L_itemlabel doc
+end
+end
+end
+end
+if eq slen doc 0
+doc = L_nodoc
+end
+iadd isimplerow path doc
+end
+end
+end
+fn istudies dir ulong to void
+if not fwalk dir
+if eq get ferr 0 -2
+ret
+end
+exit 74
+end
+for i ulong get fcounts 0
+path = get ffiles i
+if and and sends path L_md seq sparent path dir not seq path L_indexpath
+n = get nstudies 0
+if eq n len studies
+exit 70
+end
+put studies n path
+put nstudies 0 add n 1
+raw = ftext ffull path
+title = ulong 0
+if ge raw 0
+title = ifirstline ulong raw L_heading
+end
+if eq slen title 0
+title = L_notitle
+end
+iadd isimplerow path title
+end
+end
+end

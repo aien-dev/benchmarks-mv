@@ -1,0 +1,44 @@
+text fcpath "tests/fixtures/numerics/fixed.tsv"
+global fcstate ulong 3
+fn fcuint s ulong to ulong
+i = get fcstate 0
+v = ulong 0
+while ne schar s i 32
+v = add mul v 10 ulong sub schar s i 48
+i = add i 1
+end
+put fcstate 0 add i 1
+ret v
+end
+fn fcrow s ulong to bool
+bits = fcuint s
+digits = fcuint s
+start = get fcstate 0
+i = start
+while ne schar s i 10
+i = add i 1
+end
+want = ssub s start sub i start
+put fcstate 0 add i 1
+got = df_to_fixed bits digits
+ret seq want got
+end
+fn main to int
+sinit
+p = get sp 0
+for i ulong len fcpath
+sbyte get fcpath i
+end
+raw = ftext sdone p
+if lt raw 0
+ret 1
+end
+while lt get fcstate 0 slen ulong raw
+put fcstate 1 add get fcstate 1 1
+if not fcrow ulong raw
+swrite 2 suint get fcstate 1
+ret 2
+end
+end
+ret 0
+end

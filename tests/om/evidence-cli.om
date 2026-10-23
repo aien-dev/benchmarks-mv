@@ -1,0 +1,57 @@
+note End-to-end native checker tests. Expected diagnostics are transcribed from historical Rust tests.
+text testgood "tests/fixtures/records/good"
+text testbad "tests/fixtures/records/bad"
+text testwant "tests/fixtures/records/bad/expected.txt"
+fn testgoodpath to ulong
+p = get sp 0
+for i ulong len testgood
+sbyte get testgood i
+end
+ret sdone p
+end
+fn testbadpath to ulong
+p = get sp 0
+for i ulong len testbad
+sbyte get testbad i
+end
+ret sdone p
+end
+fn testwantpath to ulong
+p = get sp 0
+for i ulong len testwant
+sbyte get testwant i
+end
+ret sdone p
+end
+fn main to int
+sinit
+put fr 0 L_dot
+checker = sarg 1
+preset
+parg checker
+parg L_records
+parg L_artifacts
+parg testgoodpath
+r = pcapture
+if lt r 0
+ret 1
+end
+if ne slen ulong r 0
+ret 2
+end
+preset
+parg checker
+parg testbadpath
+r = pcapture
+if or ge r 0 ne get pmeta 0 1
+ret 3
+end
+want = ftext testwantpath
+if lt want 0
+ret 4
+end
+if not seq ulong want ulong get pmeta 1
+ret 5
+end
+ret 0
+end

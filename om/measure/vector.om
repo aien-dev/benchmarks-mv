@@ -1,0 +1,50 @@
+note Exact binary32 workload. Software arithmetic; no SIMD or hardware-float claim.
+global vfirst uint 4096
+global vsecond uint 4096
+global vresult ulong 5
+note vresult: elapsed ns, accumulator bits, iters, dims, mean ns bits.
+fn vprepare dims ulong to bool
+if or eq dims 0 gt dims len vfirst
+ret false
+end
+for i ulong dims
+v = fs_round df_from_u64 i
+put vfirst i fsmul v 981668463
+put vsecond i fsmul v 990057071
+end
+ret true
+end
+fn vdot dims ulong to uint
+total = uint 0
+for i ulong dims
+total = fsadd total fsmul get vfirst i get vsecond i
+end
+ret total
+end
+fn vbenchmark iters ulong dims ulong to bool
+if or eq iters 0 gt iters 1000000
+ret false
+end
+if not vprepare dims
+ret false
+end
+start = monons
+if lt start 0
+ret false
+end
+total = uint 0
+for k ulong iters
+total = fsadd total vdot dims
+end
+stop = monons
+if lt stop start
+ret false
+end
+elapsed = ulong sub stop start
+put vresult 0 elapsed
+put vresult 1 ulong total
+put vresult 2 iters
+put vresult 3 dims
+put vresult 4 dfdiv df_from_u64 elapsed df_from_u64 iters
+ret true
+end

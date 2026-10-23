@@ -1,0 +1,86 @@
+text lr_dname "fixture.invalid"
+global lr_peer uchar 28
+fn lr_dhost to ulong
+p = get sp 0
+for i ulong len lr_dname
+sbyte get lr_dname i
+end
+ret sdone p
+end
+fn lr_ck ok bool code int to void
+if not ok
+exit code
+end
+end
+fn lr_answer n ulong to ulong
+put lr_dns 2 129
+put lr_dns 3 128
+put lr_dns 6 0
+put lr_dns 7 1
+put lr_dns n 192
+put lr_dns add n 1 12
+put lr_dns add n 2 0
+put lr_dns add n 3 1
+put lr_dns add n 4 0
+put lr_dns add n 5 1
+for i ulong 4
+put lr_dns add add n 6 i 0
+end
+put lr_dns add n 10 0
+put lr_dns add n 11 4
+put lr_dns add n 12 127
+put lr_dns add n 13 0
+put lr_dns add n 14 0
+put lr_dns add n 15 7
+ret add n 16
+end
+fn lr_tcpfixture server int to void
+lr_ck gt lr_ready server 1 add monons 3000000000 0 30
+client = accept server 524288
+lr_ck ge client 0 31
+deadline = add monons 3000000000
+lr_ck lr_dns_read int client 0 2 deadline 32
+n = lr_dn16 0
+lr_ck lr_dns_read int client 0 n deadline 33
+n = lr_answer n
+for i ulong n
+j = sub sub n i 1
+put lr_dns add j 2 get lr_dns j
+end
+put lr_dns 0 uchar shr n 8
+put lr_dns 1 uchar and n 255
+lr_ck lr_dns_write int client add n 2 deadline 34
+r = fclose int client
+r = fclose server
+exit 0
+end
+fn main to int
+sinit
+ac_init
+lr_init
+lr_ck lr_ipv4 lr_L 0 0 1
+server = socknew 2 526337 0
+lr_ck ge server 0 2
+r = bind int server lr_addr 0 16
+lr_ck eq r 0 3
+r = listen int server 4
+lr_ck eq r 0 4
+r = sockname int server lr_addr 0 len lr_addr
+lr_ck gt r 0 5
+port = or shl ulong get lr_addr 2 8 ulong get lr_addr 3
+lr_ck lr_qbuild lr_dhost 1 6
+pid = fork
+lr_ck ge pid 0 7
+if eq pid 0
+lr_tcpfixture int server
+end
+lr_ck lr_dns_tcp_at lr_L 0 port 8
+lr_ck lr_dns_parse 1 77 9
+lr_ck eq get lr_addr 7 7 10
+lr_ck eq get lr_addr 3 77 11
+r = waitpid int pid pstatus 0 len pstatus 0
+lr_ck eq r pid 12
+lr_ck eq pcode 0 13
+r = fclose int server
+ret 0
+end

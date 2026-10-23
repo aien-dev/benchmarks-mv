@@ -37,10 +37,3 @@ path = "src/bin/bench_branching_neutral.rs"
 name = "bench_canonical_suite"
 path = "src/bin/bench_canonical_suite.rs"
 
-[[bin]]
-name = "bench_verify_records"
-path = "src/bin/bench_verify_records.rs"
-
-[[bin]]
-name = "bench_index"
-path = "src/bin/bench_index.rs"

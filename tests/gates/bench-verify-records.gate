@@ -1,6 +1,6 @@
 # tests/gates/bench-verify-records.gate
 # No hosted step: the offline evidence-integrity check (aien-architecture#233 lane P2).
-# 'cargo run --release --bin bench_verify_records -- records artifacts tests/fixtures/records/good'
+# 'build/om/bench_verify_records records artifacts tests/fixtures/records/good'
 # validates aien-bench-record/1 records and SHA256SUMS bundles; any defect line is a FAIL.
 # Needs sibling ../canonical-branch-native-runtime (same crate as the other gates).
 gate: BENCH-VERIFY-RECORDS

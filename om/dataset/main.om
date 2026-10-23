@@ -1,0 +1,5 @@
+note Standalone entry point; the unified CLI calls ds_main directly.
+fn main to int
+sinit
+ret ds_main 1 0
+end

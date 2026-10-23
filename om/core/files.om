@@ -1,0 +1,306 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Linux ARM64 file operations, bounded traversal, lexical ordering, SHA-256.
+global fr ulong 1
+global ferr long 1
+global fi uchar 65536
+global fstatbuf uchar 128
+global fdirbuf uchar 32768
+global ffiles ulong 32768
+global fqueue ulong 16384
+global fcounts ulong 2
+
+fn ffull path ulong to ulong
+ret spath get fr 0 path
+end
+fn fvalid path ulong to bool
+if or eq slen path 0 gt slen path 4095
+put ferr 0 -36
+ret false
+end
+for i ulong slen path
+if eq schar path i 0
+put ferr 0 -22
+ret false
+end
+end
+ret true
+end
+fn fopenread path ulong to long
+if not fvalid path
+ret -1
+end
+fd = fopen sb soff path slen path 526336 0
+put ferr 0 fd
+ret fd
+end
+fn fmode path ulong to long
+if not fvalid path
+ret -1
+end
+note O_PATH | O_CLOEXEC: metadata access must not require read permission or open a FIFO.
+fd = fopen sb soff path slen path 2621440 0
+if lt fd 0
+put ferr 0 fd
+ret -1
+end
+r = fstat int fd fstatbuf 0 128
+closed = fclose int fd
+if or lt r 0 ne closed 0
+put ferr 0 -5
+ret -1
+end
+ret long or ulong get fstatbuf 16 shl ulong get fstatbuf 17 8
+end
+fn fexists path ulong to bool
+ret ge fmode path 0
+end
+fn ftext path ulong to long
+fd = fopenread path
+if lt fd 0
+ret -1
+end
+start = get sp 0
+more = true
+good = true
+while more
+r = read int fd fi 0 len fi
+if ne r -4
+if lt r 0
+put ferr 0 r
+more = false
+good = false
+else
+if eq r 0
+more = false
+else
+if gt add sub get sp 0 start ulong r 1000000
+put ferr 0 -27
+more = false
+good = false
+else
+for i ulong ulong r
+sbyte get fi i
+end
+end
+end
+end
+end
+end
+closed = fclose int fd
+if or not good ne closed 0
+ret -1
+end
+ret long sdone start
+end
+fn fhash path ulong to long
+fd = fopenread path
+if lt fd 0
+ret -1
+end
+hreset
+more = true
+good = true
+while more
+r = read int fd fi 0 len fi
+if ne r -4
+if lt r 0
+more = false
+good = false
+put ferr 0 r
+else
+if eq r 0
+more = false
+else
+if gt add get hmeta 1 ulong r 1073741824
+good = false
+more = false
+put ferr 0 -27
+else
+for i ulong ulong r
+if not hpush get fi i
+good = false
+end
+end
+end
+end
+end
+end
+end
+closed = fclose int fd
+if or not good ne closed 0
+ret -1
+end
+if not hfinal
+ret -1
+end
+p = get sp 0
+for i ulong 64
+sbyte get hd i
+end
+ret long sdone p
+end
+fn fadd path ulong to bool
+n = get fcounts 0
+if eq n len ffiles
+put ferr 0 -27
+ret false
+end
+put ffiles n path
+put fcounts 0 add n 1
+ret true
+end
+fn fqadd path ulong to bool
+n = get fcounts 1
+if eq n len fqueue
+put ferr 0 -27
+ret false
+end
+put fqueue n path
+put fcounts 1 add n 1
+ret true
+end
+fn fdirlen p ulong to ulong
+ret or ulong get fdirbuf add p 16 shl ulong get fdirbuf add p 17 8
+end
+fn fentry base ulong p ulong size ulong to bool
+reclen = fdirlen p
+if or lt reclen 20 gt reclen sub size p
+ret false
+end
+start = get sp 0
+i = add p 19
+more = true
+while and more lt i add p reclen
+c = get fdirbuf i
+if eq c 0
+more = false
+else
+sbyte c
+end
+i = add i 1
+end
+if more
+ret false
+end
+name = sdone start
+if or seq name L_dot seq name L_dotdot
+ret true
+end
+if or seq name L_git seq name L_target
+ret true
+end
+path = spath base name
+kind = get fdirbuf add p 18
+if eq kind 4
+ret fqadd path
+end
+if or eq kind 0 eq kind 10
+mode = fmode ffull path
+if lt mode 0
+ret fadd path
+end
+if eq and mode 61440 16384
+note Refuse symlink directory cycles rather than silently omit or recurse forever.
+if eq kind 10
+put ferr 0 -40
+ret false
+end
+ret fqadd path
+end
+end
+ret fadd path
+end
+fn fdir path ulong to bool
+fd = fopenread ffull path
+if lt fd 0
+ret false
+end
+more = true
+good = true
+while more
+r = getdnts int fd fdirbuf 0 len fdirbuf
+if ne r -4
+if lt r 0
+put ferr 0 r
+good = false
+more = false
+else
+if eq r 0
+more = false
+else
+p = ulong 0
+while and good lt p ulong r
+if lt sub ulong r p 20
+good = false
+else
+good = fentry path p ulong r
+if good
+p = add p fdirlen p
+end
+end
+end
+if not good
+more = false
+end
+end
+end
+end
+end
+closed = fclose int fd
+ret and good eq closed 0
+end
+fn fwalk path ulong to bool
+put fcounts 0 0
+put fcounts 1 0
+mode = fmode ffull path
+if lt mode 0
+ret false
+end
+if ne and mode 61440 16384
+ret fadd path
+end
+if not fqadd path
+ret false
+end
+i = ulong 0
+while lt i get fcounts 1
+if not fdir get fqueue i
+ret false
+end
+i = add i 1
+end
+ret true
+end
+fn fsift root ulong count ulong to void
+while lt root div count 2
+child = add mul root 2 1
+if lt add child 1 count
+if lt scmp get ffiles child get ffiles add child 1 0
+child = add child 1
+end
+end
+if ge scmp get ffiles root get ffiles child 0
+ret
+end
+saved = get ffiles root
+put ffiles root get ffiles child
+put ffiles child saved
+root = child
+end
+end
+fn fsort to void
+n = get fcounts 0
+p = div n 2
+while gt p 0
+p = sub p 1
+fsift p n
+end
+p = n
+while gt p 1
+p = sub p 1
+saved = get ffiles 0
+put ffiles 0 get ffiles p
+put ffiles p saved
+fsift 0 p
+end
+end

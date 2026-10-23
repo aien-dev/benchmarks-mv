@@ -1,0 +1,25 @@
+note Native process fixture: bulk outputs or deliberate timeout. No benchmark claim.
+global pxbuf uchar 65536
+fn main to int
+sinit
+if seq sarg 2 suint 11
+r = sleepns 1000000000
+ret 0
+end
+for i ulong len pxbuf
+put pxbuf i uchar rem i 251
+end
+for stream ulong 2
+for block ulong 32
+p = ulong 0
+while lt p len pxbuf
+n = write int add stream 1 pxbuf p sub len pxbuf p
+if le n 0
+ret 74
+end
+p = add p ulong n
+end
+end
+end
+ret 7
+end

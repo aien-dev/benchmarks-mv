@@ -1,0 +1,51 @@
+note Arithmetic oracle: frozen V8 binary32 results, generated outside the delivered runtime.
+text dvpath "tests/fixtures/numerics/binary32.tsv"
+global dv ulong 4
+fn main to int
+sinit
+p = get sp 0
+for i ulong len dvpath
+sbyte get dvpath i
+end
+raw = ftext sdone p
+if lt raw 0
+ret 1
+end
+textval = ulong raw
+p = ulong 0
+while lt p slen textval
+for k ulong 4
+v = ulong 0
+more = true
+while and more lt p slen textval
+c = schar textval p
+p = add p 1
+if or eq c 32 eq c 10
+more = false
+else
+v = add mul v 10 ulong sub c 48
+end
+end
+put dv k v
+end
+if not dfcheck
+ret 2
+end
+end
+ret 0
+end
+fn dfcheck to bool
+a = uint get dv 1
+b = uint get dv 2
+want = uint get dv 3
+got = uint 0
+if eq get dv 0 0
+got = fsadd a b
+else
+got = fsmul a b
+end
+if gt and want 2147483647 2139095040
+ret gt and got 2147483647 2139095040
+end
+ret eq got want
+end

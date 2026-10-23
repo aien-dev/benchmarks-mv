@@ -1,0 +1,877 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Streaming JSON emission, measured summaries, honest native build identity.
+global lr_io long 1
+global lr_meta ulong 12
+note metadata: source commit0, dirty1, hostname2, CPU3, GPU4, stem5,
+note samples filename6, record filename7, wall ns8, current sample content type9.
+global lr_sum ulong 9
+note summary: ok0, events1, coalesced2, malformed3, usage requests4, tokens5,
+note gaps6, tpot samples7, token accounting flag8.
+global lr_fail ulong 13
+global lr_ttft ulong 10000
+global lr_first ulong 10000
+global lr_e2e ulong 10000
+global lr_gaps ulong 1000000
+global lr_tpot ulong 10000
+fn lr_raw s ulong to void
+for i ulong slen s
+lr_byte schar s i
+end
+end
+fn lr_flush to void
+if ne get ws 1 0
+exit 70
+end
+if lt get lr_io 0 0
+exit 70
+end
+p = ulong 0
+while lt p get ws 0
+r = write int get lr_io 0 jw p sub get ws 0 p
+if ne r -4
+if le r 0
+exit 74
+end
+p = add p ulong r
+end
+end
+wreset
+end
+fn lr_byte c uchar to void
+if ge get ws 0 60000
+lr_flush
+end
+wbyte c
+end
+fn lr_str s ulong to void
+lr_byte 34
+for i ulong slen s
+c = schar s i
+if or eq c 34 eq c 92
+lr_byte 92
+lr_byte c
+else
+if lt c 32
+lr_byte 92
+lr_byte 117
+lr_byte 48
+lr_byte 48
+lr_byte get whex ulong shr c 4
+lr_byte get whex ulong and c 15
+else
+lr_byte c
+end
+end
+end
+lr_byte 34
+end
+fn lr_num n ulong to void
+if ge get ws 0 59970
+lr_flush
+end
+wuint n
+end
+fn lr_bool yes bool to void
+if yes
+lr_raw lr_L 87
+else
+lr_raw lr_L 88
+end
+end
+fn lr_key id ulong to void
+lr_str lr_L id
+lr_byte 58
+end
+fn lr_next id ulong to void
+lr_byte 44
+lr_key id
+end
+fn lr_ms ns ulong to void
+save = get sp 0
+bits = dfdiv df_from_u64 ns df_from_u64 1000000
+lr_raw df_to_json bits
+put sp 0 save
+end
+fn lr_double bits ulong to void
+save = get sp 0
+if not df_finite bits
+exit 70
+end
+lr_raw df_to_json bits
+put sp 0 save
+end
+fn lr_optional flag ulong value ulong to void
+if eq flag 0
+lr_raw lr_L 86
+else
+lr_num value
+end
+end
+fn lr_optms flag ulong value ulong to void
+if eq flag 0
+lr_raw lr_L 86
+else
+lr_ms value
+end
+end
+fn lr_request to bool
+put lr_io 0 -1
+wreset
+lr_raw lr_L 24
+lr_str get lr_cfg 3
+lr_raw lr_L 25
+lr_str get lr_cfg 8
+lr_raw lr_L 26
+lr_num get lr_cfg 7
+lr_raw lr_L 27
+if eq get lr_cfg 14 1
+lr_raw lr_L 28
+end
+lr_byte 125
+p = get sp 0
+for i ulong get ws 0
+sbyte get jw i
+end
+body = sdone p
+p = get sp 0
+sappend lr_L 29
+sappend get lr_cfg 2
+sappend lr_L 30
+lr_crlf
+sappend lr_L 31
+lr_host_header
+sbyte 58
+discard = suint get lr_cfg 1
+lr_crlf
+sappend lr_L 32
+lr_crlf
+sappend lr_L 33
+lr_crlf
+sappend lr_L 34
+discard = suint slen body
+lr_crlf
+sappend lr_L 35
+lr_crlf
+lr_crlf
+sappend body
+req = sdone p
+if gt slen req len lr_req
+ret false
+end
+for i ulong slen req
+put lr_req i schar req i
+end
+put lr_net 0 slen req
+ret true
+end
+fn lr_crlf to void
+sbyte 13
+sbyte 10
+end
+fn lr_source to bool
+preset
+parg lr_L 36
+parg lr_L 37
+parg lr_L 43
+parg lr_L 38
+parg lr_L 39
+res = pcapture
+if lt res 0
+ret false
+end
+commit = strim ulong res
+if ne slen commit 40
+ret false
+end
+for i ulong 40
+c = schar commit i
+if not or and ge c 48 le c 57 and ge c 97 le c 102
+ret false
+end
+end
+put lr_meta 0 commit
+preset
+parg lr_L 36
+parg lr_L 37
+parg lr_L 43
+parg lr_L 40
+parg lr_L 41
+parg lr_L 42
+res = pcapture
+if lt res 0
+ret false
+end
+put lr_meta 1 0
+if gt slen ulong res 0
+put lr_meta 1 1
+end
+ret true
+end
+fn lr_hardware to void
+host = ftext lr_L 59
+put lr_meta 2 lr_L 67
+if ge host 0
+put lr_meta 2 strim ulong host
+end
+put lr_meta 3 lr_L 61
+put lr_meta 4 lr_L 62
+cpu = ftext lr_L 60
+if ge cpu 0
+s = ulong cpu
+p = sfind s lr_L 66
+if ge p 0
+s = ssub s ulong p sub slen s ulong p
+p = sfind s L_colon
+if ge p 0
+s = ssub s add ulong p 1 sub slen s add ulong p 1
+p = sfind s L_newline
+if ge p 0
+s = ssub s 0 ulong p
+end
+put lr_meta 3 strim s
+end
+end
+end
+end
+fn lr_summary_add to void
+outcome = get ac_s 3
+if ne outcome 0
+put lr_fail outcome add get lr_fail outcome 1
+ret
+end
+n = get lr_sum 0
+put lr_ttft n get ac_s 13
+put lr_first n get ac_s 8
+put lr_e2e n get ac_s 16
+put lr_sum 0 add n 1
+lr_checked_add 1 get ac_s 18
+lr_checked_add 2 get ac_s 36
+lr_checked_add 3 get ac_s 21
+if eq get ac_s 22 1
+lr_checked_add 4 1
+lr_checked_add 5 get ac_s 23
+if and ge get ac_s 23 2 gt get ac_s 14 get ac_s 13
+window = sub get ac_s 14 get ac_s 13
+bits = dfdiv df_from_u64 window df_from_u64 sub get ac_s 23 1
+n = get lr_sum 7
+put lr_tpot n bits
+put lr_sum 7 add n 1
+end
+end
+if gt get ac_s 18 1
+n = get lr_sum 6
+count = sub get ac_s 18 1
+if gt count sub len lr_gaps n
+exit 70
+end
+for i ulong count
+put lr_gaps add n i get ac_gap i
+end
+put lr_sum 6 add n count
+end
+end
+fn lr_checked_add slot ulong n ulong to void
+old = get lr_sum slot
+if gt n sub ulong 18446744073709551615 old
+exit 70
+end
+put lr_sum slot add old n
+end
+fn lr_dist_get which ulong i ulong to ulong
+if eq which 0
+ret get lr_ttft i
+end
+if eq which 1
+ret get lr_first i
+end
+if eq which 2
+ret get lr_e2e i
+end
+if eq which 3
+ret get lr_gaps i
+end
+ret get lr_tpot i
+end
+fn lr_dist_put which ulong i ulong val ulong to void
+if eq which 0
+put lr_ttft i val
+ret
+end
+if eq which 1
+put lr_first i val
+ret
+end
+if eq which 2
+put lr_e2e i val
+ret
+end
+if eq which 3
+put lr_gaps i val
+ret
+end
+put lr_tpot i val
+end
+note Heap sort avoids quadratic cost and unbounded recursion at the observation limit.
+fn lr_sift which ulong root ulong count ulong to void
+while lt add mul root 2 1 count
+child = add mul root 2 1
+if lt add child 1 count
+if lt lr_dist_get which child lr_dist_get which add child 1
+child = add child 1
+end
+end
+v = lr_dist_get which root
+if ge v lr_dist_get which child
+ret
+end
+lr_dist_put which root lr_dist_get which child
+lr_dist_put which child v
+root = child
+end
+end
+fn lr_sort which ulong count ulong to void
+if lt count 2
+ret
+end
+n = div count 2
+for i ulong n
+lr_sift which sub sub n i 1 count
+end
+n = sub count 1
+for i ulong n
+last = sub n i
+v = lr_dist_get which 0
+lr_dist_put which 0 lr_dist_get which last
+lr_dist_put which last v
+lr_sift which 0 last
+end
+end
+fn lr_dist which ulong key ulong count ulong to void
+lr_sort which count
+lr_byte 44
+lr_str scat lr_L key lr_L 168
+lr_byte 58
+lr_num count
+if gt count 0
+lr_byte 44
+lr_str scat lr_L key lr_L 169
+lr_byte 58
+v = lr_dist_get which div sub count 1 2
+lr_distval which v
+end
+if ge count 20
+lr_byte 44
+lr_str scat lr_L key lr_L 170
+lr_byte 58
+rank = sub div add mul count 95 99 100 1
+v = lr_dist_get which rank
+lr_distval which v
+end
+end
+fn lr_distval which ulong v ulong to void
+if eq which 4
+lr_double dfdiv v df_from_u64 1000000
+else
+lr_ms v
+end
+end
+fn lr_sample to void
+lr_byte 123
+lr_key 125
+lr_num get ac_s 0
+lr_next 126
+lr_str lr_L add 68 get ac_s 3
+lr_next 127
+lr_optional get ac_s 4 get ac_s 32
+lr_next 218
+lr_detail
+lr_next 128
+lr_optms get ac_s 34 get ac_s 35
+lr_next 129
+lr_optional get ac_s 9 get ac_s 11
+lr_next 130
+if eq get lr_meta 10 0
+lr_raw lr_L 86
+else
+lr_str get lr_meta 9
+end
+lr_sample_times
+lr_next 136
+lr_bool eq get ac_s 17 1
+for i ulong 4
+lr_next add 137 i
+lr_num get ac_s add 18 i
+end
+lr_next 141
+lr_optional get ac_s 22 get ac_s 23
+lr_next 142
+lr_optional get ac_s 24 get ac_s 25
+lr_next 143
+lr_num get ac_s 5
+lr_next 144
+lr_num get ac_s 6
+for i ulong 4
+lr_next add 145 i
+lr_num get ac_s add 28 i
+end
+lr_next 149
+lr_error_snippet
+lr_next 150
+lr_byte 91
+for i ulong get ac_s 26
+if gt i 0
+lr_byte 44
+end
+lr_byte 123
+lr_key 151
+lr_ms get ac_at i
+lr_next 192
+lr_num get ac_at i
+lr_next 152
+lr_num get ac_ri i
+lr_next 153
+lr_str lr_L add 81 ulong get ac_kind i
+lr_byte 125
+end
+lr_byte 93
+lr_byte 125
+end
+fn lr_sample_times to void
+lr_next 131
+lr_optms get ac_s 7 get ac_s 8
+lr_next 132
+lr_optms get ac_s 9 get ac_s 10
+lr_next 133
+lr_optms get ac_s 12 get ac_s 13
+lr_next 134
+lr_optms get ac_s 12 get ac_s 14
+lr_next 135
+lr_optms get ac_s 15 get ac_s 16
+lr_next 193
+lr_optional get ac_s 12 get ac_s 13
+lr_next 194
+lr_optional get ac_s 12 get ac_s 14
+lr_next 195
+lr_optional get ac_s 15 get ac_s 16
+lr_next 196
+lr_optional get ac_s 34 get ac_s 35
+lr_next 197
+lr_optional get ac_s 7 get ac_s 8
+lr_next 198
+lr_optional get ac_s 9 get ac_s 10
+end
+fn lr_error_snippet to void
+if eq get ac_s 27 0
+lr_raw lr_L 86
+ret
+end
+p = get sp 0
+n = get ac_s 27
+i = ulong 0
+count = ulong 0
+while and lt i n lt count 512
+c = get ac_err i
+if lt c 128
+sbyte c
+i = add i 1
+else
+k = lr_utfwidth i n
+if eq k 0
+sbyte 239
+sbyte 191
+sbyte 189
+i = add i 1
+else
+for j ulong k
+sbyte get ac_err add i j
+end
+i = add i k
+end
+end
+count = add count 1
+end
+lr_str sdone p
+put sp 0 p
+end
+fn lr_utfwidth i ulong n ulong to ulong
+c = get ac_err i
+k = ulong 0
+v = ulong 0
+low = ulong 0
+if and ge c 194 le c 223
+k = 2
+v = ulong and c 31
+low = 128
+end
+if and ge c 224 le c 239
+k = 3
+v = ulong and c 15
+low = 2048
+end
+if and ge c 240 le c 244
+k = 4
+v = ulong and c 7
+low = 65536
+end
+if or eq k 0 gt k sub n i
+ret 0
+end
+for j ulong sub k 1
+c = get ac_err add add i j 1
+if or lt c 128 gt c 191
+ret 0
+end
+v = add mul v 64 ulong and c 63
+end
+if or lt v low gt v 1114111
+ret 0
+end
+if and ge v 55296 le v 57343
+ret 0
+end
+ret k
+end
+fn lr_metrics to void
+lr_byte 123
+lr_key 154
+lr_num get lr_cfg 9
+lr_next 155
+lr_num get lr_sum 0
+lr_next 156
+lr_num sub get lr_cfg 9 get lr_sum 0
+lr_next 157
+lr_ms get lr_meta 8
+lr_next 199
+lr_num get lr_meta 8
+lr_dist 0 163 get lr_sum 0
+lr_dist 1 164 get lr_sum 0
+lr_dist 2 165 get lr_sum 0
+lr_dist 3 166 get lr_sum 6
+lr_next 158
+lr_num get lr_sum 1
+lr_next 159
+lr_num get lr_sum 2
+lr_next 200
+lr_num get lr_sum 3
+lr_next 201
+lr_num get lr_sum 4
+if and gt get lr_sum 0 0 gt get lr_meta 8 0
+lr_next 160
+lr_rate get lr_sum 1
+end
+if eq get lr_sum 8 1
+lr_next 161
+lr_num get lr_sum 5
+if gt get lr_meta 8 0
+lr_next 162
+lr_rate get lr_sum 5
+end
+lr_dist 4 167 get lr_sum 7
+end
+lr_byte 125
+end
+fn lr_failurecounts to void
+lr_byte 123
+first = true
+for i ulong 13
+if gt get lr_fail i 0
+if not first
+lr_byte 44
+end
+first = false
+lr_str lr_L add 68 i
+lr_byte 58
+lr_num get lr_fail i
+end
+end
+lr_byte 125
+end
+fn lr_rate n ulong to void
+lr_double dfdiv dfmul df_from_u64 n df_from_u64 1000000000 df_from_u64 get lr_meta 8
+end
+fn lr_definition key ulong value ulong first bool to void
+if not first
+lr_byte 44
+end
+lr_key key
+lr_str lr_L value
+end
+fn lr_definitions to void
+lr_byte 123
+lr_definition 172 183 true
+lr_definition 173 184 false
+lr_definition 131 209 false
+lr_definition 163 210 false
+lr_definition 165 211 false
+lr_definition 166 186 false
+lr_definition 159 177 false
+lr_definition 160 187 false
+lr_definition 157 188 false
+lr_definition 174 185 false
+lr_definition 175 182 false
+lr_definition 124 180 false
+lr_definition 154 220 false
+lr_definition 155 221 false
+lr_definition 156 222 false
+lr_definition 158 223 false
+lr_definition 200 224 false
+lr_definition 201 225 false
+lr_definition 199 226 false
+lr_distdefs 163 210
+lr_distdefs 164 209
+lr_distdefs 165 211
+lr_distdefs 166 186
+if eq get lr_sum 8 1
+lr_definition 161 181 false
+lr_definition 162 189 false
+lr_distdefs 167 190
+lr_definition 167 190 false
+end
+lr_byte 125
+end
+fn lr_record to void
+lr_byte 123
+lr_key 89
+lr_str lr_L 48
+lr_next 90
+if eq get lr_sum 0 0
+lr_str lr_L 51
+else
+lr_str lr_L 50
+end
+lr_next 91
+lr_byte 123
+lr_key 92
+lr_str lr_L 52
+lr_next 93
+lr_str get lr_meta 0
+lr_next 94
+lr_bool eq get lr_meta 1 1
+lr_byte 125
+lr_next 95
+lr_byte 123
+lr_key 96
+lr_str lr_L 53
+lr_next 97
+lr_str lr_L 54
+lr_byte 125
+lr_next 98
+lr_byte 123
+lr_key 99
+lr_str lr_L 56
+lr_next 100
+lr_num slen get lr_cfg 8
+lr_next 101
+lr_num get lr_cfg 7
+lr_next 102
+lr_num get lr_cfg 9
+lr_next 103
+lr_num get lr_cfg 10
+lr_byte 125
+lr_next 104
+lr_byte 123
+for i ulong 3
+if gt i 0
+lr_byte 44
+end
+lr_key add 105 i
+lr_str get lr_meta add i 2
+end
+lr_byte 125
+lr_record_tail
+end
+fn lr_record_tail to void
+lr_next 108
+lr_byte 123
+lr_key 109
+lr_str get lr_cfg 4
+lr_next 110
+lr_str get lr_cfg 3
+lr_next 111
+lr_str get lr_cfg 5
+lr_next 112
+p = get sp 0
+lr_host_header
+sbyte 58
+discard = suint get lr_cfg 1
+sappend get lr_cfg 2
+lr_str sdone p
+if eq get lr_cfg 16 1
+lr_next 113
+lr_num get lr_cfg 6
+end
+lr_byte 125
+lr_next 114
+lr_byte 123
+lr_key 115
+lr_str lr_L 55
+lr_next 116
+lr_definitions
+lr_next 117
+if eq get lr_sum 8 1
+lr_str lr_L 57
+else
+lr_str lr_L 58
+end
+lr_next 118
+lr_num get lr_sum 0
+lr_byte 125
+lr_next 119
+lr_metrics
+lr_next 171
+lr_failurecounts
+lr_next 227
+lr_str lr_L 122
+lr_next 120
+lr_byte 91
+lr_str get lr_meta 6
+lr_byte 93
+lr_next 121
+lr_byte 91
+for i ulong 7
+if gt i 0
+lr_byte 44
+end
+lr_str lr_L add 176 i
+end
+lr_conditional_limits
+lr_byte 93
+lr_byte 125
+lr_byte 10
+end
+fn lr_host_header to void
+host = get lr_cfg 0
+v6 = false
+for i ulong slen host
+if eq schar host i 58
+v6 = true
+end
+end
+if v6
+sbyte 91
+end
+sappend host
+if v6
+sbyte 93
+end
+end
+global lr_gpul ulong 64
+text lr_gpuuk "NVIDIA GPU (driver reports model Unknown)"
+fn lr_gpu to void
+if not fwalk lr_L 63
+ret
+end
+fsort
+n = ulong 0
+for i ulong get fcounts 0
+path = get ffiles i
+if sends path lr_L 64
+file = ftext path
+if ge file 0
+model = lr_model_line ulong file
+if ne model 0
+if eq n len lr_gpul
+exit 70
+end
+put lr_gpul n model
+n = add n 1
+end
+end
+end
+end
+if eq n 0
+ret
+end
+for i ulong n
+for j ulong sub sub n i 1
+a = get lr_gpul j
+b = get lr_gpul add j 1
+if gt scmp a b 0
+put lr_gpul j b
+put lr_gpul add j 1 a
+end
+end
+end
+p = get sp 0
+for i ulong n
+if gt i 0
+sbyte 44
+sbyte 32
+end
+sappend get lr_gpul i
+end
+put lr_meta 4 sdone p
+end
+fn lr_model_line s ulong to ulong
+p = sfind s lr_L 65
+if lt p 0
+ret 0
+end
+s = ssub s add ulong p 6 sub slen s add ulong p 6
+p = sfind s L_newline
+if ge p 0
+s = ssub s 0 ulong p
+end
+s = strim s
+if or eq slen s 0 lr_ci s lr_L 67
+p = long get sp 0
+for i ulong len lr_gpuuk
+sbyte get lr_gpuuk i
+end
+ret sdone ulong p
+end
+ret s
+end
+fn lr_limit id ulong to void
+lr_byte 44
+lr_str lr_L id
+end
+fn lr_conditional_limits to void
+if seq get lr_cfg 5 lr_L 3
+lr_limit 212
+end
+if seq get lr_cfg 4 lr_L 3
+lr_limit 213
+end
+if eq get lr_cfg 14 0
+lr_limit 214
+end
+if eq get lr_sum 0 0
+lr_limit 215
+else
+if eq get lr_sum 8 0
+lr_limit 216
+end
+end
+lr_limit 217
+end
+fn lr_detail to void
+outcome = get ac_s 3
+if eq outcome 0
+lr_raw lr_L 86
+ret
+end
+save = get sp 0
+if eq outcome 7
+lr_str scat lr_L 219 suint get ac_s 11
+else
+if eq get ac_s 4 1
+lr_str scat3 lr_L add 68 outcome L_colon suint get ac_s 32
+else
+lr_str lr_L add 68 outcome
+end
+end
+put sp 0 save
+end
+fn lr_distdefs key ulong desc ulong to void
+for i ulong 3
+lr_byte 44
+lr_str scat lr_L key lr_L add 168 i
+lr_byte 58
+if eq i 0
+lr_str lr_L 182
+else
+lr_str lr_L desc
+end
+end
+end

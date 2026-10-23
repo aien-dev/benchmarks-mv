@@ -1,0 +1,2 @@
+evidence[0]: "../outside.json" must be a relative path inside the repository
+evidence[1]: "/etc/hostname" must be a relative path inside the repository

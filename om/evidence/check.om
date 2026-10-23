@@ -1,0 +1,549 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Offline record validation. Diagnostics preserve the existing public field/reason format.
+global estate ulong 6
+note estate: path, defects, records, bundles, checked files, status string.
+global defects ulong 32768
+global esample ulong 2
+text ekeys "build.compiler~build.rustc~evidence_base~record~repository~must be record or repository~"
+fn ekey index ulong to ulong
+start = ulong 0
+found = ulong 0
+for i ulong len ekeys
+if eq get ekeys i 126
+if eq found index
+p = get sp 0
+for j ulong sub i start
+sbyte get ekeys add start j
+end
+ret sdone p
+end
+found = add found 1
+start = add i 1
+end
+end
+exit 70
+end
+note sample state: 0 invalid/missing, 1 not_recorded, 2 exact unsigned; then value.
+
+fn emember s ulong csv ulong to bool
+start = ulong 0
+for i ulong add slen csv 1
+split = eq i slen csv
+if not split
+split = eq schar csv i 44
+end
+if split
+if seq s ssub csv start sub i start
+ret true
+end
+start = add i 1
+end
+end
+ret false
+end
+fn eplaceholder s ulong to bool
+ret emember slower strim s L_placeholderlist
+end
+fn equote s ulong to ulong
+ret scat3 L_quote s L_quote
+end
+fn eadd field ulong reason ulong to void
+n = get estate 1
+if ge n len defects
+exit 70
+end
+line = scat3 get estate 0 L_colon field
+put defects n scat3 line L_colon reason
+put estate 1 add n 1
+end
+fn ecommit s ulong to bool
+if ne slen s 40
+ret false
+end
+for i ulong 40
+c = schar s i
+if not or and ge c 48 le c 57 and ge c 97 le c 102
+ret false
+end
+end
+ret true
+end
+fn efield key ulong to long
+ret jpath 0 key
+end
+fn erequired field ulong to void
+if seq field ekey 1
+native = ekey 0
+if ge efield native 0
+field = native
+end
+end
+t = efield field
+if lt t 0
+eadd field L_missing
+else
+if not jkind t 3
+eadd field L_string
+end
+end
+end
+fn erequiredall to void
+list = L_required
+start = ulong 0
+for i ulong add slen list 1
+split = eq i slen list
+if not split
+split = eq schar list i 44
+end
+if split
+erequired ssub list start sub i start
+start = add i 1
+end
+end
+end
+fn eenum field ulong one ulong two ulong reason ulong to void
+t = efield field
+if lt t 0
+eadd field L_missing
+ret
+end
+if not jkind t 3
+eadd field L_string
+ret
+end
+s = jstringval t
+if or or seq s one seq s two seq s L_notrecorded
+ret
+end
+if not eplaceholder s
+eadd field scat equote s reason
+end
+end
+fn epsegment seg ulong to ulong
+n = slen seg
+if and ge n 2 le n 3
+if eq schar seg 0 112
+v = ulong 0
+valid = true
+for j ulong sub n 1
+c = schar seg add 1 j
+if or lt c 48 gt c 57
+valid = false
+else
+v = add mul v 10 ulong sub c 48
+end
+end
+if and valid and ge v 1 le v 99
+ret v
+end
+end
+end
+ret 0
+end
+fn epercentile key ulong to ulong
+start = ulong 0
+for i ulong add slen key 1
+split = eq i slen key
+if not split
+split = eq schar key i 95
+end
+if split
+v = epsegment ssub key start sub i start
+if ne v 0
+ret v
+end
+start = add i 1
+end
+end
+ret 0
+end
+fn etokens key ulong to bool
+start = ulong 0
+for i ulong add slen key 1
+split = eq i slen key
+if not split
+split = eq schar key i 95
+end
+if split
+seg = ssub key start sub i start
+if or or seq seg L_tok seq seg L_tokens seq seg L_itl
+ret true
+end
+start = add i 1
+end
+end
+ret false
+end
+fn eexplained field ulong to bool
+arr = efield L_limitations
+if not jkind arr 2
+ret false
+end
+t = add ulong arr 1
+while lt t get jn ulong arr
+if jkind long t 3
+if ge sfind jstringval long t field 0
+ret true
+end
+end
+t = get jn t
+end
+ret false
+end
+fn estring field ulong s ulong legacy bool to void
+if eplaceholder s
+eadd field scat L_placeholder equote s
+ret
+end
+if legacy
+if and sends field L_gitsha not ecommit s
+eadd field scat equote s L_badcommit
+end
+ret
+end
+if seq s L_notrecorded
+if not emember field L_nrallowed
+eadd field L_nrfield
+else
+status = get estate 5
+if and ne status 0 not or seq status L_historical seq status L_superseded
+eadd field L_nrstatus
+else
+if not eexplained field
+eadd field L_nrexplain
+end
+end
+end
+end
+end
+fn estrings token ulong prefix ulong legacy bool to void
+kind = get jk token
+if eq kind 3
+estring prefix jstringval long token legacy
+ret
+end
+if eq kind 2
+t = add token 1
+i = ulong 0
+while lt t get jn token
+field = scat3 prefix L_lbracket suint i
+estrings t scat field L_rbracket legacy
+i = add i 1
+t = get jn t
+end
+ret
+end
+if eq kind 1
+t = add token 1
+while lt t get jn token
+key = jstringval long t
+value = add t 1
+if eq jlookup long token key long value
+field = key
+if ne slen prefix 0
+field = scat3 prefix L_dotsep key
+end
+estrings value field legacy
+end
+t = get jn value
+end
+end
+end
+fn elimitations to void
+arr = efield L_limitations
+if lt arr 0
+eadd L_limitations L_missing
+ret
+end
+if not jkind arr 2
+eadd L_limitations L_arrstrings
+ret
+end
+t = add ulong arr 1
+i = ulong 0
+while lt t get jn ulong arr
+if not jkind long t 3
+field = scat3 L_limitations L_lbracket suint i
+eadd scat field L_rbracket L_string
+end
+i = add i 1
+t = get jn t
+end
+end
+fn estatus to void
+put estate 5 0
+t = efield L_status
+if lt t 0
+eadd L_status L_missing
+ret
+end
+if not jkind t 3
+eadd L_status L_string
+ret
+end
+s = jstringval t
+good = or or seq s L_verified seq s L_experimental seq s L_historical
+good = or good or or seq s L_notrun seq s L_fail seq s L_superseded
+if good
+put estate 5 s
+else
+eadd L_status scat equote s L_enumstatus
+end
+end
+fn esamples to void
+put esample 0 0
+put esample 1 0
+t = efield L_samples
+if lt t 0
+eadd L_samples L_missing
+ret
+end
+if jsame t L_notrecorded
+put esample 0 1
+ret
+end
+if not junsigned t
+eadd L_samples L_integer
+ret
+end
+n = get js 5
+put esample 0 2
+put esample 1 n
+if seq get estate 5 L_notrun
+if ne n 0
+eadd L_samples L_nrsamples
+end
+else
+if eq n 0
+eadd L_samples L_atleast
+end
+end
+end
+fn eworkload to void
+obj = efield L_workload
+if lt obj 0
+ret
+end
+if not jkind obj 1
+eadd L_workload L_object
+ret
+end
+t = add ulong obj 1
+while lt t get jn ulong obj
+key = jstringval long t
+value = add t 1
+if eq jlookup obj key long value
+if not seq key L_name
+if not jfinite long value
+eadd scat3 L_workload L_dotsep key L_finite
+end
+end
+end
+t = get jn value
+end
+end
+fn edefinitions to void
+obj = efield L_definitions
+if lt obj 0
+eadd L_definitions L_missing
+ret
+end
+if not jkind obj 1
+eadd L_definitions L_object
+ret
+end
+t = add ulong obj 1
+while lt t get jn ulong obj
+key = jstringval long t
+value = add t 1
+if eq jlookup obj key long value
+if not jkind long value 3
+eadd scat3 L_definitions L_dotsep key L_string
+end
+end
+t = get jn value
+end
+end
+fn emetric key ulong value ulong to void
+field = scat3 L_metrics L_dotsep key
+if not jfinite long value
+eadd field L_finite
+end
+defs = efield L_definitions
+if jkind defs 1
+if lt jlookup defs key 0
+eadd scat3 L_definitions L_dotsep key scat L_defmissing key
+end
+end
+q = epercentile key
+if gt q 0
+need = div add 100 sub 99 q sub 100 q
+if eq get esample 0 1
+eadd field scat3 L_p suint q L_precorded
+end
+if and eq get esample 0 2 lt get esample 1 need
+reason = scat3 L_p suint q L_pneeds
+reason = scat3 reason suint need L_psamples
+eadd field scat reason suint get esample 1
+end
+end
+if jsame efield L_accounting L_events
+if etokens key
+eadd field L_tokenerror
+end
+end
+end
+fn emetrics to void
+obj = efield L_metrics
+if lt obj 0
+eadd L_metrics L_missing
+ret
+end
+if not jkind obj 1
+eadd L_metrics L_object
+ret
+end
+empty = eq get jn ulong obj add ulong obj 1
+status = get estate 5
+if and empty and ne status 0 not seq status L_notrun
+eadd L_metrics L_isempty
+end
+if and not empty seq status L_notrun
+eadd L_metrics L_nrmetrics
+end
+t = add ulong obj 1
+while lt t get jn ulong obj
+key = jstringval long t
+value = add t 1
+if eq jlookup obj key long value
+emetric key value
+end
+t = get jn value
+end
+end
+fn eevidence to void
+basekey = ekey 2
+baseval = efield basekey
+local = false
+if ge baseval 0
+if jsame baseval ekey 3
+local = true
+else
+if not jsame baseval ekey 4
+eadd basekey ekey 5
+end
+end
+end
+arr = efield L_evidence
+if lt arr 0
+eadd L_evidence L_missing
+ret
+end
+if not jkind arr 2
+eadd L_evidence L_arrpaths
+ret
+end
+empty = eq jlistcount arr 0
+status = get estate 5
+if and empty and ne status 0 not seq status L_notrun
+eadd L_evidence L_emptyevidence
+end
+if and not empty seq status L_notrun
+eadd L_evidence L_nrevidence
+end
+t = add ulong arr 1
+i = ulong 0
+while lt t get jn ulong arr
+field = scat3 L_evidence L_lbracket suint i
+field = scat field L_rbracket
+if not jkind long t 3
+eadd field L_string
+else
+s = jstringval long t
+if not eplaceholder s
+if not srelative s
+eadd field scat equote s L_relerror
+else
+path = s
+if local
+path = spath sparent get estate 0 s
+end
+if not fexists ffull path
+eadd field scat L_pathmissing s
+end
+end
+end
+end
+t = get jn t
+i = add i 1
+end
+end
+fn erecord to void
+if ne get jk 0 1
+eadd L_file L_topobject
+ret
+end
+estatus
+elimitations
+erequiredall
+commit = efield L_commit
+if jkind commit 3
+s = jstringval commit
+if and not ecommit s not eplaceholder s
+eadd L_commit scat equote s L_badcommit
+end
+end
+dirty = efield L_dirty
+if lt dirty 0
+eadd L_dirty L_missing
+else
+if not or or jkind dirty 5 jkind dirty 6 jsame dirty L_notrecorded
+eadd L_dirty L_boolean
+end
+end
+eenum L_profile L_release L_debug L_enumprofile
+eenum L_accounting L_usage L_events L_enumaccount
+esamples
+eworkload
+edefinitions
+emetrics
+eevidence
+if and seq get estate 5 L_verified not jkind dirty 6
+eadd L_dirty L_clean
+end
+estrings 0 L_empty false
+end
+fn edsort start ulong to void
+note Per-file diagnostic lists are small; insertion sort preserves exact lexical ordering.
+i = add start 1
+while lt i get estate 1
+v = get defects i
+p = i
+more = true
+while and more gt p start
+if gt scmp get defects sub p 1 v 0
+put defects p get defects sub p 1
+p = sub p 1
+else
+more = false
+end
+end
+put defects p v
+i = add i 1
+end
+note Deduplicate only this file's sorted diagnostics, preserving bundle ordering before it.
+writeidx = start
+i = start
+while lt i get estate 1
+keep = eq writeidx start
+if not keep
+keep = not seq get defects sub writeidx 1 get defects i
+end
+if keep
+put defects writeidx get defects i
+writeidx = add writeidx 1
+end
+i = add i 1
+end
+put estate 1 writeidx
+end

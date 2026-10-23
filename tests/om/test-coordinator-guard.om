@@ -1,0 +1,59 @@
+note Filename guard edge cases. Called by the coordinator before scanning tracked files.
+text gn_bad "x/Foo.PY\nx/a.PYI\na.pyw\na.pyx\na.pyc\na.IPYNB\nx/setup.cfg\nx/pyproject.toml\nx/Pipfile\nx/Pipfile.lock\nx/poetry.lock\nx/uv.lock\nx/.python-version\nx/requirements-dev.txt\nrequirements.in\nsetup.py\n"
+text gn_good "om/test/guard.om\nrequirements.md\nrequirements.txt.backup\nmyrequirements.txt\nsetup.cfg.om\nfile.py.txt\n"
+fn tguardnames to bool
+p = get sp 0
+for i ulong len gn_bad
+sbyte get gn_bad i
+end
+pool = sdone p
+for i ulong 16
+if not gname tline pool i
+ret false
+end
+end
+p = get sp 0
+for i ulong len gn_good
+sbyte get gn_good i
+end
+pool = sdone p
+for i ulong 6
+if gname tline pool i
+ret false
+end
+end
+ret true
+end
+text gs_cases "#!/usr/bin/python3\n#!/usr/bin/env PYTHON3\n#!/bin/sh\nplain python text\n# comment\n"
+text gs_name "guard-input"
+fn tguardshebang to bool
+p = get sp 0
+for i ulong len gs_name
+sbyte get gs_name i
+end
+name = sdone p
+path = tpath name
+p = get sp 0
+for i ulong len gs_cases
+sbyte get gs_cases i
+end
+pool = sdone p
+for i ulong 5
+if not twrite path scat tline pool i L_newline
+ret false
+end
+if ne gshebang path lt i 2
+ret false
+end
+end
+if not twrite path scat3 tline pool 4 L_newline tline pool 0
+ret false
+end
+if gshebang path
+ret false
+end
+if not twrite path 0
+ret false
+end
+ret not gshebang path
+end

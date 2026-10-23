@@ -1,0 +1,220 @@
+note Pure canonical accumulator regression tests. Timestamps are supplied nanoseconds.
+text ac_tests "HTTP/1.1 200 OK\nContent-Type: text/event-stream\n\n~data: {\"choices\":[{\"delta\":{\"content\":\"a\"}}]}\n\n~data: [DONE]\n\n~data: {\"choices\":[],\"usage\":{\"prompt_tokens\":7,\"completion_tokens\":9}}\n\n~data: {\"choices\":[{\"delta\":{\"role\":\"assistant\"}}]}\n\n~data: {\"choices\":[{\"delta\":{\"content\":\"\"}}]}\n\n~data: {\"choices\":[{\"delta\":{},\"finish_reason\":\"stop\"}]}\n\n~data: {not json\n\n~: ping\n\n~HTTP/1.1 500 Internal Server Error\nContent-Length: 25\n\n{\"error\":\"model crashed\"}~data: {\"error\":{\"message\":\"oom\"}}\n\n~event: error\ndata: bad\n\n~HTTP/1.1 200 OK\nContent-Ty~HTTP/1.1 200 OK\nTransfer-Encoding: chunked\n\n~zz\nxx~20\ndata: {\"cho~data: {\"choices\":[{\"delta\":{\"refusal\":\"no\",\"tool_calls\":[{}]}}]}\n\n~data: {\"choices\":[{\"delta\":{\"reasoning_content\":\"think\"}},{\"text\":\"yes\"}]}\n\n~data: {\"usage\":{\"completion_tokens\":0}}\n\n~data: {\"usage\":{\"completion_tokens\":-1,\"prompt_tokens\":7.0}}\n\n~garbage\n\n~data: {\"choices\":[{\"text\":\"a\"}]}\n\ndata: {\"choices\":[{\"text\":\"b\"}]}\n\ndata: {\"choices\":[{\"text\":\"c\"}]}\n\n~0\n\n~"
+text ac_hex "0123456789abcdef"
+global ac_tmp ulong 1
+fn ac_ck ok bool code int to void
+if not ok
+exit code
+end
+end
+fn ac_load want ulong to void
+idx = ulong 0
+n = ulong 0
+for i ulong len ac_tests
+c = get ac_tests i
+if eq c 126
+if eq idx want
+put ac_tmp 0 n
+ret
+end
+idx = add idx 1
+else
+if eq idx want
+put sf_fi n c
+n = add n 1
+end
+end
+end
+exit 99
+end
+fn ac_send which ulong at ulong to void
+ac_load which
+ac_feed 0 get ac_tmp 0 at
+end
+fn ac_begin to void
+ac_reset 12 100
+ac_send 0 110
+end
+fn ac_chunk which ulong at ulong to void
+ac_load which
+n = get ac_tmp 0
+for i ulong n
+j = sub sub n 1 i
+put sf_fi add j 4 get sf_fi j
+end
+put sf_fi 0 get ac_hex and shr n 8 15
+put sf_fi 1 get ac_hex and shr n 4 15
+put sf_fi 2 get ac_hex and n 15
+put sf_fi 3 10
+put sf_fi add n 4 10
+ac_feed 0 add n 5 at
+end
+fn ac_split_test to void
+ac_begin
+ac_load 1
+n = get ac_tmp 0
+ac_feed 0 10 120
+ac_ck eq get ac_s 18 0 1
+ac_feed 10 sub n 10 130
+ac_send 2 140
+ac_ck eq ac_finish 0 2
+ac_ck eq get ac_s 10 10 3
+ac_ck eq get ac_s 13 30 4
+ac_ck eq get ac_s 16 40 5
+ac_ck eq get ac_s 18 1 6
+ac_ck eq get ac_ri 0 2 7
+ac_ck eq get ac_at 0 30 8
+ac_ck eq get ac_s 0 12 9
+end
+fn ac_coalesce_test to void
+ac_begin
+ac_send 21 120
+ac_send 1 130
+ac_send 2 140
+ac_ck eq ac_finish 0 10
+ac_ck eq get ac_s 18 4 11
+ac_ck eq get ac_s 36 2 12
+ac_ck eq get ac_gap 0 0 13
+ac_ck eq get ac_gap 1 0 14
+ac_ck eq get ac_gap 2 10 15
+ac_ck eq get ac_s 22 0 16
+ac_ck eq get ac_s 26 5 17
+end
+fn ac_failures_test to void
+ac_reset 0 0
+ac_ck eq ac_finish 6 18
+ac_reset 0 0
+ac_send 12 10
+ac_ck eq ac_finish 6 19
+ac_begin
+ac_send 8 120
+ac_eof
+ac_ck eq ac_finish 10 20
+ac_ck eq get ac_s 28 1 21
+ac_begin
+ac_send 2 120
+ac_ck eq ac_finish 12 22
+ac_ck eq get ac_s 15 0 23
+ac_reset 0 0
+ac_send 13 10
+ac_send 14 20
+ac_ck eq ac_finish 5 24
+ac_ck eq get ac_s 12 0 25
+ac_begin
+ac_send 7 120
+ac_send 1 130
+ac_send 2 140
+ac_ck eq ac_finish 0 26
+ac_ck eq get ac_s 21 1 27
+ac_ck eq get ac_s 13 30 28
+end
+fn ac_errors_test to void
+ac_reset 0 0
+ac_send 9 10
+ac_ck eq ac_finish 7 29
+ac_ck eq get ac_s 11 500 30
+ac_ck eq get ac_s 27 25 31
+ac_ck eq get ac_s 26 0 32
+ac_ck eq get ac_err 0 123 33
+ac_ck eq get ac_err 24 125 34
+ac_begin
+ac_send 1 120
+ac_send 10 130
+ac_send 2 140
+ac_ck eq ac_finish 8 35
+ac_ck eq get ac_s 20 1 36
+ac_ck eq get ac_s 15 0 37
+ac_begin
+ac_send 11 120
+ac_send 2 130
+ac_ck eq ac_finish 8 38
+ac_begin
+ac_send 1 120
+ac_fail 3 77
+ac_fail 4 88
+ac_ck eq ac_finish 3 39
+ac_ck eq get ac_s 32 77 40
+ac_ck not ac_complete 41
+end
+fn ac_noncontent_test to void
+ac_reset 0 100
+ac_send 13 110
+ac_chunk 4 120
+ac_chunk 5 130
+ac_chunk 1 140
+ac_chunk 6 150
+ac_chunk 16 160
+ac_chunk 2 170
+ac_send 22 180
+ac_ck eq ac_finish 0 42
+ac_ck eq get ac_s 19 4 43
+ac_ck eq get ac_s 18 1 44
+ac_ck eq get ac_s 8 10 45
+ac_ck eq get ac_s 13 40 46
+ac_ck eq get ac_s 16 70 47
+ac_begin
+ac_send 17 120
+ac_send 2 130
+ac_ck eq ac_finish 0 48
+ac_ck eq get ac_s 18 1 49
+end
+fn ac_truncated_test to void
+ac_reset 0 0
+ac_send 13 10
+ac_chunk 1 20
+ac_send 15 30
+ac_eof
+ac_ck eq ac_finish 9 50
+ac_ck eq get ac_s 18 1 51
+ac_begin
+ac_send 1 120
+ac_eof
+ac_ck eq ac_finish 11 52
+ac_begin
+ac_load 1
+ac_feed 0 10 120
+ac_eof
+ac_ck eq ac_finish 9 53
+end
+fn ac_usage_test to void
+ac_begin
+ac_send 1 120
+ac_send 1 130
+ac_send 1 140
+ac_send 3 150
+ac_send 2 160
+ac_ck eq ac_finish 0 54
+ac_ck eq get ac_s 22 1 55
+ac_ck eq get ac_s 23 9 56
+ac_ck eq get ac_s 24 1 57
+ac_ck eq get ac_s 25 7 58
+ac_ck eq get ac_s 19 1 59
+ac_ck eq get ac_s 14 40 60
+ac_begin
+ac_send 1 120
+ac_send 3 130
+ac_send 18 140
+ac_send 19 150
+ac_send 2 160
+ac_ck eq ac_finish 0 61
+ac_ck eq get ac_s 23 0 62
+ac_ck eq get ac_s 25 7 63
+ac_begin
+ac_send 3 120
+ac_send 2 130
+ac_ck eq ac_finish 12 64
+ac_ck eq get ac_s 23 9 65
+ac_ck not ac_complete 66
+end
+fn main to int
+sinit
+ac_init
+ac_split_test
+ac_coalesce_test
+ac_failures_test
+ac_errors_test
+ac_noncontent_test
+ac_truncated_test
+ac_usage_test
+ret 0
+end

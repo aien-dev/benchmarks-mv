@@ -1,0 +1,48 @@
+note Frozen independent binary64 decimal conversion and roundtrip controls.
+text dcpath "tests/fixtures/numerics/decimal.tsv"
+global dcstate ulong 2
+fn dcrow s ulong to bool
+i = get dcstate 0
+start = i
+while ne schar s i 32
+i = add i 1
+end
+num = ssub s start sub i start
+i = add i 1
+want = ulong 0
+while and lt i slen s ne schar s i 10
+want = add mul want 10 ulong sub schar s i 48
+i = add i 1
+end
+put dcstate 0 add i 1
+if not df_parse num
+ret false
+end
+if ne get dfstate 0 want
+ret false
+end
+out = df_to_json want
+if not df_parse out
+ret false
+end
+ret eq get dfstate 0 want
+end
+fn main to int
+sinit
+p = get sp 0
+for i ulong len dcpath
+sbyte get dcpath i
+end
+raw = ftext sdone p
+if lt raw 0
+ret 1
+end
+while lt get dcstate 0 slen ulong raw
+put dcstate 1 add get dcstate 1 1
+if not dcrow ulong raw
+swrite 2 suint get dcstate 1
+ret 2
+end
+end
+ret 0
+end

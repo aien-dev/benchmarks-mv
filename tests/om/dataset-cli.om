@@ -1,0 +1,233 @@
+note Independent native dataset CLI checks. All numeric values below are test inputs, never measurements.
+text dtbase "{\"benchmark_suite\":\"test\",\"version\":\"1\",\"timestamp\":\"T\",\"hardware\":{\"system\":\"H\",\"processor\":\"P\",\"architecture\":\"A\",\"memory_unified_gb\":8,\"os\":\"O\"},\"memory_rss\":[{\"service\":\"openclaw-rs\",\"role\":\"R & <x> \\\"quote\\\" 'single'\",\"architecture\":\"A\",\"rss_mb\":9.5}],\"latency_concurrency\":[{\"service\":\"openclaw-rs\",\"endpoint\":\"/e\",\"description\":\"D\",\"engine\":\"Rust\",\"requests_per_sec\":1500,\"p50_ms\":1.25,\"p95_ms\":2.5,\"p99_ms\":3,\"concurrency\":1,\"sample_size\":2}],\"neural_inference\":[{\"workload\":\"N\",\"model\":\"M\",\"engine\":\"E\",\"p50_ms\":0.005}]}"
+text dtwords "input.json\nreport\nverify\ngenerate\nsync-docs\n-i\n-o\n-t\n--check\nassets\ndoc.md\nmissing.md\nAll invariant checks passed successfully.\n9.50\n1500.0\n1.25\n2.50\n0.0050\nn/a\nCompiler:\nBENCH-UNKNOWN\n| R & <x> \"quote\" 'single' | A | `BENCH-UNKNOWN` | 9.50 MB | 1.25 ms | 1500 req/s |\n*Hardware Reference: H (P, 8 GB unified memory). All metrics measured under concurrency C=0 over 0 requests per endpoint.*\n<!-- AIEN:BENCHMARKS:START -->\n<!-- AIEN:BENCHMARKS:END -->\nheader\nfooter\nmemory_comparison.svg\nlatency_comparison.svg\nR &amp; &lt;x&gt; &quot;quote&quot; &apos;single&apos;\n<x>\nwidth=\"4.0000000000000000e0\"\nwidth=\"6.0000000000000000e2\"\nwidth=\"5.6000000000000000e2\"\n#d7755d\n#7fb8a6\n\"rss_mb\":9.5\n\"rss_mb\":10\n\"rss_mb\":9.999\n\"rss_mb\":3800\n\"p50_ms\":1.25\n\"p50_ms\":10\n\"p50_ms\":9.999\n\"p50_ms\":45\n\"requests_per_sec\":1500\n\"requests_per_sec\":1000\n\"requests_per_sec\":1000.1\n\"rss_mb\":\"9.5\"\n\"version\":\"1\"\n\"version\":\"1\",\"version\":\"2\"\n\"versionx\":\"1\"\n\"memory_unified_gb\":8\n\"memory_unified_gb\":4294967296\n\"memory_unified_gb\":8.5\n\"neural_inference\":\n\"environment\":null,\"neural_inference\":\n\"cross_surface\":null,\"neural_inference\":\n\"cross_surface\":[{}],\"neural_inference\":\n\"unknown_field\":true,\"neural_inference\":\n\"p50_ms\":0.005\n\"p50_ms\":0.005,\"p95_ms\":null\n\"rss_mb\":1e309\n\"rss_mb\":-1\n"
+global dtpool ulong 1
+global dtstate ulong 4
+fn dtword i ulong to ulong
+ret tline get dtpool 0 i
+end
+fn dtfixture to ulong
+p = get sp 0
+for i ulong len dtbase
+sbyte get dtbase i
+end
+ret sdone p
+end
+fn dtcall body ulong command ulong code long to bool
+if not twrite tpath dtword 0 body
+ret false
+end
+preset
+parg get dtstate 0
+parg dtword 5
+parg tpath dtword 0
+parg command
+r = pcapture
+ret eq get pmeta 0 code
+end
+fn dtmutation old ulong repl ulong code long to bool
+body = treplace get dtstate 1 dtword old dtword repl
+ret dtcall body dtword 2 code
+end
+fn dtbudgets to bool
+if not dtmutation 36 37 1
+ret false
+end
+if not dtmutation 36 38 0
+ret false
+end
+if not dtmutation 40 41 1
+ret false
+end
+if not dtmutation 40 42 0
+ret false
+end
+if not dtmutation 44 45 1
+ret false
+end
+ret dtmutation 44 46 0
+end
+fn dtinvalid to bool
+if not dtmutation 36 47 65
+ret false
+end
+if not dtmutation 48 49 65
+ret false
+end
+if not dtmutation 48 50 65
+ret false
+end
+if not dtmutation 51 52 65
+ret false
+end
+if not dtmutation 51 53 65
+ret false
+end
+for i ulong 3
+if not dtmutation 54 add 55 i 65
+ret false
+end
+end
+if not dtmutation 54 58 0
+ret false
+end
+if not dtmutation 59 60 0
+ret false
+end
+if not dtmutation 36 61 65
+ret false
+end
+note Historical budget verification did not impose nonnegative metrics.
+ret dtmutation 36 62 0
+end
+fn dtreport to bool
+if not dtcall get dtstate 1 dtword 1 0
+ret false
+end
+report = ulong get pmeta 1
+for i ulong 6
+if lt sfind report dtword add 13 i 0
+ret false
+end
+end
+if ge sfind report dtword 19 0
+ret false
+end
+if not dtcall get dtstate 1 dtword 1 0
+ret false
+end
+ret seq report ulong get pmeta 1
+end
+fn dtchart body ulong wide bool to bool
+if not twrite tpath dtword 0 body
+ret false
+end
+preset
+parg get dtstate 0
+parg dtword 5
+parg tpath dtword 0
+parg dtword 3
+parg dtword 6
+parg tpath dtword 9
+r = pcapture
+if lt r 0
+ret false
+end
+mem = tload spath tpath dtword 9 dtword 27
+lat = tload spath tpath dtword 9 dtword 28
+if lt sfind mem dtword 29 0
+ret false
+end
+if ge sfind mem dtword 30 0
+ret false
+end
+if wide
+if or lt sfind mem dtword 32 0 lt sfind lat dtword 33 0
+ret false
+end
+ret and ge sfind mem dtword 34 0 ge sfind lat dtword 34 0
+end
+if lt sfind mem dtword 31 0
+ret false
+end
+ret and ge sfind mem dtword 35 0 ge sfind lat dtword 35 0
+end
+fn dtsynccall check bool code long to bool
+preset
+parg get dtstate 0
+parg dtword 5
+parg tpath dtword 0
+parg dtword 4
+parg dtword 7
+parg tpath dtword 10
+if check
+parg dtword 8
+end
+r = pcapture
+ret eq get pmeta 0 code
+end
+fn dtsync to bool
+if not twrite tpath dtword 0 get dtstate 1
+ret false
+end
+original = scat3 dtword 25 L_newline scat3 dtword 23 L_newline scat3 dtword 24 L_newline dtword 26
+if not twrite tpath dtword 10 original
+ret false
+end
+if not dtsynccall true 1
+ret false
+end
+if not seq tload tpath dtword 10 original
+ret false
+end
+if not dtsynccall false 0
+ret false
+end
+updated = tload tpath dtword 10
+if or not sstarts updated dtword 25 not sends updated dtword 26
+ret false
+end
+if or lt sfind updated dtword 21 0 lt sfind updated dtword 22 0
+ret false
+end
+if not dtsynccall true 0
+ret false
+end
+if not twrite tpath dtword 10 dtword 25
+ret false
+end
+if not dtsynccall false 0
+ret false
+end
+if not seq tload tpath dtword 10 dtword 25
+ret false
+end
+if not twrite tpath dtword 10 scat3 dtword 24 L_newline dtword 23
+ret false
+end
+ret dtsynccall true 65
+end
+fn main to int
+sinit
+put fr 0 L_dot
+p = get sp 0
+for i ulong len dtwords
+sbyte get dtwords i
+end
+put dtpool 0 sdone p
+put dtstate 0 sarg 1
+put dtstate 1 dtfixture
+if not tstage
+ret 74
+end
+if not dtcall get dtstate 1 dtword 2 0
+ret 1
+end
+if not seq ulong get pmeta 1 scat dtword 12 L_newline
+ret 2
+end
+if not dtbudgets
+ret 3
+end
+if not dtinvalid
+ret 4
+end
+if not dtreport
+ret 5
+end
+if not dtchart get dtstate 1 false
+ret 6
+end
+wide = treplace get dtstate 1 dtword 36 dtword 39
+wide = treplace wide dtword 40 dtword 43
+if not dtchart wide true
+ret 7
+end
+if not dtsync
+ret 8
+end
+if not tcleanup
+ret 9
+end
+ret 0
+end

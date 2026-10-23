@@ -1,0 +1,64 @@
+note Native binary32 represented as uint. Arithmetic rounds each operation to nearest-even.
+note Every binary32 product is exactly representable in binary64 before final rounding.
+fn fs_double bits uint to ulong
+sign = shl ulong shr bits 31 63
+e = and shr bits 23 255
+m = ulong and bits 8388607
+if eq e 255
+if ne m 0
+ret or sign 9221120237041090560
+end
+ret or sign 9218868437227405312
+end
+if eq e 0
+if eq m 0
+ret sign
+end
+expo = long -126
+while lt m 8388608
+m = shl m 1
+expo = sub expo 1
+end
+ret or sign or shl ulong add expo 1023 52 shl and m 8388607 29
+end
+ret or sign or shl ulong add e 896 52 shl m 29
+end
+fn fs_round bits ulong to uint
+sign = uint shl shr bits 63 31
+if df_nan bits
+ret or sign 2143289344
+end
+if not df_finite bits
+ret or sign 2139095040
+end
+df_unpack bits
+e = get dfparts 1
+sig = df_jam ulong get dfparts 2 26
+if lt e -126
+sig = df_jam sig ulong sub -126 e
+e = long -126
+end
+m = shr sig 3
+tail = and sig 7
+if or gt tail 4 and eq tail 4 ne and m 1 0
+m = add m 1
+end
+if ge m 16777216
+m = shr m 1
+e = add e 1
+end
+if gt e 127
+ret or sign 2139095040
+end
+encoded = uint 0
+if ge m 8388608
+encoded = shl uint add e 127 23
+end
+ret or sign or encoded uint and m 8388607
+end
+fn fsadd a uint b uint to uint
+ret fs_round dfadd fs_double a fs_double b
+end
+fn fsmul a uint b uint to uint
+ret fs_round dfmul fs_double a fs_double b
+end

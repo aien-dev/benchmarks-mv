@@ -1,0 +1,129 @@
+note Copy a real committed bundle, verify the control, then tamper three independent ways.
+text bundle "artifacts/gb10_canonical_1789907893_4d762"
+text coldfile "branch_cold.json"
+text steady "branch_steady.json"
+text extra "extra.txt"
+text wantbad "artifacts/gb10_canonical_1789907893_4d762/branch_steady.json: SHA256SUMS: listed file is missing\nartifacts/gb10_canonical_1789907893_4d762/branch_cold.json: sha256: does not match SHA256SUMS\nartifacts/gb10_canonical_1789907893_4d762/extra.txt: SHA256SUMS: file is not listed\n"
+fn bundlepath to ulong
+p = get sp 0
+for i ulong len bundle
+sbyte get bundle i
+end
+ret sdone p
+end
+fn coldpath to ulong
+p = get sp 0
+for i ulong len coldfile
+sbyte get coldfile i
+end
+ret sdone p
+end
+fn steadypath to ulong
+p = get sp 0
+for i ulong len steady
+sbyte get steady i
+end
+ret sdone p
+end
+fn extrapath to ulong
+p = get sp 0
+for i ulong len extra
+sbyte get extra i
+end
+ret sdone p
+end
+fn wantlines to ulong
+p = get sp 0
+for i ulong len wantbad
+sbyte get wantbad i
+end
+ret sdone p
+end
+fn savedata path ulong value ulong to bool
+fd = fopen sb soff path slen path 524865 420
+if lt fd 0
+ret false
+end
+r = write int fd sb soff value slen value
+c = fclose int fd
+ret and eq r long slen value eq c 0
+end
+fn makedirtest path ulong to bool
+r = makedir sb soff path slen path 493
+ret or eq r 0 eq r -17
+end
+fn runbundle checker ulong root ulong to long
+preset
+parg checker
+parg L_root
+parg root
+parg L_artifacts
+ret pcapture
+end
+fn copybundle root ulong to bool
+if not makedirtest root
+ret false
+end
+if not makedirtest spath root L_artifacts
+ret false
+end
+if not makedirtest spath root bundlepath
+ret false
+end
+if not fwalk bundlepath
+ret false
+end
+for i ulong get fcounts 0
+path = get ffiles i
+raw = ftext path
+if lt raw 0
+ret false
+end
+if not savedata spath root path ulong raw
+ret false
+end
+end
+ret true
+end
+fn tamper root ulong to bool
+base = spath root bundlepath
+path = spath base coldpath
+raw = ftext path
+if lt raw 0
+ret false
+end
+if not savedata path scat ulong raw L_newline
+ret false
+end
+path = spath base steadypath
+r = unlink sb soff path slen path
+if ne r 0
+ret false
+end
+ret savedata spath base extrapath L_newline
+end
+fn main to int
+sinit
+put fr 0 L_dot
+checker = sarg 1
+root = scat3 sarg 2 L_dot suint ulong getpid
+if not copybundle root
+ret 2
+end
+r = runbundle checker root
+if or lt r 0 ne slen ulong get pmeta 1 0
+ret 3
+end
+if not tamper root
+ret 4
+end
+r = runbundle checker root
+if ne get pmeta 0 1
+ret 5
+end
+if not seq ulong get pmeta 1 wantlines
+swrite 2 ulong get pmeta 1
+ret 6
+end
+ret 0
+end

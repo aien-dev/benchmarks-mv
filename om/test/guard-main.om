@@ -1,0 +1,28 @@
+note Native no-Python guard; find the repository root before checking every tracked file.
+fn main to int
+sinit
+put fr 0 L_dot
+ginit
+preset
+parg gword 0
+parg gword 9
+parg gword 10
+r = pcapture
+if lt r 0
+ret 2
+end
+root = ulong r
+if eq slen root 0
+ret 2
+end
+if ne schar root sub slen root 1 10
+ret 2
+end
+put fr 0 ssub root 0 sub slen root 1
+if not gcheck gtracked
+ret 1
+end
+swrite 1 suint get tstate 3
+swrite 1 L_newline
+ret 0
+end

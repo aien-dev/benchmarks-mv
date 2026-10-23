@@ -1,0 +1,66 @@
+note Qualify nonzero child output, output bounds, deadlines, and offline CLI suites.
+text qwords "tests/om/test-coordinator-child.om\nchild\n1\n2\n3\nchild output\ntest-evidence-cli\ntest-offline-records\ntest-offline-bundles\ntest-offline-index\nbench_verify_records\nbench_index\nbundle\nindex\n"
+global qpool ulong 1
+fn qword i ulong to ulong
+ret tline get qpool 0 i
+end
+fn tprocess to bool
+p = get sp 0
+for i ulong len qwords
+sbyte get qwords i
+end
+put qpool 0 sdone p
+binary = tpath qword 1
+if not tcompile tload qword 0 binary
+ret false
+end
+preset
+parg binary
+parg qword 2
+r = pcapture
+if or ge r 0 ne get pmeta 0 7
+ret false
+end
+if not seq ulong get pmeta 1 scat qword 5 L_newline
+ret false
+end
+preset
+parg binary
+parg qword 3
+r = pcapture
+if or ge r 0 gt slen ulong get pmeta 1 1000000
+ret false
+end
+preset
+parg binary
+parg qword 4
+start = monons
+r = pcapture
+elapsed = sub monons start
+if or ge r 0 ne get pmeta 0 -9
+ret false
+end
+if or lt elapsed 9000000000 gt elapsed 15000000000
+ret false
+end
+ret true
+end
+fn toffline to bool
+for i ulong 4
+preset
+parg tbin qword add i 6
+if eq i 3
+parg tbin qword 11
+parg tpath qword 13
+else
+parg tbin qword 10
+if eq i 2
+parg tpath qword 12
+end
+end
+if ne trun tnullpath tpath tconstant 2 false 0
+ret false
+end
+end
+ret true
+end

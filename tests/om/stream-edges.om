@@ -1,0 +1,110 @@
+text wire "HTTP/1.1 200 OK@\nContent-Type: text/event-stream@\nTransfer-Encoding: chunked@\n@\n6@\ndata: @\n7;ext=1@\nhello\n\n@\n0@\nX-Trailer: y@\n@\n"
+text data "data: x\n\n"
+text overflow "HTTP/1.1 200 OK\nContent-Length: 18446744073709551616\n\n"
+text chunkov "HTTP/1.1 200 OK\nTransfer-Encoding: chunked\n\n10000000000000000\n"
+fn ck ok bool code int to void
+if not ok
+exit code
+end
+end
+fn split_cr to void
+for i ulong len wire
+c = get wire i
+if eq c 64
+c = 13
+end
+put sf_fi i c
+end
+for split ulong add len wire 1
+sf_hreset
+ck sf_hfeed 0 split 1
+ck sf_hfeed split sub len wire split 2
+ck sf_heof 3
+ck eq get sf_hs 8 13 4
+ck eq get sf_hs 11 17 5
+end
+end
+fn utf to void
+sf_sreset
+note Valid scalar U+1F600, followed by LF, counts unknown field not invalid UTF8.
+put sf_fi 0 240
+put sf_fi 1 159
+put sf_fi 2 152
+put sf_fi 3 128
+put sf_fi 4 10
+ck sf_sfeed 0 5 0 0 6
+ck eq get sf_ss 8 0 7
+ck eq get sf_ss 7 1 8
+note UTF8 surrogate encoding must be skipped.
+put sf_fi 0 237
+put sf_fi 1 160
+put sf_fi 2 128
+put sf_fi 3 10
+ck sf_sfeed 0 4 0 0 9
+ck eq get sf_ss 8 1 10
+note Overlong encoding must be skipped.
+put sf_fi 0 192
+put sf_fi 1 128
+put sf_fi 2 10
+ck sf_sfeed 0 3 0 0 11
+ck eq get sf_ss 8 2 12
+note Above U+10FFFF must be skipped.
+put sf_fi 0 244
+put sf_fi 1 144
+put sf_fi 2 128
+put sf_fi 3 128
+put sf_fi 4 10
+ck sf_sfeed 0 5 0 0 13
+ck eq get sf_ss 8 3 14
+note Lone CR stays in data, no implicit end at EOF.
+sf_sreset
+for i ulong len data
+put sf_fi i get data i
+end
+put sf_fi 7 13
+ck sf_sfeed 0 8 0 0 15
+ck sf_spending 16
+ck eq get sf_ss 10 0 17
+end
+fn capacities to void
+sf_hreset
+for i ulong len overflow
+put sf_fi i get overflow i
+end
+ck not sf_hfeed 0 len overflow 18
+ck eq get sf_hs 0 3 19
+sf_hreset
+for i ulong len chunkov
+put sf_fi i get chunkov i
+end
+ck not sf_hfeed 0 len chunkov 20
+ck eq get sf_hs 0 4 21
+sf_sreset
+for i ulong len data
+put sf_fi i get data i
+end
+note Explicitly stage a full event table and ensure no write exceeds capacity.
+put sf_ss 10 len sf_sa
+ck not sf_sfeed 0 len data 0 0 22
+ck eq get sf_ss 0 8 23
+sf_sreset
+put sf_ss 11 len sf_so
+ck not sf_sfeed 0 len data 0 0 24
+ck eq get sf_ss 0 8 25
+sf_sreset
+put sf_ss 2 len sf_sd
+put sf_ss 3 1
+ck not sf_sfeed 0 len data 0 0 26
+ck eq get sf_ss 0 8 27
+sf_hreset
+put sf_hs 2 1
+put sf_hs 8 len sf_ho
+ck not sf_hfeed 0 1 28
+ck eq get sf_hs 0 8 29
+end
+fn main to int
+split_cr
+utf
+capacities
+ret 0
+end

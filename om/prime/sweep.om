@@ -1,0 +1,210 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Sorted unique correctness limits. Capacity 4096; exceeding it is an explicit error.
+note swdefault and swparse return 0 on success; 1 bad limit, 2 bad range, 3 empty, 4 capacity.
+note swstate[0] count, swstate[1] offending trimmed part. swvalues holds sorted results.
+global swvalues ulong 4096
+global swstate ulong 2
+global swnum ulong 1
+fn swdecimal s ulong to bool
+p = ulong 0
+n = ulong 0
+if eq slen s 0
+ret false
+end
+if eq schar s 0 43
+p = ulong 1
+end
+if eq p slen s
+ret false
+end
+while lt p slen s
+c = schar s p
+if or lt c 48 gt c 57
+ret false
+end
+d = ulong sub c 48
+if gt n div sub ulong 18446744073709551615 d 10
+ret false
+end
+n = add mul n 10 d
+p = add p 1
+end
+put swnum 0 n
+ret true
+end
+fn swinsert n ulong to bool
+count = get swstate 0
+p = ulong 0
+search = true
+while and lt p count search
+v = get swvalues p
+if eq v n
+ret true
+end
+if gt v n
+search = false
+else
+p = add p 1
+end
+end
+if eq count len swvalues
+ret false
+end
+j = count
+while gt j p
+put swvalues j get swvalues sub j 1
+j = sub j 1
+end
+put swvalues p n
+put swstate 0 add count 1
+ret true
+end
+fn swrange a ulong b ulong to bool
+n = a
+while true
+if not swinsert n
+ret false
+end
+if eq n b
+ret true
+end
+n = add n 1
+end
+ret false
+end
+fn swpart part ulong to ulong
+put swstate 1 part
+size = slen part
+if eq size 0
+ret 0
+end
+split = size
+p = ulong 0
+while and lt add p 1 size eq split size
+if and eq schar part p 46 eq schar part add p 1 46
+split = p
+end
+p = add p 1
+end
+if eq split size
+if not swdecimal part
+ret 1
+end
+if not swinsert get swnum 0
+ret 4
+end
+ret 0
+end
+if not swdecimal ssub part 0 split
+ret 1
+end
+a = get swnum 0
+if not swdecimal ssub part add split 2 sub size add split 2
+ret 1
+end
+b = get swnum 0
+if gt a b
+ret 2
+end
+if not swrange a b
+ret 4
+end
+ret 0
+end
+fn swparse txt ulong to ulong
+put swstate 0 0
+put swstate 1 0
+start = ulong 0
+for i ulong add slen txt 1
+boundary = eq i slen txt
+if not boundary
+boundary = eq schar txt i 44
+end
+if boundary
+r = swpart strim ssub txt start sub i start
+if ne r 0
+put swstate 0 0
+ret r
+end
+start = add i 1
+end
+end
+if eq get swstate 0 0
+ret 3
+end
+put swstate 1 0
+ret 0
+end
+fn swdefault to ulong
+put swstate 0 0
+put swstate 1 0
+note Original isolated points, expressed without a shared literal namespace.
+fixed = new ulong 16 0
+put fixed 0 0
+put fixed 1 1
+put fixed 2 2
+put fixed 3 3
+put fixed 4 4
+put fixed 5 5
+put fixed 6 8
+put fixed 7 9
+put fixed 8 15
+put fixed 9 25
+put fixed 10 121
+put fixed 11 169
+put fixed 12 289
+put fixed 13 361
+put fixed 14 961
+put fixed 15 1000000
+for i ulong 16
+if not swinsert get fixed i
+ret 4
+end
+end
+starts = new ulong 9 0
+ends = new ulong 9 0
+put starts 0 31
+put ends 0 34
+put starts 1 63
+put ends 1 66
+put starts 2 95
+put ends 2 97
+put starts 3 127
+put ends 3 130
+put starts 4 255
+put ends 4 258
+put starts 5 1023
+put ends 5 1025
+put starts 6 1999
+put ends 6 2001
+put starts 7 4095
+put ends 7 4097
+put starts 8 999983
+put ends 8 1000003
+for i ulong 9
+if not swrange get starts i get ends i
+ret 4
+end
+end
+for i ulong 16
+k = add i 1
+for j ulong 2
+bv = mul k 128
+if eq j 1
+bv = mul k 2048
+end
+if not swrange sub bv 1 add bv 1
+ret 4
+end
+end
+end
+for p ulong 998
+if isprime p
+square = mul p p
+if not swrange sub square 1 add square 1
+ret 4
+end
+end
+end
+ret 0
+end

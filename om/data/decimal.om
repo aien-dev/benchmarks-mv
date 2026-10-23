@@ -1,0 +1,457 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Exact bounded rational decimal conversion. Four banks of 8192-bit integers.
+global db uint 1024
+global dn ulong 4
+global dd uchar 2048
+global dmeta long 8
+fn dbget b ulong i ulong to ulong
+ret ulong get db add mul b 256 i
+end
+fn dbput b ulong i ulong v ulong to void
+if ge i 256
+exit 70
+end
+put db add mul b 256 i uint and v 4294967295
+end
+fn dbzero b ulong to void
+for i ulong 256
+dbput b i 0
+end
+put dn b 0
+end
+fn dbnorm b ulong to void
+n = get dn b
+while gt n 0
+if ne dbget b sub n 1 0
+put dn b n
+ret
+end
+n = sub n 1
+end
+put dn b n
+end
+fn dbset b ulong v ulong to void
+dbzero b
+dbput b 0 v
+dbput b 1 shr v 32
+put dn b 2
+dbnorm b
+end
+fn dbcopy dst ulong src ulong to void
+dbzero dst
+n = get dn src
+for i ulong n
+dbput dst i dbget src i
+end
+put dn dst n
+end
+fn dbmul b ulong m ulong to void
+n = get dn b
+carry = ulong 0
+for i ulong n
+v = add mul dbget b i m carry
+dbput b i v
+carry = shr v 32
+end
+if ne carry 0
+dbput b n carry
+put dn b add n 1
+end
+dbnorm b
+end
+fn dbadd b ulong v ulong to void
+i = ulong 0
+while ne v 0
+v = add v dbget b i
+dbput b i v
+v = shr v 32
+i = add i 1
+end
+if gt i get dn b
+put dn b i
+end
+end
+fn dbshift b ulong n ulong to void
+for i ulong n
+dbmul b 2
+end
+end
+fn dbright b ulong to void
+n = get dn b
+carry = ulong 0
+for k ulong n
+i = sub sub n 1 k
+v = dbget b i
+dbput b i or shr v 1 shl carry 31
+carry = and v 1
+end
+dbnorm b
+end
+fn dbcmp a ulong b ulong to long
+na = get dn a
+nb = get dn b
+if lt na nb
+ret -1
+end
+if gt na nb
+ret 1
+end
+for k ulong na
+i = sub sub na 1 k
+x = dbget a i
+y = dbget b i
+if lt x y
+ret -1
+end
+if gt x y
+ret 1
+end
+end
+ret 0
+end
+fn dbsub a ulong b ulong to void
+borrow = ulong 0
+for i ulong get dn a
+x = dbget a i
+y = add dbget b i borrow
+borrow = ulong 0
+if lt x y
+borrow = ulong 1
+end
+dbput a i sub x y
+end
+dbnorm a
+end
+fn dbbits b ulong to ulong
+n = get dn b
+if eq n 0
+ret 0
+end
+v = dbget b sub n 1
+out = mul sub n 1 32
+while ne v 0
+out = add out 1
+v = shr v 1
+end
+ret out
+end
+fn dbdivsm b ulong d ulong to ulong
+r = ulong 0
+n = get dn b
+for k ulong n
+i = sub sub n 1 k
+v = or shl r 32 dbget b i
+dbput b i div v d
+r = rem v d
+end
+dbnorm b
+ret r
+end
+note Divide bank0 by bank1, quotient bank2, remainder bank0, scratch bank3.
+fn dbdivide to void
+dbzero 2
+if lt dbcmp 0 1 0
+ret
+end
+shift = sub dbbits 0 dbbits 1
+dbcopy 3 1
+dbshift 3 shift
+for k ulong add shift 1
+dbmul 2 2
+if ge dbcmp 0 3 0
+dbsub 0 3
+dbadd 2 1
+end
+dbright 3
+end
+end
+fn dbdigits bank ulong to ulong
+n = ulong 0
+while ne get dn bank 0
+put dd n uchar add dbdivsm bank 10 48
+n = add n 1
+end
+if eq n 0
+put dd 0 48
+n = ulong 1
+end
+ret n
+end
+fn dpdigit c uchar to bool
+if or ne c 48 ne get dn 0 0
+n = add get dmeta 2 1
+put dmeta 2 n
+if gt n 1100
+ret false
+end
+dbmul 0 10
+dbadd 0 ulong sub c 48
+end
+ret true
+end
+fn dpnumber s ulong to bool
+dbzero 0
+put dmeta 2 0
+n = slen s
+i = ulong 0
+sign = long 0
+if eq n 0
+ret false
+end
+c = schar s i
+if or eq c 45 eq c 43
+if eq c 45
+sign = long 1
+end
+i = add i 1
+end
+frac = long 0
+point = false
+seen = false
+scan = true
+while and scan lt i n
+c = schar s i
+if and ge c 48 le c 57
+seen = true
+if point
+frac = add frac 1
+end
+if not dpdigit c
+ret false
+end
+i = add i 1
+else
+if and eq c 46 not point
+point = true
+i = add i 1
+else
+scan = false
+end
+end
+end
+if not seen
+ret false
+end
+put dmeta 0 sign
+put dmeta 1 frac
+put dmeta 3 long i
+ret true
+end
+fn dpexp s ulong to bool
+i = ulong get dmeta 3
+n = slen s
+e = long 0
+eneg = false
+if lt i n
+c = schar s i
+if not or eq c 101 eq c 69
+ret false
+end
+i = add i 1
+if lt i n
+c = schar s i
+if or eq c 43 eq c 45
+eneg = eq c 45
+i = add i 1
+end
+end
+if eq i n
+ret false
+end
+while lt i n
+c = schar s i
+if or lt c 48 gt c 57
+ret false
+end
+if lt e 1000000000
+e = add mul e 10 long sub c 48
+end
+i = add i 1
+end
+end
+if eneg
+e = sub 0 e
+end
+put dmeta 4 sub e get dmeta 1
+ret true
+end
+fn dpratio sign ulong to ulong
+e = sub long dbbits 0 long dbbits 1
+if ge e 0
+dbcopy 3 1
+dbshift 3 ulong e
+if lt dbcmp 0 3 0
+e = sub e 1
+end
+else
+dbcopy 3 0
+dbshift 3 ulong sub 0 e
+if lt dbcmp 3 1 0
+e = sub e 1
+end
+end
+scale = sub 55 e
+if ge scale 0
+dbshift 0 ulong scale
+else
+dbshift 1 ulong sub 0 scale
+end
+dbdivide
+q = or dbget 2 0 shl dbget 2 1 32
+if ne get dn 0 0
+q = or q 1
+end
+ret df_pack sign e q
+end
+fn df_parse s ulong to bool
+put dfstate 0 0
+put dfstate 1 1
+if not dpnumber s
+ret false
+end
+if not dpexp s
+ret false
+end
+sign = ulong get dmeta 0
+e = get dmeta 4
+order = add e get dmeta 2
+v = shl sign 63
+if ne get dn 0 0
+if gt order 309
+ret false
+end
+if ge order -324
+dbset 1 1
+if ge e 0
+for k ulong ulong e
+dbmul 0 10
+end
+else
+for k ulong ulong sub 0 e
+dbmul 1 10
+end
+end
+v = dpratio sign
+if not df_finite v
+ret false
+end
+end
+end
+put dfstate 0 v
+put dfstate 1 0
+ret true
+end
+fn df_to_fixed bits ulong digits ulong to ulong
+if or not df_finite bits gt digits 18
+exit 70
+end
+df_unpack bits
+e = sub get dfparts 1 52
+dbset 0 ulong get dfparts 2
+dbset 1 1
+for k ulong digits
+dbmul 0 10
+end
+if ge e 0
+dbshift 0 ulong e
+else
+dbshift 1 ulong sub 0 e
+end
+dbdivide
+dbmul 0 2
+cmp = dbcmp 0 1
+if or gt cmp 0 and eq cmp 0 ne and dbget 2 0 1 0
+dbadd 2 1
+end
+n = dbdigits 2
+while le n digits
+put dd n 48
+n = add n 1
+end
+p = get sp 0
+if ne shr bits 63 0
+sbyte 45
+end
+for k ulong n
+i = sub sub n 1 k
+sbyte get dd i
+if and ne digits 0 eq i digits
+sbyte 46
+end
+end
+ret sdone p
+end
+note Seventeen significant decimal digits guarantee a binary64 round trip.+note Scientific spelling is deterministic, and does not promise shortest spelling.
+fn df_to_json bits ulong to ulong
+if not df_finite bits
+exit 70
+end
+df_unpack bits
+e = sub get dfparts 1 52
+dbset 0 ulong get dfparts 2
+scale = long 0
+if ge e 0
+dbshift 0 ulong e
+else
+scale = sub 0 e
+for k ulong ulong scale
+dbmul 0 5
+end
+end
+n = dbdigits 0
+expo = sub sub long n scale 1
+q = ulong 0
+for k ulong 17
+q = mul q 10
+if lt k n
+q = add q ulong sub get dd sub sub n 1 k 48
+end
+end
+if gt n 17
+d = get dd sub n 18
+sticky = false
+for k ulong sub n 18
+if ne get dd k 48
+sticky = true
+end
+end
+if or gt d 53 and eq d 53 or sticky ne and q 1 0
+q = add q 1
+end
+end
+if eq q 100000000000000000
+q = div q 10
+expo = add expo 1
+end
+if eq df_abs bits 0
+expo = long 0
+end
+ret dfjwrite bits q expo
+end
+fn dfjwrite bits ulong q ulong expo long to ulong
+digits = suint q
+mag = expo
+if lt mag 0
+mag = sub 0 mag
+end
+exptxt = suint ulong mag
+p = get sp 0
+if ne shr bits 63 0
+sbyte 45
+end
+if eq df_abs bits 0
+sbyte 48
+ret sdone p
+end
+sbyte schar digits 0
+sbyte 46
+for k ulong sub slen digits 1
+sbyte schar digits add k 1
+end
+sbyte 101
+if lt expo 0
+sbyte 45
+end
+sappend exptxt
+ret sdone p
+end

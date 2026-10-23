@@ -1,0 +1,550 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Native evidence store. Exclusive creation, fsync, readonly permissions, no-replace rename.
+text prwords "blobs~.json~.tmp-~null~PASS~FAIL~schema~aien-prime-race/receipt/v1~contract_version~1~verdict~reason~implementation~runner~commit~binary_sha256~hardware~conditions~correctness~protocol~trials~summary~upstream_lines~reproduction~runner_argv~nonconforming~NONCONFORMING for upstream PlummersSoftwareLLC/Primes drag-race pinned a2899c96752b65ac1b08a0e1418ab7e708040ed0; AGPL-3.0-or-later license and language eligibility. Experimental.~impl~kind~index~limit~loadavg_before~loadavg_after~exit_code~wall_s~raw_line~stdout_sha256~stderr_sha256~report_sha256~bitmap_sha256~report~passes~elapsed_s~passes_per_s~reject_kind~reject_reason~audit~warmup~trial~name~labels~line_label~algorithm~faithful~bits~threads~environment~source~build_command~build_reported_by_binary~quiet_flag_file~quiet_flag_contents~governors~loadavg_at_start~loadavg_at_end~reference_method~deterministic Miller-Rabin on every odd n <= limit; overflow-safe modular multiplication; full bitmap comparison~audit_passes~sweep~run prime_race verify separately; not part of this receipt~warmup~min_seconds~order~round-robin interleaved across implementations, sequential~n~median~min~max~mean~stddev~cv~unit~passes_per_second~created_unix_ns~unavailable~every audit and trial validated PASS~/proc/loadavg~/proc/cpuinfo~/proc/sys/kernel/osrelease~/proc/driver/nvidia/version~cpu_models~nvidia_smi~kernel~observed_cpuinfo~observed_nvidia_driver~metadata_limits~GPU UUID/name unavailable; raw CPU and driver metadata recorded; governors probed for CPUs 0 through 255~"
+global prcache ulong 97
+global prstate ulong 5
+note prstate: evidence dir, blob dir, receipt path, receipt digest, error code.
+fn prinit to void
+p = get sp 0
+n = ulong 0
+for i ulong len prwords
+c = get prwords i
+if eq c 126
+put prcache n sdone p
+n = add n 1
+p = get sp 0
+else
+sbyte c
+end
+end
+end
+fn prlit n ulong to ulong
+ret get prcache n
+end
+fn prquoted s ulong to void
+sbyte 34
+for i ulong slen s
+c = schar s i
+if or eq c 34 eq c 92
+sbyte 92
+sbyte c
+else
+if lt c 32
+sbyte 92
+sbyte 117
+sbyte 48
+sbyte 48
+sbyte get whex ulong shr c 4
+sbyte get whex ulong and c 15
+else
+sbyte c
+end
+end
+end
+sbyte 34
+end
+fn prkey n ulong to void
+prquoted prlit n
+sbyte 58
+end
+fn prstr n ulong s ulong to void
+prkey n
+prquoted s
+end
+fn prnum n ulong x ulong to void
+prkey n
+digits = suint x
+end
+fn prfloat n ulong x ulong to void
+prkey n
+if df_finite x
+p = get sp 0
+digits = df_to_json x
+put sp 0 p
+sappend digits
+else
+sappend prlit 3
+end
+end
+fn prmaybe n ulong s ulong to void
+prkey n
+if eq s 0
+sappend prlit 3
+else
+prquoted s
+end
+end
+fn prhash s ulong to ulong
+hreset
+for i ulong slen s
+if not hpush schar s i
+ret 0
+end
+end
+if not hfinal
+ret 0
+end
+p = get sp 0
+for i ulong 64
+sbyte get hd i
+end
+ret sdone p
+end
+fn prwrite fd int s ulong to bool
+p = ulong 0
+while lt p slen s
+n = write fd sb add soff s p sub slen s p
+if ne n -4
+if le n 0
+ret false
+end
+p = add p ulong n
+end
+end
+ret true
+end
+fn prseal fd int to bool
+r = fchmod fd 292
+if ne r 0
+ret false
+end
+ret eq fsync fd 0
+end
+fn prrename src ulong dst ulong to long
+preset
+parg src
+parg dst
+size = ppack
+ret renames packet 0 size 1
+end
+fn prsyncdir to bool
+for i ulong 2
+fd = fopenread get prstate i
+if lt fd 0
+ret false
+end
+r = fsync int fd
+c = fclose int fd
+if or ne r 0 ne c 0
+ret false
+end
+end
+ret true
+end
+fn prstore s ulong receipt bool to ulong
+digest = prhash s
+if eq digest 0
+ret 0
+end
+dir = get prstate 1
+if receipt
+dir = get prstate 0
+end
+name = digest
+if receipt
+name = scat digest prlit 1
+end
+dst = spath dir name
+tmp = scat3 dst prlit 2 suint ulong monons
+fd = pxopen tmp
+if lt fd 0
+ret 0
+end
+ok = prwrite int fd s
+if ok
+ok = prseal int fd
+end
+c = fclose int fd
+if or not ok ne c 0
+ret 0
+end
+r = prrename tmp dst
+if ne r 0
+if or receipt ne r -17
+ret 0
+end
+have = fhash dst
+if or lt have 0 not seq ulong have digest
+ret 0
+end
+r = unlink sb soff tmp slen tmp
+if ne r 0
+ret 0
+end
+end
+if not prsyncdir
+ret 0
+end
+if receipt
+put prstate 2 dst
+put prstate 3 digest
+end
+ret digest
+end
+fn prcopy source ulong fd int to bool
+srcfd = fopenread source
+if lt srcfd 0
+ret false
+end
+good = true
+more = true
+while and good more
+n = read int srcfd fi 0 len fi
+if ne n -4
+if lt n 0
+good = false
+else
+if eq n 0
+more = false
+else
+p = ulong 0
+while and good lt p ulong n
+w = write fd fi p sub ulong n p
+if ne w -4
+if le w 0
+good = false
+else
+p = add p ulong w
+end
+end
+end
+end
+end
+end
+end
+c = fclose int srcfd
+ret and good eq c 0
+end
+fn prblob source ulong to ulong
+d = fhash source
+if lt d 0
+ret 0
+end
+digest = ulong d
+dst = spath get prstate 1 digest
+tmp = scat3 dst prlit 2 suint ulong monons
+fd = pxopen tmp
+if lt fd 0
+ret 0
+end
+good = prcopy source int fd
+if good
+good = prseal int fd
+end
+closed = fclose int fd
+if or not good ne closed 0
+ret 0
+end
+actual = fhash tmp
+if or lt actual 0 not seq ulong actual digest
+ret 0
+end
+r = prrename tmp dst
+if and ne r 0 ne r -17
+ret 0
+end
+actual = fhash dst
+if or lt actual 0 not seq ulong actual digest
+ret 0
+end
+if eq r -17
+removed = unlink sb soff tmp slen tmp
+if ne removed 0
+ret 0
+end
+end
+if not prsyncdir
+ret 0
+end
+ret digest
+end
+fn prload path ulong to ulong
+r = ftext path
+if lt r 0
+ret 0
+end
+ret strim ulong r
+end
+fn prloadavg to ulong
+s = prload prlit 86
+if eq s 0
+ret prlit 84
+end
+n = ulong 0
+for i ulong slen s
+if eq schar s i 32
+n = add n 1
+if eq n 3
+ret ssub s 0 i
+end
+end
+end
+ret s
+end
+global prsample ulong 4096
+global prstats ulong 7
+note prstatistics count samples computes n, median, min, max, mean, sample sd, cv.
+fn prstatistics count ulong to bool
+if or eq count 0 gt count len prsample
+ret false
+end
+for i ulong count
+j = i
+while gt j 0
+if le dfcmp get prsample sub j 1 get prsample j 0
+j = ulong 0
+else
+x = get prsample j
+put prsample j get prsample sub j 1
+put prsample sub j 1 x
+j = sub j 1
+end
+end
+end
+sum = ulong 0
+for i ulong count
+sum = dfadd sum get prsample i
+end
+mean = dfdiv sum df_from_u64 count
+mid = get prsample div count 2
+if eq rem count 2 0
+mid = dfdiv dfadd mid get prsample sub div count 2 1 df_from_u64 2
+end
+variance = ulong 0
+if gt count 1
+for i ulong count
+d = dfsub get prsample i mean
+variance = dfadd variance dfmul d d
+end
+variance = dfdiv variance df_from_u64 sub count 1
+end
+sd = dfsqrt variance
+cv = ulong 0
+if ne dfcmp mean 0 0
+cv = dfdiv sd mean
+end
+put prstats 0 count
+put prstats 1 mid
+put prstats 2 get prsample 0
+put prstats 3 get prsample sub count 1
+put prstats 4 mean
+put prstats 5 sd
+put prstats 6 cv
+ret true
+end
+fn prstatsjson to ulong
+p = get sp 0
+sbyte 123
+prnum 74 get prstats 0
+for i ulong 6
+sbyte 44
+prfloat add i 75 get prstats add i 1
+end
+sbyte 44
+prstr 81 prlit 82
+sbyte 125
+ret sdone p
+end
+global prpath uchar 4096
+fn prparent path ulong to ulong
+n = slen path
+while gt n 1
+n = sub n 1
+if eq schar path n 47
+if eq n 0
+ret ssub path 0 1
+end
+ret ssub path 0 n
+end
+end
+ret ssub path 0 1
+end
+fn prcwd to ulong
+n = cwd prpath 0 len prpath
+if le n 0
+ret 0
+end
+count = ulong n
+if eq get prpath sub count 1 0
+count = sub count 1
+end
+p = get sp 0
+for i ulong count
+sbyte get prpath i
+end
+ret sdone p
+end
+global prres ulong 3
+fn prlink cand ulong to bool
+n = readlnk sb soff cand slen cand prpath 0 len prpath
+if ge n 0
+put prres 2 add get prres 2 1
+if or gt get prres 2 40 eq ulong n len prpath
+ret false
+end
+p = get sp 0
+for i ulong ulong n
+sbyte get prpath i
+end
+target = sdone p
+if eq slen target 0
+ret false
+end
+if eq schar target 0 47
+put prres 0 ssub target 0 1
+end
+put prres 1 spath target get prres 1
+else
+if and ne n -22 ne n -2
+ret false
+end
+put prres 0 cand
+end
+ret true
+end
+fn prcomponent to bool
+pending = get prres 1
+stop = slen pending
+for i ulong slen pending
+if and eq stop slen pending eq schar pending i 47
+stop = i
+end
+end
+part = ssub pending 0 stop
+next = stop
+if lt next slen pending
+next = add next 1
+end
+put prres 1 ssub pending next sub slen pending next
+if or eq slen part 0 seq part L_dot
+ret true
+end
+if seq part L_dotdot
+put prres 0 prparent get prres 0
+ret true
+end
+ret prlink spath get prres 0 part
+end
+fn prresolve path ulong to ulong
+if not fvalid path
+ret 0
+end
+base = prcwd
+if eq base 0
+ret 0
+end
+if eq schar path 0 47
+base = ssub path 0 1
+end
+put prres 0 base
+put prres 1 path
+put prres 2 0
+while gt slen get prres 1 0
+if not prcomponent
+ret 0
+end
+end
+ret get prres 0
+end
+fn prsetup path ulong to bool
+resolved = prresolve path
+if eq resolved 0
+ret false
+end
+probe = resolved
+while true
+if fexists spath probe L_git
+ret false
+end
+if le slen probe 1
+ret prmkdirs resolved
+end
+probe = prparent probe
+end
+ret false
+end
+fn prmkdirs path ulong to bool
+for i ulong add slen path 1
+split = eq i slen path
+if not split
+split = eq schar path i 47
+end
+if and split gt i 0
+part = ssub path 0 i
+r = makedir sb soff part slen part 493
+if and ne r 0 ne r -17
+ret false
+end
+mode = fmode part
+if ne and mode 61440 16384
+ret false
+end
+end
+end
+put prstate 0 path
+blobdir = spath path prlit 0
+resolved = prresolve blobdir
+if or eq resolved 0 not seq resolved blobdir
+ret false
+end
+r = makedir sb soff blobdir slen blobdir 493
+if and ne r 0 ne r -17
+ret false
+end
+if ne and fmode blobdir 61440 16384
+ret false
+end
+put prstate 1 blobdir
+ret true
+end
+text prgovpre "/sys/devices/system/cpu/cpu"
+text prgovend "/cpufreq/scaling_governor"
+global prgovs ulong 256
+fn prgovernors to ulong
+p = get sp 0
+for i ulong len prgovpre
+sbyte get prgovpre i
+end
+prefix = sdone p
+p = get sp 0
+for i ulong len prgovend
+sbyte get prgovend i
+end
+suffix = sdone p
+count = ulong 0
+for cpu ulong 256
+path = scat3 prefix suint cpu suffix
+value = prload path
+if ne value 0
+found = false
+for i ulong count
+if seq get prgovs i value
+found = true
+end
+end
+if not found
+put prgovs count value
+count = add count 1
+end
+end
+end
+for i ulong count
+for j ulong i
+if lt scmp get prgovs i get prgovs j 0
+value = get prgovs i
+put prgovs i get prgovs j
+put prgovs j value
+end
+end
+end
+p = get sp 0
+sbyte 91
+for i ulong count
+if ne i 0
+sbyte 44
+end
+prquoted get prgovs i
+end
+sbyte 93
+ret sdone p
+end

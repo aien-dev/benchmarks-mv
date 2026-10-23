@@ -1,0 +1,158 @@
+note Markdown synchronization preserves surrounding bytes and performs no write in check mode.
+text dmwords "<!-- AIEN:BENCHMARKS:START -->\n<!-- AIEN:BENCHMARKS:END -->\n<!-- Sourced automatically from benchmarks/data/benchmarks_latest.json (Measurement Suite v\n) -->\n| Workload / Service | Architecture | Measurement ID | Resident Memory (RSS) | p50 Latency | Throughput |\n| :--- | :--- | :--- | :---: | :---: | :---: |\nBENCH-UNKNOWN\n MB\n ms\n req/s\nN/A\n*Hardware Reference: \n GB unified memory). All metrics measured under concurrency C=\n over \n requests per endpoint.*\nTarget file not found, skipping: \nBenchmark table out of date in: \nSynchronized benchmark table into: \nBenchmark table already in sync: \n../README.md\n../docs/STATE_OF_AIEN.md\n"
+global dmpool ulong 1
+fn dminit to void
+p = get sp 0
+for i ulong len dmwords
+sbyte get dmwords i
+end
+put dmpool 0 sdone p
+end
+fn dmword i ulong to ulong
+ret dsline get dmpool 0 i
+end
+fn dmatch service ulong to long
+list = dfield 0 6
+i = add ulong list 1
+while lt i get jn ulong list
+if seq dstr long i 24 service
+ret long i
+end
+i = get jn i
+end
+ret -1
+end
+fn dmrow item long to void
+dobyte 124
+dobyte 32
+doadd dstr item 25
+doseparator
+doadd dstr item 14
+doseparator
+dobyte 96
+id = dfield item 23
+if or lt id 0 jkind id 7
+doadd dmword 6
+else
+doadd jstringval id
+end
+dobyte 96
+doseparator
+donum dval item 26 2
+doadd dmword 7
+doseparator
+lat = dmatch dstr item 24
+if ge lat 0
+donum dval lat 31 2
+doadd dmword 8
+doseparator
+donum dval lat 30 0
+doadd dmword 9
+else
+doadd dmword 10
+doseparator
+doadd dmword 10
+end
+dobyte 32
+dobyte 124
+donewline
+end
+fn dmarkdown to ulong
+doreset
+doadd dmword 0
+donewline
+doadd dmword 2
+doadd dstr 0 1
+doadd dmword 3
+donewline
+doadd dmword 4
+donewline
+doadd dmword 5
+donewline
+list = dfield 0 5
+i = add ulong list 1
+while lt i get jn ulong list
+dmrow long i
+i = get jn i
+end
+donewline
+doadd dmword 11
+hardware = dfield 0 3
+doadd dstr hardware 12
+dobyte 32
+dobyte 40
+doadd dstr hardware 13
+dobyte 44
+dobyte 32
+doint duint hardware 15
+doadd dmword 12
+env = dfield 0 4
+doint duint env 20
+doadd dmword 13
+doint duint env 21
+doadd dmword 14
+donewline
+doadd dmword 1
+ret doresult
+end
+fn dreplace content ulong table ulong to ulong
+first = sfind content dmword 0
+last = sfind content dmword 1
+if or lt first 0 lt last 0
+ret content
+end
+finish = add ulong last slen dmword 1
+if lt ulong last ulong first
+note Reversed markers are refused rather than duplicating document content.
+exit 65
+end
+ret scat3 ssub content 0 ulong first table ssub content finish sub slen content finish
+end
+fn dsave path ulong value ulong to bool
+fd = fopen sb soff path slen path 524865 420
+if lt fd 0
+ret false
+end
+p = ulong 0
+while lt p slen value
+w = write int fd sb add soff value p sub slen value p
+if ne w -4
+if le w 0
+c = fclose int fd
+ret false
+end
+p = add p ulong w
+end
+end
+c = fclose int fd
+ret eq c 0
+end
+fn dnotice fd int prefix ulong path ulong to void
+swrite fd dmword prefix
+swrite fd path
+swrite fd L_newline
+end
+fn dsync path ulong table ulong check bool to bool
+if not fexists path
+dnotice 1 15 path
+ret true
+end
+raw = ftext path
+if lt raw 0
+exit 74
+end
+updated = dreplace ulong raw table
+if seq updated ulong raw
+dnotice 1 18 path
+ret true
+end
+if check
+dnotice 2 16 path
+ret false
+end
+if not dsave path updated
+exit 74
+end
+dnotice 1 17 path
+ret true
+end

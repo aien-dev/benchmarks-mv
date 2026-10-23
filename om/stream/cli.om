@@ -1,0 +1,204 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Configuration: host0, port1, path2, model3, engine4, precision5, context6,
+note max_tokens7, prompt8, requests9, concurrency10, warmup11, connect_ns12,
+note read_ns13, request_usage14, output_dir15, context_present16.
+global lr_cfg ulong 17
+global lr_numv ulong 1
+global lr_lit ulong 256
+text lr_words "127.0.0.1~/v1/chat/completions~atlas-lightning-omni~unlabeled~Explain unified memory architecture in ten words.~records~--llm-host~--llm-port~--llm-path~--llm-model~--llm-engine~--llm-precision~--llm-context-length~--llm-max-tokens~--llm-prompt~--llm-requests~--llm-concurrency~--llm-warmup~--llm-no-usage-request~--llm-connect-timeout-secs~--llm-read-timeout-secs~--out-dir~--help~llm-stream~{\"model\":~ ,\"messages\":[{\"role\":\"user\",\"content\":~}],\"max_tokens\":~,\"stream\":true~,\"stream_options\":{\"include_usage\":true}~POST ~ HTTP/1.1~Host: ~Content-Type: application/json~Accept: text/event-stream~Content-Length: ~Connection: close~/usr/bin/git~-C~rev-parse~HEAD~status~--porcelain~--untracked-files=no~.~llm_streaming-~.samples.json~.json~.part~aien-bench-record/1~aien-bench-samples/1~EXPERIMENTAL~FAIL~aien-spark/benchmarks~release~Omega native ARM64 omc SHA256 e5d60db892c8f21cc8c9128af26d8bded0e96d7f92946f5a549397c43a872649~Linux CLOCK_MONOTONIC nanoseconds~llm_streaming~backend_usage~events_not_tokens~/proc/sys/kernel/hostname~/proc/cpuinfo~aarch64~none_detected~/proc/driver/nvidia/gpus~information~Model:~model name~unknown~complete~connect_error~write_error~read_error~read_timeout~malformed_stream~truncated_head~http_status~stream_error_event~truncated_body~zero_events~missing_done~no_content~content~non_content~done~error~malformed~null~true~false~schema~status~source~repo~commit~dirty~build~profile~compiler~workload~name~prompt_bytes~max_tokens~requests~concurrency~hardware~host~cpu~gpu~backend~engine~model~precision~endpoint~context_length~methodology~clock~definitions~token_accounting~samples~metrics~evidence~limitations~record~offsets~warmup~index~outcome~detail_code~connect_ms~http_status~content_type~first_byte_ms~head_ms~first_content_ms~last_content_ms~completion_ms~done_seen~content_events~non_content_events~error_events~malformed_events~usage_completion_tokens~usage_prompt_tokens~reads~bytes~sse_comments~sse_ignored_lines~sse_invalid_utf8_lines~sse_empty_dispatches~error_body~events~offset_ms~read_index~kind~requests_attempted~requests_ok~requests_failed~wall_ms~content_events_total~events_coalesced_in_read~events_per_sec~output_tokens_total~output_tokens_per_sec~ttft_ms~first_byte_ms~e2e_ms~inter_event_ms~tpot_ms~_samples~_p50~_p95~failures~request_start~arrival~success~percentiles~Source commit and dirty state are read from the current working tree at runtime. Native compiler identity is pinned in this program; build.rustc is intentionally absent.~Socket-read arrival granularity; coalesced events retain zero inter-event gaps.~Native IPv4 and IPv6 literals, hosts-file aliases, and DNS A/AAAA resolution. Custom NSS modules and mDNS are not loaded. TCP_NODELAY is enabled.~EXPERIMENTAL: not qualified against a pinned model baseline. Native fixture servers qualify transport behavior, not model performance.~Only successful requests contribute measurements. Warmup requests are preserved separately and excluded from wall time and metrics.~Token metrics exist only when every successful request supplies backend usage.completion_tokens. Counts are reported by the backend, not inferred from events.~Nearest rank: p50 needs one observation; p95 needs at least 20 observations; sample counts accompany each distribution.~Immediately before writing request bytes to a connected socket; connection time excluded.~Monotonic time immediately after recv returns the event final byte.~HTTP2xx plus content and DONE, with no transport or stream error.~Consecutive content-event arrival gaps, including coalesced zeros.~Successful content events divided by measured wall seconds.~Measured dispatch until last request completion, excluding warmup.~Backend completion tokens divided by measured wall seconds.~Per request content-arrival window divided by backend completion tokens minus one; requires at least 2 tokens and positive window.~ns and ms offsets are relative to request_start; raw integer_ns fields retain exact observations.~offset_ns~first_content_ns~last_content_ns~completion_ns~connect_ns~first_byte_ns~head_ns~wall_ns~malformed_events_total~usage_requests~search~domain~options~ndots:~attempts:~timeout:~rotate~Request_start to arrival of the first response byte.~Request_start to the first SSE event with nonempty choices delta content, reasoning_content or text; role, empty, finish and usage events excluded.~Request_start to arrival of data: [DONE].~Precision was not labeled by the operator.~Engine was not labeled by the operator.~stream_options.include_usage was not requested.~No successful request supplied a usable observation; rates and token metrics are absent.~Some successful requests lack backend completion-token usage; token metrics are absent.~Per-request packet transfer and process scheduling can affect dispatch spacing between requests.~detail~HTTP ~Number of measured requests dispatched, excluding warmup.~Number of successful measured requests.~Number of failed measured requests, excluded from latency and throughput observations.~Content-bearing SSE events from successful requests; events are not tokens.~Malformed JSON events observed in otherwise successful requests.~Successful requests that supplied backend completion-token usage.~Exact measured wall duration in integer nanoseconds.~evidence_base~"
+text lr_help "Usage: llm-stream [--llm-host HOST] [--llm-port PORT] [--llm-path PATH]\n  --llm-model MODEL --llm-engine ENGINE --llm-precision LABEL\n  --llm-context-length N --llm-max-tokens N --llm-prompt TEXT\n  --llm-requests N --llm-concurrency N --llm-warmup N\n  --llm-no-usage-request --llm-connect-timeout-secs N --llm-read-timeout-secs N\n  --out-dir DIR\nLimits: 10000 requests/warmups, 32 concurrent workers; 1..3600s deadlines.\nNative ARM64 client. IPv4, IPv6, hosts-file aliases, native DNS; no custom NSS modules.\n"
+text lr_bad "llm-stream: invalid option/value, unsupported host, or capacity exceeded. Use --help.\n"
+fn lr_L i ulong to ulong
+ret get lr_lit i
+end
+fn lr_init to void
+p = get sp 0
+n = ulong 0
+for i ulong len lr_words
+c = get lr_words i
+if eq c 126
+put lr_lit n sdone p
+n = add n 1
+p = get sp 0
+else
+sbyte c
+end
+end
+put lr_cfg 0 lr_L 0
+put lr_cfg 1 18006
+put lr_cfg 2 lr_L 1
+put lr_cfg 3 lr_L 2
+put lr_cfg 4 lr_L 3
+put lr_cfg 5 lr_L 3
+put lr_cfg 7 20
+put lr_cfg 8 lr_L 4
+put lr_cfg 9 1
+put lr_cfg 10 1
+put lr_cfg 11 1
+put lr_cfg 12 5000000000
+put lr_cfg 13 20000000000
+put lr_cfg 14 1
+put lr_cfg 15 lr_L 5
+end
+fn lr_number s ulong to long
+if eq slen s 0
+ret -1
+end
+v = ulong 0
+for i ulong slen s
+c = schar s i
+if or lt c 48 gt c 57
+ret -1
+end
+d = ulong sub c 48
+if gt v div sub ulong 9223372036854775807 d 10
+ret -1
+end
+v = add mul v 10 d
+end
+ret long v
+end
+fn lr_option key ulong value ulong to bool
+for i ulong 16
+if seq key lr_L add i 6
+if eq i 12
+ret false
+end
+if or eq i 0 or and ge i 2 le i 5 eq i 8
+put lr_cfg i value
+ret true
+end
+if eq i 15
+put lr_cfg 15 value
+ret true
+end
+if eq i 6
+if not lr_u64 value
+ret false
+end
+put lr_cfg 6 get lr_numv 0
+put lr_cfg 16 1
+ret true
+end
+n = lr_number value
+if lt n 0
+ret false
+end
+if eq i 6
+put lr_cfg 16 1
+end
+if or eq i 13 eq i 14
+if or eq n 0 gt n 3600
+ret false
+end
+put lr_cfg sub i 1 mul ulong n 1000000000
+ret true
+end
+put lr_cfg i ulong n
+ret true
+end
+end
+ret false
+end
+fn lr_safe s ulong to bool
+for i ulong slen s
+c = schar s i
+if or lt c 33 eq c 127
+ret false
+end
+end
+ret true
+end
+fn lr_validate to bool
+if or eq get lr_cfg 1 0 gt get lr_cfg 1 65535
+ret false
+end
+if eq slen get lr_cfg 0 0
+ret false
+end
+if not lr_safe get lr_cfg 0
+ret false
+end
+if or eq get lr_cfg 9 0 gt get lr_cfg 9 10000
+ret false
+end
+if or eq get lr_cfg 10 0 gt get lr_cfg 10 32
+ret false
+end
+if gt get lr_cfg 11 10000
+ret false
+end
+if gt get lr_cfg 7 4294967295
+ret false
+end
+path = get lr_cfg 2
+if eq slen path 0
+ret false
+end
+if ne schar path 0 47
+ret false
+end
+ret lr_safe path
+end
+fn lr_cli_from start ulong to bool
+i = start
+while lt i ulong argcnt
+key = sarg i
+equal = lr_equal key
+if ge equal 0
+if not lr_option ssub key 0 ulong equal ssub key add ulong equal 1 sub slen key add ulong equal 1
+ret false
+end
+i = add i 1
+else
+if seq key lr_L 23
+i = add i 1
+else
+if seq key lr_L 22
+r = write 1 lr_help 0 len lr_help
+exit 0
+end
+if seq key lr_L 18
+put lr_cfg 14 0
+i = add i 1
+else
+if ge add i 1 ulong argcnt
+ret false
+end
+if not lr_option key sarg add i 1
+ret false
+end
+i = add i 2
+end
+end
+end
+end
+ret lr_validate
+end
+fn lr_equal key ulong to long
+for i ulong slen key
+if eq schar key i 61
+ret long i
+end
+end
+ret -1
+end
+fn lr_u64 s ulong to bool
+if eq slen s 0
+ret false
+end
+v = ulong 0
+for i ulong slen s
+c = schar s i
+if or lt c 48 gt c 57
+ret false
+end
+d = ulong sub c 48
+if gt v div sub ulong 18446744073709551615 d 10
+ret false
+end
+v = add mul v 10 d
+end
+put lr_numv 0 v
+ret true
+end

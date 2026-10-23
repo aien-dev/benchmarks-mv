@@ -1,0 +1,50 @@
+text lr_stall "HTTP/1.1 200 OK\n\n"
+fn lr_ck ok bool code int to void
+if not ok
+exit code
+end
+end
+fn main to int
+sinit
+ac_init
+lr_init
+lr_ck lr_ipv4 lr_L 0 0 1
+server = socknew 2 526337 0
+lr_ck ge server 0 2
+r = bind int server lr_addr 0 16
+lr_ck eq r 0 3
+r = listen int server 4
+lr_ck eq r 0 4
+r = sockname int server lr_addr 0 len lr_addr
+lr_ck gt r 0 5
+put lr_cfg 1 or shl ulong get lr_addr 2 8 ulong get lr_addr 3
+put lr_cfg 13 20000000
+put lr_req 0 71
+put lr_net 0 1
+pid = fork
+lr_ck ge pid 0 6
+if eq pid 0
+lr_ck gt lr_ready int server 1 add monons 3000000000 0 7
+client = accept int server 524288
+lr_ck ge client 0 8
+r = recv int client sf_fi 0 16384 0
+lr_ck gt r 0 9
+r = send int client lr_stall 0 len lr_stall 0
+lr_ck eq r long len lr_stall 10
+r = sleepns 100000000
+r = fclose int client
+exit 0
+end
+lr_measure 0
+lr_ck eq get ac_s 3 4 11
+lr_ck eq get ac_s 9 1 12
+lr_ck eq get ac_s 15 0 13
+r = waitpid int pid pstatus 0 len pstatus 0
+lr_ck eq r pid 14
+lr_ck eq pcode 0 15
+r = fclose int server
+lr_measure 1
+lr_ck eq get ac_s 3 1 16
+lr_ck eq get ac_s 5 0 17
+ret 0
+end

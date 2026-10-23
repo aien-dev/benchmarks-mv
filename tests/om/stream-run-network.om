@@ -1,0 +1,115 @@
+text lr_test6 "::1"
+text lr_full6 "2001:db8:0:1::abcd"
+text lr_bad6 "1::2::3"
+text lr_map6 "::ffff:127.0.0.1"
+text lr_reply "HTTP/1.1 200 OK\nContent-Type: text/event-stream\n\ndata: {\"choices\":[{\"delta\":{\"content\":\"fixture\"}}]}\n\ndata: {\"usage\":{\"completion_tokens\":7,\"prompt_tokens\":3}}\n\ndata: [DONE]\n\n"
+global lr_test ulong 1
+fn lr_ts kind ulong to ulong
+p = get sp 0
+if eq kind 0
+for i ulong len lr_test6
+sbyte get lr_test6 i
+end
+end
+if eq kind 1
+for i ulong len lr_full6
+sbyte get lr_full6 i
+end
+end
+if eq kind 2
+for i ulong len lr_bad6
+sbyte get lr_bad6 i
+end
+end
+if eq kind 3
+for i ulong len lr_map6
+sbyte get lr_map6 i
+end
+end
+ret sdone p
+end
+fn lr_ck ok bool code int to void
+if not ok
+exit code
+end
+end
+fn lr_serve fd int to void
+ready = waitio fd 1 3000000000
+if le ready 0
+exit 80
+end
+client = accept fd 524288
+if lt client 0
+exit 81
+end
+r = waitio int client 1 3000000000
+if le r 0
+exit 82
+end
+r = recv int client sf_fi 0 16384 0
+if le r 0
+exit 83
+end
+r = send int client lr_reply 0 len lr_reply 0
+if ne r long len lr_reply
+exit 84
+end
+r = fclose int client
+r = fclose fd
+exit 0
+end
+fn lr_transport family ulong to void
+host = lr_L 0
+if eq family 10
+host = lr_ts 0
+end
+lr_ck lr_literal host 0 10
+server = socknew int family 526337 0
+lr_ck ge server 0 11
+r = bind int server lr_addr 0 get lr_net 3
+lr_ck eq r 0 12
+r = listen int server 8
+lr_ck eq r 0 13
+r = sockname int server lr_addr 0 len lr_addr
+lr_ck gt r 0 14
+port = or shl ulong get lr_addr 2 8 ulong get lr_addr 3
+put lr_cfg 0 host
+put lr_cfg 1 port
+pid = fork
+lr_ck ge pid 0 15
+if eq pid 0
+lr_serve int server
+end
+note Request bytes are a minimal real HTTP request for this network-only suite.
+put lr_req 0 71
+put lr_req 1 69
+put lr_req 2 84
+put lr_req 3 10
+put lr_net 0 4
+lr_measure 0
+lr_ck eq get ac_s 3 0 16
+lr_ck eq get ac_s 18 1 17
+lr_ck eq get ac_s 23 7 18
+lr_ck eq get ac_s 25 3 19
+lr_ck gt get ac_s 16 0 20
+r = waitpid int pid pstatus 0 len pstatus 0
+lr_ck eq r pid 21
+lr_ck eq pcode 0 22
+r = fclose int server
+end
+fn main to int
+sinit
+ac_init
+lr_init
+lr_ck lr_ipv4 lr_L 0 18006 1
+lr_ck eq get lr_addr 4 127 2
+lr_ck lr_ipv6 lr_ts 1 90 3
+lr_ck eq get lr_addr 8 32 4
+lr_ck eq get lr_addr 22 171 5
+lr_ck not lr_ipv6 lr_ts 2 90 6
+lr_ck lr_ipv6 lr_ts 3 90 7
+lr_ck eq get lr_addr 20 127 8
+lr_transport 2
+lr_transport 10
+ret 0
+end

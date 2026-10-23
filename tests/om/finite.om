@@ -1,0 +1,22 @@
+text ncases "11.7976931348623157e308\n11.7976931348623158e308\n01.79769313486231581e308\n01.7976931348623159e308\n1-1.7976931348623158e308\n0-1.7976931348623159e308\n11e-9999\n00.1e9999\n10e9999\n11.0\n0\"1\"\n"
+fn main to int
+p = ulong 0
+while lt p len ncases
+want = eq get ncases p 49
+p = add p 1
+n = ulong 0
+while ne get ncases p 10
+put jb n get ncases p
+p = add p 1
+n = add n 1
+end
+if not jparse n
+ret 1
+end
+if ne jfinite 0 want
+ret 2
+end
+p = add p 1
+end
+ret 0
+end

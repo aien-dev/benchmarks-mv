@@ -63,7 +63,7 @@
     },
     {
       "id": "measurement-and-streaming",
-      "status": "OPEN: bench_llm_stream, vector, system and memory modules qualified; active measure CLI and sibling-runtime inference_bench remain open",
+      "status": "PARTIAL: bench_llm_stream, vector, system and memory modules qualified; native bench_measure covers standalone HTTP concurrency, live memory/endpoint sampling, vector workload, JSON output and UTC timestamps; LLM/embedding inference wiring and the sibling-runtime inference_bench remain open",
       "old_sources": [
         "src/harness/mod.rs",
         "src/harness/http_bench.rs",
@@ -81,7 +81,10 @@
         "om/stream/",
         "om/measure/system.om",
         "om/measure/memory.om",
-        "om/measure/vector.om"
+        "om/measure/vector.om",
+        "om/measure/clock.om",
+        "om/measure/run.om",
+        "om/measure/main.om"
       ],
       "qualification": [
         "tests/om/stats.om",
@@ -102,13 +105,15 @@
         "tests/om/stream-run-timeout.om",
         "tests/om/stream-run-full.om",
         "tests/om/stream-run-mixed.om",
-        "tests/om/stream-run-p95.om"
+        "tests/om/stream-run-p95.om",
+        "tests/om/measure-run.om"
       ],
       "blockers": [
-        "Active measure CLI orchestration (http_bench, standalone, inference_bench)",
+        "LLM and embedding inference rows in bench_measure (streaming remains in bench_llm_stream)",
+        "Asset rendering from bench_measure (bench_dataset owns SVG)",
         "runtime consumer boundary"
       ],
-      "deletion_gate": "Native measure and llm-stream consumers pass protocol, timeout, cancellation, metric and evidence tests; delete all old harness sources and unused runtime/network dependencies"
+      "deletion_gate": "Native bench_measure standalone, live, vector and JSON paths are qualified; finish LLM/embedding and sibling-runtime parity, cut over gates, then delete all old harness sources and unused runtime/network dependencies"
     },
     {
       "id": "dataset-and-presentation",

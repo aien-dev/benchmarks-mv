@@ -1,0 +1,631 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Native active measurement sweep: system/memory discovery, standalone HTTP workers, live sampling, vector workload and JSON output.
+text mr_words "data/benchmarks_latest.json~assets~--concurrency~-c~--requests~-r~--warmup~-w~--output-json~--output-assets~--skip-standalone~--skip-live~--skip-llm~--help~-h~Usage: aien-benchmarks measure [-c N] [-r N] [-w N] [--output-json FILE] [--output-assets DIR] [--skip-standalone] [--skip-live] [--skip-llm]\n~GET ~ HTTP/1.1\nHost: 127.0.0.1:~\nConnection: close\n\n~GET /api/status~GET /health~GET /api/query~GET /api/vector~HTTP/1.1 200 OK\nContent-Type: application/json\nContent-Length: 58\nConnection: close\n\n{\"status\":\"ok\",\"engine\":\"rust-standalone\",\"version\":\"0.1\"}~HTTP/1.1 200 OK\nContent-Type: application/json\nContent-Length: 120\nConnection: close\n\n{\"id\":1,\"canonical_name\":\"benchmark_reference_entity\",\"content\":\"Verified cryptographic token record for baseline testing\"}~HTTP/1.1 200 OK\nContent-Type: application/json\nContent-Length: 39\nConnection: close\n\n{\"similarity\":1.12896,\"dimensions\":768}~HTTP/1.1 404 Not Found\nContent-Type: application/json\nContent-Length: 21\nConnection: close\n\n{\"error\":\"not found\"}~BENCH-LIVE-STANDALONE-STATUS-001~/api/status~Minimal JSON Status Ping~Omega native standalone~BENCH-LIVE-STANDALONE-QUERY-001~/api/query~Single Entity Query & JSON Serialization~BENCH-LIVE-STANDALONE-VEC-001~/api/vector~768-dimensional Vector Dot Product~Omega binary32 loop~omega-standalone~aegis~BENCH-LIVE-AEGIS-RSS-001~aegis-runtime~Sovereign Gateway & Heartbeat~Native Rust (Grace Blackwell)~cortex-rs~BENCH-LIVE-CORTEX-RSS-001~Canonical Memory Engine~Native Rust + SQLite WAL~spark-cockpit-rs~BENCH-LIVE-COCKPIT-RSS-001~Real-time Telemetry Cockpit~Native Rust + Axum~cortex-encoder-rs~BENCH-LIVE-ENCODER-RSS-001~Neural Embedding Microservice~Rust + ONNX Runtime (BGE-M3)~BENCH-LIVE-SIMD-DOT-001~SIMD Vector Dot Product (768-dim)~In-Memory Cortex Embedding~AIEN Sovereign Systems Performance Benchmark Suite~0.2.0~1.0.0~{\"benchmark_suite\":~,\"version\":~,\"schema_version\":~,\"timestamp\":~,\"hardware\":{\"system\":~,\"processor\":~,\"architecture\":~,\"memory_unified_gb\":~,\"os\":~},\"environment\":{\"rustc_version\":~,\"kernel_version\":~,\"page_size_kb\":~,\"concurrency_tested\":~,\"requests_per_endpoint\":~,\"warmup_requests\":~},\"memory_rss\":[~],\"latency_concurrency\":[~],\"neural_inference\":[~]}~{\"measurement_id\":~,\"service\":~,\"role\":~,\"architecture\":~,\"rss_mb\":~}~{\"measurement_id\":~,\"service\":~,\"endpoint\":~,\"description\":~,\"engine\":~,\"requests_per_sec\":~,\"p50_ms\":~,\"p95_ms\":~,\"p99_ms\":~,\"concurrency\":~,\"sample_size\":~}~{\"measurement_id\":~,\"workload\":~,\"model\":~,\"engine\":~,\"p50_ms\":~,\"p95_ms\":null}~BENCH-LIVE-CORTEX-GET-001~/api/cortex/get~Cortex Canonical Retrieval~Rust Axum + SQLite WAL~BENCH-LIVE-PULSE-001~/api/pulse~Real-time System Pulse~BENCH-LIVE-ENCODER-HEALTH-001~/health~ONNX Runtime Service Health~Rust Axum + ONNX Runtime~"
+global mr_lit ulong 128
+global mr_cfg ulong 8
+note mr_cfg: conc0, reqs1, warmup2, out_json3, out_assets4, skip_standalone5, skip_live6, skip_llm7.
+global mr_lats ulong 10000
+global mr_hres ulong 5
+note mr_hres: count0, rps_bits1, p50_bits2, p95_bits3, p99_bits4.
+global mr_mem ulong 32
+global mr_lat ulong 32
+global mr_neu ulong 32
+global mr_cnts ulong 3
+global mr_pipe uchar 8
+global mr_enc uchar 8
+global mr_stat uchar 4
+global mr_pbuf uchar 65536
+global mr_rfds ulong 64
+global mr_pids ulong 64
+fn mr_L i ulong to ulong
+ret get mr_lit i
+end
+fn mr_init to void
+p = get sp 0
+n = ulong 0
+for i ulong len mr_words
+c = get mr_words i
+if eq c 126
+put mr_lit n sdone p
+n = add n 1
+p = get sp 0
+else
+sbyte c
+end
+end
+put mr_cfg 0 10
+put mr_cfg 1 500
+put mr_cfg 2 20
+put mr_cfg 3 mr_L 0
+put mr_cfg 4 mr_L 1
+put mr_cfg 5 0
+put mr_cfg 6 0
+put mr_cfg 7 0
+put mr_cnts 0 0
+put mr_cnts 1 0
+put mr_cnts 2 0
+end
+fn mr_opt key ulong val ulong to bool
+if or seq key mr_L 2 seq key mr_L 3
+n = lr_number val
+if or le n 0 gt n 32
+ret false
+end
+put mr_cfg 0 ulong n
+ret true
+end
+if or seq key mr_L 4 seq key mr_L 5
+n = lr_number val
+if or le n 0 gt n 10000
+ret false
+end
+put mr_cfg 1 ulong n
+ret true
+end
+if or seq key mr_L 6 seq key mr_L 7
+n = lr_number val
+if or lt n 0 gt n 10000
+ret false
+end
+put mr_cfg 2 ulong n
+ret true
+end
+if seq key mr_L 8
+if eq slen val 0
+ret false
+end
+put mr_cfg 3 val
+ret true
+end
+if seq key mr_L 9
+if eq slen val 0
+ret false
+end
+put mr_cfg 4 val
+ret true
+end
+ret lr_option key val
+end
+fn mr_args start ulong to bool
+i = start
+while lt i ulong argcnt
+arg = sarg i
+if or seq arg mr_L 13 seq arg mr_L 14
+swrite 1 mr_L 15
+exit 0
+end
+if seq arg mr_L 10
+put mr_cfg 5 1
+i = add i 1
+else
+if seq arg mr_L 11
+put mr_cfg 6 1
+i = add i 1
+else
+if seq arg mr_L 12
+put mr_cfg 7 1
+i = add i 1
+else
+if seq arg lr_L 18
+put lr_cfg 14 0
+i = add i 1
+else
+eqp = lr_equal arg
+if ge eqp 0
+k = ssub arg 0 ulong eqp
+v = ssub arg add ulong eqp 1 sub slen arg add ulong eqp 1
+if not mr_opt k v
+ret false
+end
+i = add i 1
+else
+if ge add i 1 ulong argcnt
+ret false
+end
+if not mr_opt arg sarg add i 1
+ret false
+end
+i = add i 2
+end
+end
+end
+end
+end
+end
+ret true
+end
+fn mr_handle client int to void
+if le lr_ready client 1 add monons 2000000000 0
+r = fclose client
+ret
+end
+n = recv client sf_fi 0 1024 0
+if le n 0
+r = fclose client
+ret
+end
+p = get sp 0
+for i ulong ulong n
+sbyte get sf_fi i
+end
+req = sdone p
+reply = mr_L 25
+if or sstarts req mr_L 18 sstarts req mr_L 19
+reply = mr_L 22
+else
+if sstarts req mr_L 20
+reply = mr_L 23
+else
+if sstarts req mr_L 21
+ok = vprepare 768
+dot = vdot 768
+if eq dot 123456789
+reply = mr_L 25
+else
+reply = mr_L 24
+end
+end
+end
+end
+sent = ulong 0
+while lt sent slen reply
+w = send client sb add soff reply sent sub slen reply sent 0
+if le w 0
+sent = slen reply
+else
+sent = add sent ulong w
+end
+end
+r = fclose client
+end
+fn mr_serve server int to void
+deadline = add monons 60000000000
+while lt monons deadline
+if gt lr_ready server 1 deadline 0
+client = accept server 524288
+if ge client 0
+mark = get sp 0
+mr_handle int client
+put sp 0 mark
+end
+end
+end
+r = fclose server
+exit 0
+end
+fn mr_one port ulong path ulong to long
+if not lr_ipv4 lr_L 0 port
+ret -1
+end
+p = get sp 0
+sappend mr_L 16
+sappend path
+sappend mr_L 17
+discard = suint port
+sappend mr_L 17
+req = sdone p
+for i ulong slen req
+put lr_req i schar req i
+end
+put lr_net 0 slen req
+t0 = monons
+fd = lr_open
+if lt fd 0
+ret -1
+end
+if not lr_send int fd
+r = fclose int fd
+ret -1
+end
+if le lr_ready int fd 1 add monons 5000000000 0
+r = fclose int fd
+ret -1
+end
+n = recv int fd sf_fi 0 1024 0
+r = fclose int fd
+if le n 0
+ret -1
+end
+t1 = monons
+if lt t1 t0
+ret 0
+end
+ret sub t1 t0
+end
+fn mr_sort count ulong to void
+for i ulong count
+v = get mr_lats i
+j = i
+more = true
+while and more gt j 0
+if gt get mr_lats sub j 1 v
+put mr_lats j get mr_lats sub j 1
+j = sub j 1
+else
+more = false
+end
+end
+put mr_lats j v
+end
+end
+fn mr_ms ns ulong to ulong
+ret dfdiv df_from_u64 ns df_from_u64 1000000
+end
+global mr_ok ulong 1
+global mr_t0 ulong 1
+global mr_t1 ulong 1
+fn mr_get32 off ulong to ulong
+v = ulong get mr_pipe off
+v = or v shl ulong get mr_pipe add off 1 8
+v = or v shl ulong get mr_pipe add off 2 16
+v = or v shl ulong get mr_pipe add off 3 24
+ret v
+end
+fn mr_get64 off ulong to ulong
+v = ulong get mr_pbuf off
+v = or v shl ulong get mr_pbuf add off 1 8
+v = or v shl ulong get mr_pbuf add off 2 16
+v = or v shl ulong get mr_pbuf add off 3 24
+v = or v shl ulong get mr_pbuf add off 4 32
+v = or v shl ulong get mr_pbuf add off 5 40
+v = or v shl ulong get mr_pbuf add off 6 48
+v = or v shl ulong get mr_pbuf add off 7 56
+ret v
+end
+fn mr_put64 v ulong to void
+for i ulong 8
+put mr_enc i uchar and shr v mul i 8 255
+end
+end
+fn mr_absorb n long to void
+c = div ulong n 8
+for j ulong c
+d = mr_get64 mul j 8
+if lt get mr_ok 0 len mr_lats
+put mr_lats get mr_ok 0 d
+put mr_ok 0 add get mr_ok 0 1
+end
+end
+end
+fn mr_worker wfd int port ulong path ulong count ulong to void
+for i ulong count
+mark = get sp 0
+d = mr_one port path
+put sp 0 mark
+if ge d 0
+mr_put64 ulong d
+p = ulong 0
+while lt p 8
+w = write wfd mr_enc p sub 8 p
+if ne w -4
+if le w 0
+p = 8
+else
+p = add p ulong w
+end
+end
+end
+end
+end
+end
+fn mr_run_workers conc ulong per ulong port ulong path ulong to bool
+for w ulong conc
+if ne pipefds mr_pipe 0 8 0 0
+ret false
+end
+rfd = mr_get32 0
+wfd = mr_get32 4
+pid = fork
+if lt pid 0
+r = fclose int rfd
+r = fclose int wfd
+ret false
+end
+if eq pid 0
+r = fclose int rfd
+mr_worker int wfd port path per
+exit 0
+end
+r = fclose int wfd
+put mr_rfds w ulong rfd
+put mr_pids w ulong pid
+end
+for w ulong conc
+rfd = get mr_rfds w
+more = true
+while more
+n = read int rfd mr_pbuf 0 len mr_pbuf
+if eq n -4
+else
+if le n 0
+more = false
+else
+mr_absorb n
+end
+end
+end
+r = fclose int rfd
+end
+for w ulong conc
+r = waitpid int get mr_pids w mr_stat 0 4 0
+end
+ret true
+end
+fn mr_stats ok ulong to void
+elapsed = ulong 100000
+if gt get mr_t1 0 get mr_t0 0
+elapsed = ulong sub get mr_t1 0 get mr_t0 0
+if lt elapsed 100000
+elapsed = ulong 100000
+end
+end
+mr_sort ok
+p50 = get mr_lats div mul ok 50 100
+p95 = get mr_lats div mul ok 95 100
+idx99 = div mul ok 99 100
+if ge idx99 ok
+idx99 = sub ok 1
+end
+p99 = get mr_lats idx99
+rps = dfdiv dfmul df_from_u64 ok df_from_u64 1000000000 df_from_u64 elapsed
+put mr_hres 0 ok
+put mr_hres 1 rps
+put mr_hres 2 mr_ms p50
+put mr_hres 3 mr_ms p95
+put mr_hres 4 mr_ms p99
+end
+fn mr_http port ulong path ulong conc ulong reqs ulong warmup ulong to bool
+for w ulong warmup
+mark = get sp 0
+d = mr_one port path
+put sp 0 mark
+end
+per = div reqs conc
+if eq per 0
+ret false
+end
+put mr_ok 0 0
+put mr_t0 0 ulong monons
+if not mr_run_workers conc per port path
+ret false
+end
+put mr_t1 0 ulong monons
+if eq get mr_ok 0 0
+ret false
+end
+mr_stats get mr_ok 0
+ret true
+end
+fn mr_qstr s ulong to void
+sbyte 34
+for i ulong slen s
+c = schar s i
+if or eq c 34 eq c 92
+sbyte 92
+sbyte c
+else
+sbyte c
+end
+end
+sbyte 34
+end
+fn mr_add_mem id ulong svc ulong role ulong arch ulong rss ulong to void
+rs = df_to_json rss
+p = get sp 0
+sappend mr_L 81
+mr_qstr id
+sappend mr_L 82
+mr_qstr svc
+sappend mr_L 83
+mr_qstr role
+sappend mr_L 84
+mr_qstr arch
+sappend mr_L 85
+sappend rs
+sappend mr_L 86
+n = get mr_cnts 0
+put mr_mem n sdone p
+put mr_cnts 0 add n 1
+end
+fn mr_add_lat id ulong svc ulong ep ulong desc ulong eng ulong to void
+rps = df_to_json get mr_hres 1
+s50 = df_to_json get mr_hres 2
+s95 = df_to_json get mr_hres 3
+s99 = df_to_json get mr_hres 4
+p = get sp 0
+sappend mr_L 87
+mr_qstr id
+sappend mr_L 88
+mr_qstr svc
+sappend mr_L 89
+mr_qstr ep
+sappend mr_L 90
+mr_qstr desc
+sappend mr_L 91
+mr_qstr eng
+sappend mr_L 92
+sappend rps
+sappend mr_L 93
+sappend s50
+sappend mr_L 94
+sappend s95
+sappend mr_L 95
+sappend s99
+sappend mr_L 96
+discard = suint get mr_cfg 0
+sappend mr_L 97
+discard = suint get mr_hres 0
+sappend mr_L 98
+n = get mr_cnts 1
+put mr_lat n sdone p
+put mr_cnts 1 add n 1
+end
+fn mr_add_neu id ulong work ulong model ulong eng ulong p50 ulong to void
+s50 = df_to_json p50
+p = get sp 0
+sappend mr_L 99
+mr_qstr id
+sappend mr_L 100
+mr_qstr work
+sappend mr_L 101
+mr_qstr model
+sappend mr_L 102
+mr_qstr eng
+sappend mr_L 103
+sappend s50
+sappend mr_L 104
+n = get mr_cnts 2
+put mr_neu n sdone p
+put mr_cnts 2 add n 1
+end
+fn mr_standalone to bool
+if not lr_ipv4 lr_L 0 0
+ret false
+end
+server = socknew 2 526337 0
+if lt server 0
+ret false
+end
+if ne bind int server lr_addr 0 16 0
+r = fclose int server
+ret false
+end
+if ne listen int server 64 0
+r = fclose int server
+ret false
+end
+if le sockname int server lr_addr 0 len lr_addr 0
+r = fclose int server
+ret false
+end
+port = or shl ulong get lr_addr 2 8 ulong get lr_addr 3
+pid = fork
+if lt pid 0
+r = fclose int server
+ret false
+end
+if eq pid 0
+mr_serve int server
+end
+conc = get mr_cfg 0
+reqs = get mr_cfg 1
+warm = get mr_cfg 2
+ok = mr_http port mr_L 28 conc reqs warm
+if ok
+mr_add_lat mr_L 27 mr_L 38 mr_L 28 mr_L 29 mr_L 30
+ok = mr_http port mr_L 32 conc reqs warm
+end
+if ok
+mr_add_lat mr_L 31 mr_L 38 mr_L 32 mr_L 33 mr_L 30
+ok = mr_http port mr_L 35 conc reqs warm
+end
+if ok
+mr_add_lat mr_L 34 mr_L 38 mr_L 35 mr_L 36 mr_L 37
+end
+r = killpid int pid 9
+r = waitpid int pid pstatus 0 len pstatus 0
+r = fclose int server
+ret ok
+end
+fn mr_live to void
+pid = mp_find mr_L 39
+if ne pid 0
+if mp_rss pid
+mr_add_mem mr_L 40 mr_L 41 mr_L 42 mr_L 43 get mpvalue 1
+end
+end
+pid = mp_find mr_L 44
+if ne pid 0
+if mp_rss pid
+mr_add_mem mr_L 45 mr_L 44 mr_L 46 mr_L 47 get mpvalue 1
+end
+end
+pid = mp_find mr_L 48
+if ne pid 0
+if mp_rss pid
+mr_add_mem mr_L 49 mr_L 48 mr_L 50 mr_L 51 get mpvalue 1
+end
+end
+pid = mp_find mr_L 52
+if ne pid 0
+if mp_rss pid
+mr_add_mem mr_L 53 mr_L 52 mr_L 54 mr_L 55 get mpvalue 1
+end
+end
+conc = get mr_cfg 0
+reqs = get mr_cfg 1
+warm = get mr_cfg 2
+if ge mr_one 18080 mr_L 106 0
+if mr_http 18080 mr_L 106 conc reqs warm
+mr_add_lat mr_L 105 mr_L 44 mr_L 106 mr_L 107 mr_L 108
+end
+end
+if ge mr_one 18095 mr_L 110 0
+if mr_http 18095 mr_L 110 conc reqs warm
+mr_add_lat mr_L 109 mr_L 48 mr_L 110 mr_L 111 mr_L 112
+end
+end
+if ge mr_one 18081 mr_L 114 0
+if mr_http 18081 mr_L 114 conc reqs warm
+mr_add_lat mr_L 113 mr_L 52 mr_L 114 mr_L 115 mr_L 116
+end
+end
+end
+fn mr_json to ulong
+ts = rr_utc_now
+p = get sp 0
+sappend mr_L 62
+mr_qstr mr_L 59
+sappend mr_L 63
+mr_qstr mr_L 60
+sappend mr_L 64
+mr_qstr mr_L 61
+sappend mr_L 65
+mr_qstr ts
+sappend mr_L 66
+mr_qstr get mshost 0
+sappend mr_L 67
+mr_qstr get mshost 1
+sappend mr_L 68
+mr_qstr get mshost 2
+sappend mr_L 69
+discard = suint get msnums 0
+sappend mr_L 70
+mr_qstr get mshost 3
+sappend mr_L 71
+mr_qstr get mshost 4
+sappend mr_L 72
+mr_qstr get mshost 5
+sappend mr_L 73
+discard = suint get msnums 1
+sappend mr_L 74
+discard = suint get msnums 2
+sappend mr_L 75
+discard = suint get msnums 3
+sappend mr_L 76
+discard = suint get msnums 4
+sappend mr_L 77
+for i ulong get mr_cnts 0
+if gt i 0
+sbyte 44
+end
+sappend get mr_mem i
+end
+sappend mr_L 78
+for i ulong get mr_cnts 1
+if gt i 0
+sbyte 44
+end
+sappend get mr_lat i
+end
+sappend mr_L 79
+for i ulong get mr_cnts 2
+if gt i 0
+sbyte 44
+end
+sappend get mr_neu i
+end
+sappend mr_L 80
+ret sdone p
+end
+

@@ -75,6 +75,7 @@ cat om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om
 chmod +x build/om/om-build
 build/om/om-build /path/to/omc
 build/om/om-test /path/to/omc
+build/om/bench_measure --help
 build/om/bench_verify_records records artifacts tests/fixtures/records/good
 build/om/bench_index --check
 ```
@@ -173,13 +174,48 @@ matching self-rebuild hashes are not substituted for that separate qualification
 No durable reuse system is claimed by this work; [Omega #651](https://github.com/aien-dev/omega-mv/issues/651)
 remains with its existing compiler/runtime owners.
 
+## Native measurement sweep
+
+`build/om/bench_measure` is the native replacement for the `measure` subcommand.
+It keeps the measurement definitions and writes the same dataset shape without a
+Rust, Python or shell runtime on the measurement path.
+
+```sh
+build/om/bench_measure \
+  --concurrency 10 --requests 500 --warmup 20 \
+  --output-json data/benchmarks_latest.json
+```
+
+- The standalone server is the Omega binary itself. It binds an ephemeral IPv4
+  loopback port, serves `/api/status`, `/api/query` and `/api/vector`, and each
+  endpoint is measured by `--concurrency` forked workers. Each worker reports
+  its successful latencies through a private pipe; the parent sorts the merged
+  samples and writes nearest-rank p50, p95 and p99.
+- Live mode reads RSS from `/proc` and measures the three tracked service
+  endpoints when they respond. Missing services are skipped, never replaced by
+  a zero.
+- The vector row is the same 768-dimension, 100,000-iteration binary32 workload
+  as `om/measure/vector.om`; it reports the mean per operation, not a
+  distribution, so `p95_ms` stays null.
+- The timestamp comes from `realns` and a native proleptic Gregorian date
+  conversion in `om/measure/clock.om`. No `date` process is invoked.
+- `--skip-standalone`, `--skip-live` and `--skip-llm` are accepted. LLM
+  streaming is a separate qualified command, `build/om/bench_llm_stream`; the
+  `measure` command does not yet fold those rows into its JSON.
+- `--output-assets` is accepted for option compatibility but this command does
+  not render SVG. `build/om/bench_dataset generate` owns chart rendering.
+
+The qualification program `tests/om/measure-run.om` starts the native server,
+checks that all three standalone rows are recorded, and checks the document
+prefix and suffix.
+
 ## Remaining migration
 
 | Existing component | Required work |
 | --- | --- |
 | Prime race runner, validation and receipts (`build/om/prime_race`) | Native `verify` and `run` commands qualified across sweep, tag, child-process, statistics, content-addressed receipt storage, validation and end-to-end execution; `prime-drag-race/src/*.rs`, `prime-drag-race/tests/negative.rs`, `prime-drag-race/Cargo.toml` and `prime-drag-race/Cargo.lock` deleted. |
 | `llm-stream` (`build/om/bench_llm_stream`) | Native HTTP/SSE framing, usage-only token accounting, IPv4/IPv6/hosts/DNS transport, process-pool concurrency and record/sample emission qualified. Shared Rust `src/harness/llm_stream.rs` and `sse.rs` await retirement of the Rust `measure` command. |
-| `measure` | Native system/memory sampling (`om/measure/system.om`, `om/measure/memory.om`) and binary32 vector workload (`om/measure/vector.om`) qualified; active endpoint sweep and sibling-runtime boundary remain open. |
+| `measure` | Native `build/om/bench_measure` now runs system and memory discovery, the standalone HTTP sweep with forked worker concurrency, live RSS and endpoint sampling, the binary32 vector workload, and schema-shaped JSON output with a native UTC timestamp. `tests/om/measure-run.om` qualifies the three standalone rows and the document shape. LLM and embedding inference wiring, `--skip-llm` behaviour, asset rendering from this command, and the sibling-runtime boundary remain open. |
 | `verify`, `report`, `generate`, `sync-docs` (`build/om/bench_dataset`) | Native dataset CLI, schema/budget validation, markdown table sync and SVG rendering qualified (`tests/om/dataset-cli.om`). Gate cutover and deletion of `src/main.rs`, `src/models.rs` and `src/svg_chart.rs` await retirement of the Rust `measure` command. |
 | `bench_verify_records`, `bench_index` | Native commands qualified; old Rust implementations and corresponding Rust tests deleted. Shared dependencies await their last other consumer. |
 | `bench_branching_neutral`, `bench_canonical_suite` | Replace direct use of the five sibling Rust crates without changing measured work. |

@@ -6,10 +6,12 @@ This repository holds AIEN's performance measurements and the Rust tools that ta
 
 An [Omega (`.om`) rewrite](docs/OMEGA_REWRITE.md) is in progress. Its first native
 components include the prime correctness reference, bounded JSON reading and
-writing, and exact timing statistics. The live measurement commands still await
-replacement. Completion requires qualifying their `.om` consumers and deleting
-the superseded implementations, dependencies, build scripts and tests from the
-active tree. Historical source remains in Git history.
+writing, exact timing statistics, and a native `bench_measure` sweep for the
+standalone server, live service sampling and the vector workload. LLM streaming
+remains a separate native command. Completion requires qualifying the remaining
+`.om` consumers and deleting the superseded implementations, dependencies,
+build scripts and tests from the active tree. Historical source remains in Git
+history.
 
 AIEN does not compare itself with other people's systems. Speed is measured against the machine's physical limit and our own previous run, and correctness against our own reference.
 

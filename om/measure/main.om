@@ -1,0 +1,49 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Measure command entry point. The sweep itself lives in om/measure/run.om.
+
+fn main to int
+mr_init
+lr_init
+if not mr_args 1
+swrite 2 mr_L 15
+ret 64
+end
+msinit 0
+msdetect get mr_cfg 0 get mr_cfg 1 get mr_cfg 2
+if eq get mr_cfg 5 0
+if not mr_standalone
+ret 1
+end
+end
+if eq get mr_cfg 6 0
+mr_live
+end
+if vbenchmark 100000 768
+mr_add_neu mr_L 56 mr_L 57 mr_L 58 mr_L 37 dfdiv get vresult 4 df_from_u64 1000000
+end
+json = mr_json
+path = get mr_cfg 3
+if eq slen path 0
+ret 65
+end
+fd = fopen sb soff path slen path 577 420
+if lt fd 0
+ret 74
+end
+p = ulong 0
+while lt p slen json
+w = write int fd sb add soff json p sub slen json p
+if ne w -4
+if le w 0
+r = fclose int fd
+ret 74
+end
+p = add p ulong w
+end
+end
+r = fclose int fd
+if ne r 0
+ret 74
+end
+ret 0
+end

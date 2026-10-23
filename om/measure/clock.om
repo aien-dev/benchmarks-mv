@@ -1,0 +1,61 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note UTC timestamp formatting from CLOCK_REALTIME. No shell, no foreign runtime.
+note Civil-date conversion is the proleptic Gregorian algorithm for day counts since 1970.
+
+fn rc_digit v ulong to void
+sbyte uchar add v 48
+end
+fn rc_pad2 v ulong to void
+rc_digit div v 10
+rc_digit rem v 10
+end
+fn rc_pad4 v ulong to void
+rc_digit div v 1000
+rc_digit rem div v 100 10
+rc_digit rem div v 10 10
+rc_digit rem v 10
+end
+fn rc_date days ulong to void
+z = add days 719468
+era = div z 146097
+doe = sub z mul era 146097
+a = sub doe div doe 1460
+a = add a div doe 36524
+a = sub a div doe 146096
+yoe = div a 365
+doy = sub doe sub add mul 365 yoe div yoe 4 div yoe 100
+mp = div add mul 5 doy 2 153
+d = add sub doy div add mul 153 mp 2 5 1
+m = add mp 3
+if ge mp 10
+m = sub mp 9
+end
+y = add yoe mul era 400
+if le m 2
+y = add y 1
+end
+rc_pad4 y
+sbyte 45
+rc_pad2 m
+sbyte 45
+rc_pad2 d
+end
+fn rr_utc_now to ulong
+ns = realns
+if lt ns 0
+ret 0
+end
+sec = div ulong ns 1000000000
+days = div sec 86400
+tod = rem sec 86400
+p = get sp 0
+rc_date days
+sbyte 84
+rc_pad2 div tod 3600
+sbyte 58
+rc_pad2 div rem tod 3600 60
+sbyte 58
+rc_pad2 rem tod 60
+sbyte 90
+ret sdone p
+end

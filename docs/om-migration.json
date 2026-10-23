@@ -1,0 +1,98 @@
+{
+  "schema": "omega-replacement-inventory/1",
+  "repository": "aien-dev/benchmarks-mv",
+  "inspected_default_commit": "1597aaaee84cc2dd6ad94b6455662f74bc5f57f6",
+  "working_branch": "refactor/om-rewrite",
+  "owner": "benchmark rewrite requested by Drake; implemented directly by the primary agent",
+  "governing_issue": "https://github.com/aien-dev/aien-architecture-mv/issues/300",
+  "completion": "OPEN: qualify native consumers, delete superseded active sources and obsolete dependencies, audit delivered closure",
+  "compiler": {
+    "repository": "aien-dev/omega-mv",
+    "commit": "42f89c3bf04265ac40384687cffb109e541c6ebe",
+    "executable_sha256": "9c655bb98bc651f5dbada342df48eb9ef25a5aa19b4dec2a34c50174a8db26be",
+    "source": "seed/omc/omc.om",
+    "production_lineage": "shell seed loader -> seed0 -> hex1 -> asm2 -> om4 -> omc",
+    "same_lineage_self_reproduction": "PASS in host-extension qualification",
+    "independent_ancestry": "NOT_RUN; omega-mv#650 owns independent correspondence",
+    "compiler_source_retirement": "Owned by Omega migration; this benchmark inventory does not mark its bootstrap tools retired"
+  },
+  "groups": [
+    {
+      "id": "prime-race",
+      "status": "OPEN",
+      "old_sources": ["prime-drag-race/src/main.rs", "prime-drag-race/src/lib.rs", "prime-drag-race/src/reference.rs", "prime-drag-race/src/validate.rs", "prime-drag-race/src/exec.rs", "prime-drag-race/src/runner.rs", "prime-drag-race/src/sweep.rs", "prime-drag-race/src/receipt.rs"],
+      "successor_sources": ["om/prime/reference.om", "om/prime/main.om", "om/data/"],
+      "qualification": ["tests/om/reference.om", "tests/om/reference.sha256", "tests/om/measurement.om"],
+      "blockers": ["Existing run/validate/sweep interfaces", "declarations and scheduling", "decimal metrics and standard deviation", "content-addressed receipt publication and recovery"],
+      "deletion_gate": "Real run/validate/sweep consumers pass frozen contract and negative tests; delete all old sources, prime-drag-race/Cargo.toml and Cargo.lock, plus obsolete dependencies"
+    },
+    {
+      "id": "measurement-and-streaming",
+      "status": "OPEN",
+      "old_sources": ["src/harness/mod.rs", "src/harness/http_bench.rs", "src/harness/inference_bench.rs", "src/harness/llm_stream.rs", "src/harness/memory.rs", "src/harness/smaps.rs", "src/harness/sse.rs", "src/harness/standalone.rs", "src/harness/system.rs", "src/harness/workloads.rs"],
+      "successor_sources": ["om/data/"],
+      "qualification": ["tests/om/stats.om", "tests/om/json-grammar.om", "tests/om/measurement.om"],
+      "blockers": ["HTTP/chunked/SSE framing", "deadlines and concurrent request execution", "backend usage-only accounting", "failure exclusion", "host sampling", "runtime consumer boundary"],
+      "deletion_gate": "Native measure and llm-stream consumers pass protocol, timeout, cancellation, metric and evidence tests; delete all old harness sources and unused runtime/network dependencies"
+    },
+    {
+      "id": "dataset-and-presentation",
+      "status": "OPEN",
+      "old_sources": ["src/main.rs", "src/models.rs", "src/svg_chart.rs"],
+      "successor_sources": ["om/data/"],
+      "qualification": ["tests/om/json-api.om", "tests/om/json-write.om"],
+      "blockers": ["CLI compatibility", "schema and budget validation", "finite decimal arithmetic and formatting", "table/SVG/document generation"],
+      "deletion_gate": "Native report, verify, generate and sync-docs pass output and failure tests; delete old CLI, models, SVG implementation and obsolete dependencies"
+    },
+    {
+      "id": "evidence-and-index",
+      "status": "OPEN",
+      "old_sources": ["src/lib.rs", "src/evidence.rs", "src/perf_index.rs", "src/bin/bench_verify_records.rs", "src/bin/bench_index.rs"],
+      "successor_sources": ["om/data/json.om", "om/data/json-write.om", "om/data/json-file.om", "om/data/sha256.om", "om/data/hash-main.om"],
+      "qualification": ["tests/om/json.om", "tests/om/sha256.om", "tests/om/measurement.om"],
+      "blockers": ["record schema rules and diagnostics", "bundle traversal and completeness", "source identities", "index ordering and generated Markdown"],
+      "deletion_gate": "Native record checker and index generator pass existing fixtures and real artifact checks; delete all old source and obsolete serde/sha2 dependencies after last consumer is removed"
+    },
+    {
+      "id": "sibling-runtime-benchmarks",
+      "status": "OPEN",
+      "old_sources": ["src/bin/bench_branching_neutral.rs", "src/bin/bench_canonical_suite.rs"],
+      "successor_sources": [],
+      "qualification": [],
+      "blockers": ["Native boundaries for aien-platform, aien-platform-linux, aien-kv-cache, aien-scheduler and aien-inference-abi", "required sibling runtime is not provided by public default branch"],
+      "deletion_gate": "Native consumers execute the same measured workloads and pass runtime qualification; delete both old benchmarks and the five Rust path dependencies"
+    },
+    {
+      "id": "tests-build-and-automation",
+      "status": "OPEN",
+      "old_sources": ["tests/evidence_records.rs", "tests/perf_index.rs", "prime-drag-race/tests/negative.rs", "scripts/build-om.sh", "scripts/test-om.sh", "scripts/check-no-python.sh", "tests/gates/run.sh"],
+      "configuration_to_cut_over": ["Cargo.toml", "Cargo.lock", "prime-drag-race/Cargo.toml", "prime-drag-race/Cargo.lock", ".forgejo/workflows/ci.yml", ".github/workflows/aien-verification.yml", "tests/gates/*.gate"],
+      "successor_sources": ["tests/om/"],
+      "qualification": ["scripts/test-om.sh temporarily coordinates native tests"],
+      "blockers": ["Native build/test coordinator", "native inventory and dependency checks", "remaining command tests", "source/seed/binary/evidence receipts"],
+      "deletion_gate": "Native build/test/release consumers pass and closure audit shows no first-party shell/Rust helper or fallback; delete old tests and scripts, Cargo manifests/locks and obsolete workflow commands"
+    }
+  ],
+  "separately_classified": [
+    {
+      "category": "immutable_historical_evidence",
+      "paths": ["prime-drag-race/evidence/2026-10-05-campaign/c7/window-c7.sh", "prime-drag-race/evidence/2026-10-05-campaign/postmerge-2041f24/postmerge-all.sh", "prime-drag-race/evidence/2026-10-05-campaign/postmerge-2041f24/postmerge-chip.sh"],
+      "rule": "Historical bundle bytes only. No active consumer references found. Preserve evidence; never execute these as a production or build fallback. Final closure audit must verify isolation."
+    },
+    {
+      "category": "non_executable_data_and_documentation",
+      "paths": ["data/", "manifests/", "assets/", "artifacts/", "tests/fixtures/", "docs/", "prime-drag-race/evidence/"],
+      "rule": "Preserve historical records, schemas, protocol assets and documentation; executable evidence members are separately accounted above"
+    },
+    {
+      "category": "generated_native_artifacts",
+      "paths": ["build/om/"],
+      "rule": "Ignored build outputs from declared native source/compiler; not authored foreign-language implementations"
+    },
+    {
+      "category": "independent_qualification_oracle",
+      "paths": ["host sha256sum utility"],
+      "rule": "Used for independent checksum boundary qualification and temporary build compiler-identity verification; never invoked by native benchmark/hash executables. Temporary build invocation remains in the scripts retirement gate."
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+fn main to int
+sreset
+if sfinish
+ret 1
+end
+if ne get ss 1 1
+ret 2
+end
+sreset
+if not spush 7
+ret 3
+end
+if not sfinish
+ret 4
+end
+if or ne get ss 4 7 ne get ss 8 7
+ret 5
+end
+if or ne get ss 5 0 ne get ss 9 0
+ret 6
+end
+note Every permutation of four distinct values yields the same exact statistics.
+for a ulong 4
+for b ulong 4
+for c ulong 4
+for d ulong 4
+if and and ne a b ne a c and and ne a d ne b c and ne b d ne c d
+sreset
+ok = spush add a 1
+ok = and ok spush add b 1
+ok = and ok spush add c 1
+ok = and ok spush add d 1
+if not and ok sfinish
+ret 7
+end
+if or ne get ss 2 1 ne get ss 3 4
+ret 8
+end
+if or ne get ss 4 2 ne get ss 5 2
+ret 9
+end
+if or ne get ss 6 2 ne get ss 7 1
+ret 10
+end
+if or ne get ss 8 2 ne get ss 9 0
+ret 11
+end
+end
+end
+end
+end
+end
+note Independent expected ranks for all lengths, including p95's sample threshold.
+for size ulong 128
+sreset
+n = add size 1
+for i ulong n
+if not spush sub n i
+ret 12
+end
+end
+if not sfinish
+ret 13
+end
+for i ulong n
+if ne get samples i add i 1
+ret 14
+end
+end
+if ne get ss 8 div add n 1 2
+ret 15
+end
+if ne ne get ss 9 0 ge n 20
+ret 16
+end
+if ge n 20
+if ne get ss 10 div add mul n 95 99 100
+ret 17
+end
+end
+end
+note Near-u64-max values exercise overflow-free mean and even median.
+sreset
+if not spush ulong 18446744073709551615
+ret 18
+end
+if not spush ulong 18446744073709551614
+ret 19
+end
+if not sfinish
+ret 20
+end
+if or ne get ss 4 ulong 18446744073709551614 ne get ss 5 1
+ret 21
+end
+if or ne get ss 6 ulong 18446744073709551614 ne get ss 7 1
+ret 22
+end
+note Maximum count, repeated maximum values, then one rejected observation.
+sreset
+for i ulong len samples
+if not spush ulong 18446744073709551615
+ret 23
+end
+end
+if not sfinish
+ret 24
+end
+if or ne get ss 4 ulong 18446744073709551615 ne get ss 5 0
+ret 25
+end
+if spush 1
+ret 26
+end
+if or ne get ss 0 len samples ne get ss 1 2
+ret 27
+end
+if sfinish
+ret 28
+end
+ret 0
+end

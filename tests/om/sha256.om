@@ -1,0 +1,58 @@
+text empty "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+text abc "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+text million "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0"
+fn main to int
+hreset
+if not hfinal
+ret 1
+end
+for i ulong 64
+if ne get hd i get empty i
+ret 2
+end
+end
+if hfinal
+ret 3
+end
+if hpush 97
+ret 4
+end
+hreset
+for i ulong 3
+if not hpush uchar add i 97
+ret 5
+end
+end
+if not hfinal
+ret 6
+end
+for i ulong 64
+if ne get hd i get abc i
+ret 7
+end
+end
+hreset
+for i ulong 1000000
+if not hpush 97
+ret 8
+end
+end
+if not hfinal
+ret 9
+end
+for i ulong 64
+if ne get hd i get million i
+ret 10
+end
+end
+note Refuse a message whose bit length would overflow the SHA-256 length field.
+hreset
+put hmeta 1 2305843009213693951
+if hpush 0
+ret 11
+end
+if or ne get hmeta 2 2 hfinal
+ret 12
+end
+ret 0
+end

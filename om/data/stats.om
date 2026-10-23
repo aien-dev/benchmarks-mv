@@ -1,0 +1,100 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Exact nonnegative nanosecond observations. No rounding through floating point.
+note ss: count, error, min, max, mean whole, mean numerator, median whole,
+note median half, nearest-rank p50, p95 present, nearest-rank p95.
+note Mean = whole + numerator/count; median = whole + half/2.
+note Caller adds successful observations only. Capacity failure invalidates results.
+global samples ulong 8192
+global ss ulong 11
+
+fn sreset to void
+for i ulong len ss
+put ss i 0
+end
+end
+
+fn spush value ulong to bool
+if ne get ss 1 0
+ret false
+end
+n = get ss 0
+if eq n len samples
+put ss 1 2
+ret false
+end
+put samples n value
+put ss 0 add n 1
+ret true
+end
+
+fn ssift root ulong count ulong to void
+while lt root div count 2
+child = add mul root 2 1
+if lt add child 1 count
+if lt get samples child get samples add child 1
+child = add child 1
+end
+end
+if ge get samples root get samples child
+ret
+end
+saved = get samples root
+put samples root get samples child
+put samples child saved
+root = child
+end
+note For odd counts the last parent is floor(count/2)-1; the loop covers it.
+end
+
+fn ssort count ulong to void
+p = div count 2
+while gt p 0
+p = sub p 1
+ssift p count
+end
+p = count
+while gt p 1
+p = sub p 1
+saved = get samples 0
+put samples 0 get samples p
+put samples p saved
+ssift 0 p
+end
+end
+
+fn sfinish to bool
+n = get ss 0
+if ne get ss 1 0
+ret false
+end
+if eq n 0
+put ss 1 1
+ret false
+end
+ssort n
+put ss 2 get samples 0
+put ss 3 get samples sub n 1
+whole = ulong 0
+frac = ulong 0
+for i ulong n
+value = get samples i
+whole = add whole div value n
+frac = add frac rem value n
+end
+put ss 4 add whole div frac n
+put ss 5 rem frac n
+lower = get samples div sub n 1 2
+upper = get samples div n 2
+gap = sub upper lower
+put ss 6 add lower div gap 2
+put ss 7 rem gap 2
+put ss 8 lower
+put ss 9 0
+put ss 10 0
+if ge n 20
+put ss 9 1
+rank = div add mul n 95 99 100
+put ss 10 get samples sub rank 1
+end
+ret true
+end

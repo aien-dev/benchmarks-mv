@@ -5,6 +5,19 @@ authorized extending Omega first, with no outside implementation help. The
 host extension is implemented and qualified. The benchmark migration remains
 in progress; this branch does not yet replace the full Rust suite.
 
+The final-state requirement is replacement and deletion, as recorded in
+[architecture #300](https://github.com/aien-dev/aien-architecture-mv/issues/300).
+After a native consumer passes qualification, remove its superseded first-party
+implementation and obsolete dependencies from the active tree. This includes
+build/release scripts, automation and project-owned tests. No permanent reference
+directory, wrapper, foreign fallback or dual production path is allowed. Existing
+Rust and shell sources are outstanding migration work. Historical source belongs
+in Git history; immutable historical evidence is preserved as evidence.
+
+The [migration inventory](om-migration.json) records the outstanding groups,
+dependencies and deletion gates. None is marked retired merely because a library
+function has a native counterpart.
+
 ## Working native replacement
 
 `om/prime/reference.om` implements the Prime Drag Race correctness reference:
@@ -66,6 +79,13 @@ shell orchestration and file/hash checks. No Rust compiler or test helper is
 invoked. The build checks the compiler hash and rejects executables
 with a dynamic loader or shared-library dependencies.
 
+The build also emits `build/om/om-sha256`: native SHA-256 of standard input,
+with a declared 1 GiB input limit. It emits 64 lowercase hexadecimal digits and
+a newline, exits 65 for oversized input, and 74 for I/O failure. Input failures
+produce no digest. This executable has no helper process or shared library.
+The installed checksum utility is used only to qualify padding/read boundaries
+and to check the compiler identity during the still-unported shell build step.
+
 The test checks the fixed digest of the previously verified reference corpus:
 100,001 small primality decisions, 100 values near the 64-bit maximum, 10,000
 modular products and powers, all bitmaps for limits 0 through 2,000, and the
@@ -86,6 +106,68 @@ not simply regenerating the expected digest.
 
 These are correctness tests. They are not new hardware performance results.
 
+## Native data and measurement foundation
+
+`om/data/` now contains native JSON reading/writing, file I/O, SHA-256 and exact
+integer timing statistics. The implementation invokes no foreign-language
+runtime or helper. The current APIs are bounded and use one private instance
+per process; they are not concurrent shared parser/hash state.
+
+- JSON input, decoded strings and output each allow 1,000,000 bytes; the tree
+  allows 131,072 tokens and at most 128 value levels. Limits are checked and
+  refused, not silently truncated. These capacities cover every tracked JSON
+  document, including the two large model manifests.
+- Strings validate UTF-8, reject unpaired UTF-16 surrogate escapes, and decode
+  escaped NUL without confusing it with an end marker. Object lookup selects
+  the last duplicate direct key, matching the existing map behavior.
+- Numeric spellings are preserved exactly. Unsigned integer conversion checks
+  the full 64-bit range. The syntax reader accepts JSON numbers such as `1e9999`;
+  this is not a claim that they fit a finite metric. Schema checks and decimal
+  arithmetic remain consumer work. Negative, fractional and exponent spellings
+  are explicitly refused by the unsigned-integer accessor.
+- The writer emits compact JSON and preserves key order, duplicates and number
+  spelling. It does not implement serde's pretty layout or claim byte-for-byte
+  equivalence with historical receipt serialization.
+- File output exclusively creates mode-0444 files, writes all bytes, syncs and
+  checks close. Existing files are refused. A failed write may leave a partial
+  file; publication/commit recovery for content-addressed receipts remains open.
+- Timing samples retain integer nanoseconds. Up to 8,192 observations yield
+  exact min/max, mean quotient/remainder, median whole/half and nearest-rank
+  p50/p95. P95 requires at least 20 samples, as in the streaming implementation.
+  The caller must exclude failed requests. Rates, standard deviation, coefficient
+  of variation and final metric formatting remain unported.
+- SHA-256 is incremental, with checked message length and explicit finalize/reset
+  state. The native checksum utility now checks the frozen prime reference corpus.
+
+Qualification includes native syntax and Unicode rejection cases, all prefixes
+of a nested record, exact and exceeded capacity limits, maximum integer values,
+all permutations of four timing observations, sorting/rank checks for lengths
+1 through 128, maximum-capacity samples, standard hash vectors and boundary
+comparisons with the installed independent checksum oracle. All tracked JSON
+documents are parsed, serialized, reparsed and serialized again with stable
+bytes. This checks syntax and round trips, not the record schema; deliberately
+schema-invalid fixtures must still parse.
+
+`tests/om/measurement.om` runs 20 real prime-reference calculations, verifies
+the known count, records native monotonic durations, calculates percentiles,
+saves a private qualification record and checks its bytes with native hashing
+on readback. It also refuses an overwrite and detects an altered metric through
+both a value assertion and a digest mismatch. The temporary
+`omega-bench-qualification/1` record is test evidence only, not a replacement for
+the frozen Prime Drag Race receipt or a published performance result.
+
+Three compiled mutants (wrong hash constant, wrong percentile, accepted unpaired
+surrogate) must fail specific runtime assertions. Build failures do not count as
+caught mutants. All tests are compiled `.om`; `scripts/test-om.sh` still coordinates
+them and is itself an outstanding replacement task.
+
+The compiler's same-lineage self-rebuild and regression checks establish the
+reported reproducibility results. Independent compiler ancestry correspondence
+under [Omega #650](https://github.com/aien-dev/omega-mv/issues/650) is **NOT_RUN**;
+matching self-rebuild hashes are not substituted for that separate qualification.
+No durable reuse system is claimed by this work; [Omega #651](https://github.com/aien-dev/omega-mv/issues/651)
+remains with its existing compiler/runtime owners.
+
 ## Remaining migration
 
 | Existing component | Required work |
@@ -93,10 +175,10 @@ These are correctness tests. They are not new hardware performance results.
 | Prime race runner, validation and receipts | Port declarations, trial scheduling, process execution, report parsing, statistics and content-addressed evidence storage. |
 | `llm-stream` | Port HTTP/SSE parsing and accounting; provide sockets, monotonic timing, deadlines and concurrency. Preserve usage-only token counting and failure exclusion. |
 | `measure` | Port system/memory sampling and endpoint workloads; replace in-process Rust runtime dependencies at an explicit boundary. |
-| `verify`, `report`, `generate`, `sync-docs` | Port JSON handling, budget validation, decimal metrics, tables, SVGs and document updates. |
+| `verify`, `report`, `generate`, `sync-docs` | Integrate native JSON; port schema and budget validation, decimal metrics, tables, SVGs and document updates. |
 | `bench_verify_records`, `bench_index` | Port schema and hash checks, directory traversal, source identity and Markdown generation. |
 | `bench_branching_neutral`, `bench_canonical_suite` | Replace direct use of the five sibling Rust crates without changing measured work. |
-| Build and verification gates | Switch only after corresponding replacements pass parity and failure tests. Existing gates still test Rust. |
+| Build and verification gates | Port scripts and project-owned tests to `.om`; switch qualified consumers, then delete superseded code and dependencies. Existing gates still test Rust. |
 
 Omega now supplies 32 native host operations for files, directories, clocks,
 sockets, polling, process launch/wait, pipes and command-line arguments. The
@@ -106,11 +188,12 @@ paths, TCP loopback, 18 negative controls and preservation of 70 original
 compiler fixtures. See the pinned compiler's `seed/host/README.md` and
 `docs/one_layer/OMEGESE.md` section 10 for exact contracts and limits.
 
-No temporary host adapter was added. Remaining work includes JSON handling,
-metric formatting, the command implementations, and the boundary to the
+No temporary host adapter was added. Remaining work includes JSON schema checks,
+decimal metrics, the command implementations, and the boundary to the
 sibling runtime. The compiler still has integer types only; floating-point
 types and direct Rust calls are not claimed as implemented.
 
 No historical records, benchmark claims, runtime services or frozen contracts
 are changed by this port. The host-extension decision is settled; the remaining
-benchmark commands still require implementation and qualification.
+benchmark commands still require implementation, consumer qualification and
+deletion of the superseded implementation and dependencies.

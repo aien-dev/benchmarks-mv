@@ -1,0 +1,108 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Bounded JSON output. ws: byte length, sticky error (2 capacity, 1 invalid tree).
+note Writer emits compact JSON, preserving numeric spellings and object key order.
+global jw uchar 1000000
+global ws ulong 2
+text whex "0123456789abcdef"
+
+fn wreset to void
+put ws 0 0
+put ws 1 0
+end
+
+fn wbyte c uchar to void
+if ne get ws 1 0
+ret
+end
+n = get ws 0
+if eq n len jw
+put ws 1 2
+ret
+end
+put jw n c
+put ws 0 add n 1
+end
+
+fn wuint n ulong to void
+note Decimal digits are emitted from the highest power without overflowing.
+power = ulong 1
+while le power div n 10
+power = mul power 10
+end
+while ne power 0
+wbyte uchar add div n power 48
+n = rem n power
+power = div power 10
+end
+end
+
+fn wstring token ulong to void
+wbyte 34
+start = get jd token
+for i ulong get jl token
+c = get jp add start i
+if or eq c 34 eq c 92
+wbyte 92
+wbyte c
+else
+if lt c 32
+wbyte 92
+wbyte 117
+wbyte 48
+wbyte 48
+wbyte get whex ulong shr c 4
+wbyte get whex ulong and c 15
+else
+wbyte c
+end
+end
+end
+wbyte 34
+end
+
+fn wvalue token ulong to void
+kind = get jk token
+if eq kind 3
+wstring token
+ret
+end
+if or eq kind 1 eq kind 2
+close = uchar 93
+if eq kind 1
+wbyte 123
+close = uchar 125
+else
+wbyte 91
+end
+t = add token 1
+while lt t get jn token
+if ne t add token 1
+wbyte 44
+end
+if eq kind 1
+wstring t
+wbyte 58
+t = add t 1
+end
+wvalue t
+t = get jn t
+end
+wbyte close
+ret
+end
+p = get ja token
+while lt p get jz token
+wbyte get jb p
+p = add p 1
+end
+end
+
+fn jwrite to bool
+wreset
+if or ne get js 4 0 eq get js 2 0
+put ws 1 1
+ret false
+end
+wvalue 0
+ret eq get ws 1 0
+end

@@ -1,0 +1,76 @@
+text source " { \"n\" : 18446744073709551615, \"x\":[-0,1.230e+2,true,null],\"s\":\"\\u0041\\n\\\"\\\\\" } "
+text want "{\"n\":18446744073709551615,\"x\":[-0,1.230e+2,true,null],\"s\":\"A\\u000a\\\"\\\\\"}"
+text digits "18446744073709551615"
+fn main to int
+for i ulong len source
+put jb i get source i
+end
+if not jparse len source
+ret 1
+end
+if not jwrite
+ret 2
+end
+if ne get ws 0 len want
+ret 3
+end
+for i ulong len want
+if ne get jw i get want i
+ret 4
+end
+put jb i get jw i
+end
+if not jparse len want
+ret 5
+end
+if not jwrite
+ret 6
+end
+for i ulong len want
+if ne get jw i get want i
+ret 7
+end
+end
+wreset
+wuint ulong 18446744073709551615
+if ne get ws 0 len digits
+ret 8
+end
+for i ulong len digits
+if ne get jw i get digits i
+ret 9
+end
+end
+wreset
+wuint 0
+if or ne get ws 0 1 ne get jw 0 48
+ret 10
+end
+note A full writer accepts capacity bytes, then refuses without writing past the end.
+wreset
+for i ulong len jw
+wbyte 97
+end
+if ne get ws 1 0
+ret 11
+end
+wbyte 98
+if or ne get ws 1 2 ne get ws 0 len jw
+ret 12
+end
+if ne get jw sub len jw 1 97
+ret 13
+end
+note Failed parses cannot be serialized as a plausible partial record.
+put jb 0 123
+if jparse 1
+ret 14
+end
+if jwrite
+ret 15
+end
+if or ne get ws 1 1 ne get ws 0 0
+ret 16
+end
+ret 0
+end

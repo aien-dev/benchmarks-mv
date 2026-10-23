@@ -1,0 +1,245 @@
+note Integration qualification only, not a published benchmark result or runner replacement.
+note Measures the real prime reference, saves raw samples, then independently rereads the file.
+global times ulong 20
+global savedsha uchar 64
+text mfile "measured.json"
+text mhead "{\"schema\":\"omega-bench-qualification/1\",\"limit\":1000,\"prime_count\":168,\"samples_ns\":["
+text mmid "],\"p50_ns\":"
+text mtail ",\"p95_ns\":"
+text key50 "p50_ns"
+text key95 "p95_ns"
+text keyraw "samples_ns"
+
+fn mhashmatch to bool
+hreset
+for i ulong get js 0
+if not hpush get jb i
+ret false
+end
+end
+if not hfinal
+ret false
+end
+for i ulong 64
+if ne get hd i get savedsha i
+ret false
+end
+end
+ret true
+end
+
+fn mkey50 to long
+for i ulong len key50
+put jb add 999980 i get key50 i
+end
+ret jfind 0 999980 len key50
+end
+
+fn mkey95 to long
+for i ulong len key95
+put jb add 999980 i get key95 i
+end
+ret jfind 0 999980 len key95
+end
+
+fn mverify to bool
+t = mkey50
+if lt t 0
+ret false
+end
+if not ju64 ulong t
+ret false
+end
+if ne get js 5 get ss 8
+ret false
+end
+t = mkey95
+if lt t 0
+ret false
+end
+if not ju64 ulong t
+ret false
+end
+if ne get js 5 get ss 10
+ret false
+end
+for i ulong len keyraw
+put jb add 999980 i get keyraw i
+end
+t = jfind 0 999980 len keyraw
+if lt t 0
+ret false
+end
+id = ulong t
+if ne get jk id 2
+ret false
+end
+if ne sub get jn id id 21
+ret false
+end
+for i ulong 20
+if not ju64 add add id 1 i
+ret false
+end
+if ne get js 5 get times i
+ret false
+end
+end
+ret true
+end
+
+fn main to int
+mpath = new uchar 4096 0
+for i ulong len mfile
+put mpath i get mfile i
+end
+sreset
+for i ulong 20
+start = monons
+if lt start 0
+ret 1
+end
+size = makebits 1000
+stop = monons
+if lt stop start
+ret 2
+end
+if ne countbits size 1000 168
+ret 3
+end
+elapsed = ulong sub stop start
+put times i elapsed
+if not spush elapsed
+ret 4
+end
+end
+if not sfinish
+ret 5
+end
+if ne get ss 9 1
+ret 6
+end
+wreset
+for i ulong len mhead
+wbyte get mhead i
+end
+for i ulong 20
+if ne i 0
+wbyte 44
+end
+wuint get times i
+end
+for i ulong len mmid
+wbyte get mmid i
+end
+wuint get ss 8
+for i ulong len mtail
+wbyte get mtail i
+end
+wuint get ss 10
+wbyte 125
+wbyte 10
+hreset
+for i ulong get ws 0
+if not hpush get jw i
+ret 15
+end
+end
+if not hfinal
+ret 16
+end
+for i ulong 64
+put savedsha i get hd i
+end
+if ne jsave mpath len mfile 0
+ret 7
+end
+if ne jload mpath len mfile 0
+ret 8
+end
+if not mhashmatch
+ret 17
+end
+if not mverify
+ret 9
+end
+note Existing evidence cannot be replaced, even with a complete alternate record.
+wreset
+wbyte 48
+if ne jsave mpath len mfile 74
+ret 10
+end
+if ne jload mpath len mfile 0
+ret 11
+end
+if not mverify
+ret 12
+end
+note A syntactically valid, wrong saved metric must fail the semantic assertion.
+t = mkey50
+if lt t 0
+ret 13
+end
+p = get ja ulong t
+c = get jb p
+if eq c 49
+put jb p 50
+else
+put jb p 49
+end
+if mverify
+ret 14
+end
+if mhashmatch
+ret 18
+end
+note Malformed and missing files invalidate the previous tree instead of retaining it.
+put mpath 0 98
+wreset
+wbyte 123
+if ne jsave mpath len mfile 0
+ret 19
+end
+if ne jload mpath len mfile 65
+ret 20
+end
+if jwrite
+ret 21
+end
+put mpath 0 122
+if ne jload mpath len mfile 74
+ret 22
+end
+if ne jfind 0 0 1 -1
+ret 23
+end
+note An oversized file is refused before syntax checks and leaves no usable tree.
+put mpath 0 99
+fd = fopen mpath 0 len mfile 524481 384
+if lt fd 0
+ret 24
+end
+p = ulong 0
+while lt p len jw
+w = write int fd jw p sub len jw p
+if le w 0
+ret 25
+end
+p = add p ulong w
+end
+w = write int fd jw 0 1
+if ne w 1
+ret 26
+end
+closed = fclose int fd
+if ne closed 0
+ret 27
+end
+if ne jload mpath len mfile 66
+ret 28
+end
+if jwrite
+ret 29
+end
+ret 0
+end

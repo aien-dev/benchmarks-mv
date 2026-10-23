@@ -1,0 +1,482 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Bounded JSON tree. Input jb; decoded UTF8 jp; preorder token tables.
+note js: input length, cursor, token count, decoded bytes, error, u64 result.
+note Kinds: object 1, array 2, string 3, number 4, true 5, false 6, null 7.
+note Token jn is the first token after the subtree; objects contain key/value pairs.
+note Errors: syntax 1, capacity 2, depth 3, unsigned integer conversion 4.
+note State is private to one parser instance; failure invalidates the whole tree.
+global jb uchar 1000000
+global jp uchar 1000000
+global js ulong 6
+global jk uchar 131072
+global ja ulong 131072
+global jz ulong 131072
+global jn ulong 131072
+global jd ulong 131072
+global jl ulong 131072
+
+fn jfail code ulong to bool
+put js 4 code
+ret false
+end
+
+fn jpeek to uchar
+if ge get js 1 get js 0
+ret 0
+end
+ret get jb get js 1
+end
+
+fn jstep to void
+put js 1 add get js 1 1
+end
+
+fn jspace to void
+while lt get js 1 get js 0
+c = jpeek
+if not or or eq c 32 eq c 9 or eq c 10 eq c 13
+ret
+end
+jstep
+end
+end
+
+fn jappend c uchar to bool
+n = get js 3
+if ge n len jp
+ret jfail 2
+end
+put jp n c
+put js 3 add n 1
+ret true
+end
+
+fn jcode cp ulong to bool
+if lt cp 128
+ret jappend uchar cp
+end
+if lt cp 2048
+if not jappend uchar or 192 shr cp 6
+ret false
+end
+else
+if lt cp 65536
+if not jappend uchar or 224 shr cp 12
+ret false
+end
+else
+if not jappend uchar or 240 shr cp 18
+ret false
+end
+if not jappend uchar or 128 and shr cp 12 63
+ret false
+end
+end
+if not jappend uchar or 128 and shr cp 6 63
+ret false
+end
+end
+ret jappend uchar or 128 and cp 63
+end
+
+fn jhex4 to long
+x = ulong 0
+for i ulong 4
+c = ulong jpeek
+d = ulong 16
+if and ge c 48 le c 57
+d = sub c 48
+end
+if and ge c 65 le c 70
+d = sub c 55
+end
+if and ge c 97 le c 102
+d = sub c 87
+end
+if eq d 16
+ret -1
+end
+x = add mul x 16 d
+jstep
+end
+ret long x
+end
+
+fn jescape to bool
+c = jpeek
+jstep
+if or or eq c 34 eq c 92 eq c 47
+ret jappend c
+end
+if eq c 98
+ret jappend 8
+end
+if eq c 102
+ret jappend 12
+end
+if eq c 110
+ret jappend 10
+end
+if eq c 114
+ret jappend 13
+end
+if eq c 116
+ret jappend 9
+end
+if ne c 117
+ret jfail 1
+end
+h = jhex4
+if lt h 0
+ret jfail 1
+end
+cp = ulong h
+if and ge cp 56320 le cp 57343
+ret jfail 1
+end
+if and ge cp 55296 le cp 56319
+if ne jpeek 92
+ret jfail 1
+end
+jstep
+if ne jpeek 117
+ret jfail 1
+end
+jstep
+l = jhex4
+if or lt l 56320 gt l 57343
+ret jfail 1
+end
+cp = add add 65536 mul sub cp 55296 1024 sub ulong l 56320
+end
+ret jcode cp
+end
+
+fn jutf8 c uchar to bool
+v = ulong c
+left = ulong 0
+min = ulong 0
+if and ge c 194 le c 223
+v = and v 31
+left = ulong 1
+min = ulong 128
+end
+if and ge c 224 le c 239
+v = and v 15
+left = ulong 2
+min = ulong 2048
+end
+if and ge c 240 le c 244
+v = and v 7
+left = ulong 3
+min = ulong 65536
+end
+if eq left 0
+ret jfail 1
+end
+for i ulong left
+b = jpeek
+if or lt b 128 gt b 191
+ret jfail 1
+end
+v = add mul v 64 ulong and b 63
+jstep
+end
+if or lt v min gt v 1114111
+ret jfail 1
+end
+if and ge v 55296 le v 57343
+ret jfail 1
+end
+ret jcode v
+end
+
+fn jstring id ulong to bool
+put jd id get js 3
+jstep
+while lt get js 1 get js 0
+c = jpeek
+jstep
+if eq c 34
+put jl id sub get js 3 get jd id
+ret true
+end
+if lt c 32
+ret jfail 1
+end
+if eq c 92
+if not jescape
+ret false
+end
+else
+if ge c 128
+if not jutf8 c
+ret false
+end
+else
+if not jappend c
+ret false
+end
+end
+end
+end
+ret jfail 1
+end
+
+fn jdigit c uchar to bool
+ret and ge c 48 le c 57
+end
+
+fn jdigits to void
+while jdigit jpeek
+jstep
+end
+end
+
+fn jnumber to bool
+if eq jpeek 45
+jstep
+end
+if eq jpeek 48
+jstep
+else
+if not jdigit jpeek
+ret jfail 1
+end
+jdigits
+end
+if eq jpeek 46
+jstep
+if not jdigit jpeek
+ret jfail 1
+end
+jdigits
+end
+if or eq jpeek 101 eq jpeek 69
+jstep
+if or eq jpeek 43 eq jpeek 45
+jstep
+end
+if not jdigit jpeek
+ret jfail 1
+end
+jdigits
+end
+ret true
+end
+
+text jlit "truefalsenull"
+fn jliteral off ulong size ulong to bool
+for i ulong size
+if ne jpeek get jlit add off i
+ret jfail 1
+end
+jstep
+end
+ret true
+end
+
+fn jnew to long
+n = get js 2
+if ge n len jk
+put js 4 2
+ret -1
+end
+put js 2 add n 1
+put ja n get js 1
+put jd n 0
+put jl n 0
+ret long n
+end
+
+fn jvalue depth ulong to bool
+if ge depth 128
+ret jfail 3
+end
+jspace
+raw = jnew
+if lt raw 0
+ret false
+end
+id = ulong raw
+c = jpeek
+if or eq c 123 eq c 91
+kind = uchar 1
+close = uchar 125
+if eq c 91
+kind = uchar 2
+close = uchar 93
+end
+put jk id kind
+jstep
+jspace
+if ne jpeek close
+more = true
+while more
+if eq kind 1
+if ne jpeek 34
+ret jfail 1
+end
+key = jnew
+if lt key 0
+ret false
+end
+put jk ulong key 3
+if not jstring ulong key
+ret false
+end
+put jz ulong key get js 1
+put jn ulong key get js 2
+jspace
+if ne jpeek 58
+ret jfail 1
+end
+jstep
+end
+if not jvalue add depth 1
+ret false
+end
+jspace
+if eq jpeek close
+more = false
+else
+if ne jpeek 44
+ret jfail 1
+end
+jstep
+jspace
+end
+end
+end
+jstep
+else
+if eq c 34
+put jk id 3
+if not jstring id
+ret false
+end
+else
+if or eq c 45 jdigit c
+put jk id 4
+if not jnumber
+ret false
+end
+else
+if eq c 116
+put jk id 5
+if not jliteral 0 4
+ret false
+end
+else
+if eq c 102
+put jk id 6
+if not jliteral 4 5
+ret false
+end
+else
+if eq c 110
+put jk id 7
+if not jliteral 9 4
+ret false
+end
+else
+ret jfail 1
+end
+end
+end
+end
+end
+end
+put jz id get js 1
+put jn id get js 2
+ret true
+end
+
+fn jparse size ulong to bool
+for i ulong len js
+put js i 0
+end
+if gt size len jb
+ret jfail 2
+end
+put js 0 size
+if not jvalue 0
+ret false
+end
+jspace
+if ne get js 1 size
+ret jfail 1
+end
+ret true
+end
+
+fn jequal t ulong off ulong size ulong to bool
+if ne get jl t size
+ret false
+end
+p = get jd t
+for i ulong size
+if ne get jp add p i get jb add off i
+ret false
+end
+end
+ret true
+end
+
+note Lookup uses a slice of jb as the decoded UTF8 key. Last duplicate key wins.
+fn jfind obj ulong off ulong size ulong to long
+if ne get js 4 0
+ret -1
+end
+if ge obj get js 2
+ret -1
+end
+if ne get jk obj 1
+ret -1
+end
+if gt off len jb
+ret -1
+end
+if gt size sub len jb off
+ret -1
+end
+found = long -1
+t = add obj 1
+while lt t get jn obj
+if jequal t off size
+found = long add t 1
+end
+t = get jn add t 1
+end
+ret found
+end
+
+note Convert only a nonnegative integer spelling; exact u64, never rounded.
+fn ju64 id ulong to bool
+put js 5 0
+if ne get js 4 0
+ret false
+end
+if ge id get js 2
+ret jfail 4
+end
+if ne get jk id 4
+ret jfail 4
+end
+n = ulong 0
+p = get ja id
+while lt p get jz id
+c = get jb p
+if not jdigit c
+ret jfail 4
+end
+d = ulong sub c 48
+if gt n div sub ulong 18446744073709551615 d 10
+ret jfail 4
+end
+n = add mul n 10 d
+p = add p 1
+end
+put js 5 n
+ret true
+end

@@ -1,0 +1,131 @@
+note Native JSON structure, conversion, Unicode and capacity assertions.
+text sample "{\"n\":1,\"nested\":[false,null,{\"n\":2}],\"n\":18446744073709551615,\"s\":\"a\\u0000\\uD83D\\uDE00\\n\"}"
+text small "{\"n\":1}"
+text huge "18446744073709551616"
+fn main to int
+for i ulong len sample
+put jb i get sample i
+end
+if not jparse len sample
+ret 1
+end
+if ne get js 2 14
+ret 2
+end
+if or ne get jk 0 1 ne get jn 0 14
+ret 3
+end
+note Duplicate lookup must skip nested values and select the last direct key.
+put jb sub len jb 1 110
+t = jfind 0 sub len jb 1 1
+if ne t 11
+ret 4
+end
+if not ju64 ulong t
+ret 5
+end
+if ne get js 5 ulong 18446744073709551615
+ret 6
+end
+note Decoded string: a, NUL, U+1F600, newline.
+if ne get jl 13 7
+ret 7
+end
+p = get jd 13
+if or ne get jp p 97 ne get jp add p 1 0
+ret 8
+end
+if or ne get jp add p 2 240 ne get jp add p 3 159
+ret 9
+end
+if or ne get jp add p 4 152 ne get jp add p 5 128
+ret 10
+end
+if ne get jp add p 6 10
+ret 11
+end
+note New parses reset all metadata and reject out of range unsigned conversion.
+for i ulong len huge
+put jb i get huge i
+end
+if not jparse len huge
+ret 12
+end
+if ju64 0
+ret 13
+end
+if or ne get js 4 4 ne get js 5 0
+ret 14
+end
+for i ulong len small
+put jb i get small i
+end
+if not jparse len small
+ret 15
+end
+if or ne get js 2 3 ne get js 4 0
+ret 16
+end
+if ne jfind 0 sub len jb 1 1 2
+ret 17
+end
+note 127 containers plus a scalar fit; a 128th container exceeds the depth budget.
+for i ulong 128
+put jb i 91
+put jb add i 129 93
+end
+put jb 128 48
+if jparse 257
+ret 18
+end
+if ne get js 4 3
+ret 19
+end
+put jb 127 48
+put jb 128 93
+if not jparse 255
+ret 20
+end
+note Exactly the token capacity fits, including the containing array.
+put jb 0 91
+for i ulong sub len jk 1
+put jb add 1 mul i 2 48
+put jb add 2 mul i 2 44
+end
+last = mul sub len jk 1 2
+put jb last 93
+if not jparse add last 1
+ret 21
+end
+if ne get js 2 len jk
+ret 22
+end
+put jb last 44
+put jb add last 1 48
+put jb add last 2 93
+if jparse add last 3
+ret 23
+end
+if ne get js 4 2
+ret 24
+end
+note Full input capacity with a single decoded string, then oversized caller input.
+put jb 0 34
+for i ulong sub len jb 2
+put jb add i 1 97
+end
+put jb sub len jb 1 34
+if not jparse len jb
+ret 25
+end
+if ne get jl 0 sub len jb 2
+ret 26
+end
+if jparse add len jb 1
+ret 27
+end
+if ne get js 4 2
+ret 28
+end
+ret 0
+end

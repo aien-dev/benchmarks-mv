@@ -12,11 +12,17 @@ stage=$(mktemp -d build/om/.compile.XXXXXX)
 trap 'rm -rf "$stage"' EXIT HUP INT TERM
 cat om/prime/reference.om om/prime/main.om > "$stage/prime.om"
 "$OMC" < "$stage/prime.om" > "$stage/prime-reference"
-readelf -h "$stage/prime-reference" | grep -q 'Machine:.*AArch64'
-if readelf -l -d "$stage/prime-reference" | grep -Eq 'INTERP|NEEDED'; then
+cat om/data/sha256.om om/data/hash-main.om > "$stage/hash.om"
+"$OMC" < "$stage/hash.om" > "$stage/om-sha256"
+for program in prime-reference om-sha256; do
+readelf -h "$stage/$program" | grep -q 'Machine:.*AArch64'
+if readelf -l -d "$stage/$program" | grep -Eq 'INTERP|NEEDED'; then
     echo 'Unexpected dynamic runtime dependency' >&2
     exit 65
 fi
-chmod 755 "$stage/prime-reference"
-mv "$stage/prime-reference" build/om/prime-reference
-printf 'Built native Omega prime reference\n'
+chmod 755 "$stage/$program"
+done
+for program in prime-reference om-sha256; do
+mv "$stage/$program" "build/om/$program"
+done
+printf 'Built native Omega prime reference and SHA-256 utility\n'

@@ -1,0 +1,91 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Native JSON file boundary. Caller supplies path pool and explicit byte length.
+note Return 0 success, 65 invalid JSON, 66 capacity, 74 I/O failure.
+note Save creates mode 0444 exclusively. No overwrite; partial files remain on I/O failure.
+global jfextra uchar 1
+
+fn jsave path view uchar 4096 size ulong to int
+if ne get ws 1 0
+ret 66
+end
+if or eq size 0 gt size 4095
+ret 74
+end
+fd = fopen path 0 size 524481 292
+if lt fd 0
+ret 74
+end
+p = ulong 0
+good = true
+while and good lt p get ws 0
+w = write int fd jw p sub get ws 0 p
+if ne w -4
+if le w 0
+good = false
+else
+p = add p ulong w
+end
+end
+end
+sync = fsync int fd
+closed = fclose int fd
+if or not good or ne sync 0 ne closed 0
+ret 74
+end
+ret 0
+end
+
+fn jload path view uchar 4096 size ulong to int
+note Invalidate any previous parse before attempting a new file.
+put js 4 1
+put js 2 0
+if or eq size 0 gt size 4095
+ret 74
+end
+fd = fopen path 0 size 524288 0
+if lt fd 0
+ret 74
+end
+n = ulong 0
+more = true
+status = int 0
+while and more lt n len jb
+r = read int fd jb n sub len jb n
+if ne r -4
+if lt r 0
+status = int 74
+more = false
+else
+if eq r 0
+more = false
+else
+n = add n ulong r
+end
+end
+end
+end
+if eq n len jb
+r = read int fd jfextra 0 1
+if lt r 0
+status = int 74
+else
+if gt r 0
+status = int 66
+end
+end
+end
+closed = fclose int fd
+if ne closed 0
+ret 74
+end
+if ne status 0
+ret status
+end
+if not jparse n
+if eq get js 4 2
+ret 66
+end
+ret 65
+end
+ret 0
+end

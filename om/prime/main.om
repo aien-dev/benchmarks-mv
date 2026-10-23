@@ -1,0 +1,95 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note One request on stdin: p NUMBER (primality), b LIMIT (bitmap), c LIMIT (count).
+note Decimal input is checked before arithmetic; no partial output on malformed input.
+global input uchar 64
+global output uchar 32
+fn putnum n ulong to void
+put output 31 10
+p = ulong 31
+x = n
+while gt x 9
+p = sub p 1
+put output p uchar add rem x 10 48
+x = div x 10
+end
+p = sub p 1
+put output p uchar add x 48
+while lt p 32
+w = write 1 output p sub 32 p
+if le w 0
+exit 74
+end
+p = add p ulong w
+end
+end
+
+fn main to int
+n = ulong 0
+reading = true
+while reading
+if eq n len input
+ret 64
+end
+r = read 0 input n sub len input n
+if lt r 0
+ret 74
+end
+if eq r 0
+reading = false
+else
+n = add n ulong r
+end
+end
+if lt n 3
+ret 64
+end
+op = get input 0
+if not or or eq op 112 eq op 98 eq op 99
+ret 64
+end
+if ne get input 1 32
+ret 64
+end
+if eq get input sub n 1 10
+n = sub n 1
+end
+if lt n 3
+ret 64
+end
+x = ulong 0
+i = ulong 2
+while lt i n
+c = get input i
+if or lt c 48 gt c 57
+ret 64
+end
+d = ulong sub c 48
+if gt x div sub ulong 18446744073709551615 d 10
+ret 64
+end
+x = add mul x 10 d
+i = add i 1
+end
+if eq op 112
+v = ulong 0
+if isprime x
+v = ulong 1
+end
+putnum v
+ret 0
+end
+bytes = makebits x
+if eq op 99
+putnum countbits bytes x
+else
+p = ulong 0
+while lt p bytes
+w = write 1 bitmap p sub bytes p
+if le w 0
+ret 74
+end
+p = add p ulong w
+end
+end
+ret 0
+end

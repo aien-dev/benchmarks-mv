@@ -4,6 +4,10 @@
 
 This repository holds AIEN's performance measurements and the Rust tools that take and check them. Every measurement in it comes from one machine, the NVIDIA DGX Spark (Grace Blackwell GB10, aarch64). It has two parts: the Prime Drag Race suite runner in [prime-drag-race/](prime-drag-race/CONTRACT.md), which builds on its own, and the main measurement harness (the `aien-benchmarks` crate at the root), which needs a sibling checkout to build (see [Build and test](#build-and-test)).
 
+An [Omega (`.om`) rewrite](docs/OMEGA_REWRITE.md) is in progress. Its first native
+component is the prime correctness reference. The live measurement suite and
+existing command interfaces remain Rust until their replacements are verified.
+
 AIEN does not compare itself with other people's systems. Speed is measured against the machine's physical limit and our own previous run, and correctness against our own reference.
 
 ## Where this fits in AIEN

@@ -1,0 +1,113 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Deterministic differential corpus, compared byte-for-byte with the existing Rust reference.
+global outbuf uchar 8
+fn sendnum x ulong to void
+for i ulong 8
+shift = mul i 8
+value = and shr x shift 255
+put outbuf i uchar value
+end
+p = ulong 0
+while lt p 8
+w = write 1 outbuf p sub 8 p
+if le w 0
+exit 74
+end
+p = add p ulong w
+end
+end
+fn sendbits limit ulong to void
+bytes = makebits limit
+sendnum countbits bytes limit
+p = ulong 0
+while lt p bytes
+w = write 1 bitmap p sub bytes p
+if le w 0
+exit 74
+end
+p = add p ulong w
+end
+end
+fn main to int
+for n ulong 100001
+v = ulong 0
+if isprime n
+v = ulong 1
+end
+sendnum v
+end
+note Large primality cases include the four-base pseudoprime and the largest u64 prime.
+for n ulong 100
+x = sub ulong 18446744073709551615 n
+v = ulong 0
+if isprime x
+v = ulong 1
+end
+sendnum v
+end
+if isprime ulong 3215031751
+ret 1
+end
+if not isprime ulong 18446744073709551557
+ret 2
+end
+note Deterministic operands exercise both the direct and overflow-safe multiplication paths.
+x = ulong 123456789
+for i ulong 10000
+x = add mul x 6364136223846793005 1442695040888963407
+a = x
+x = add mul x 6364136223846793005 1442695040888963407
+b = x
+x = add mul x 6364136223846793005 1442695040888963407
+m = or x 1
+sendnum mulmod a b m
+sendnum powmod a and b 255 m
+end
+sendnum mulmod ulong 18446744073709551615 ulong 18446744073709551615 ulong 18446744073709551614
+sendnum mulmod ulong 18446744073709551615 ulong 18446744073709551615 ulong 1
+for limit ulong 2001
+sendbits limit
+end
+sendbits 100000
+sendbits 1000000
+sendbits 10000000
+note A bitmap with missing primes, added composites, tail garbage or wrong length must fail.
+altered = new uchar 625000 0
+size = makebits 10
+for i ulong size
+put altered i get bitmap i
+end
+if ne comparebits altered size 10 0
+ret 3
+end
+put altered 0 xor get altered 0 2
+if ne comparebits altered size 10 1
+ret 4
+end
+if ne get diff 0 3
+ret 5
+end
+if ne get diff 2 1
+ret 6
+end
+put altered 0 get bitmap 0
+put altered 0 or get altered 0 1
+if ne comparebits altered size 10 1
+ret 7
+end
+if or ne get diff 0 1 ne get diff 2 0
+ret 8
+end
+put altered 0 get bitmap 0
+put altered 7 128
+if ne comparebits altered size 10 1
+ret 9
+end
+if or ne get diff 0 127 ne get diff 1 1
+ret 10
+end
+if ne comparebits altered sub size 1 10 2
+ret 11
+end
+ret 0
+end

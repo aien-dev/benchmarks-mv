@@ -1,0 +1,216 @@
+note SPDX-License-Identifier: AGPL-3.0-or-later
+note Port of prime-drag-race/src/reference.rs. Integer operations are unsigned 64-bit.
+note addmod avoids overflow with a,b < m. mulmod uses a direct product when safe,
+note otherwise double-and-add, preserving the Rust reference's u128 remainder.
+fn addmod a ulong b ulong m ulong to ulong
+if ge a sub m b
+ret sub a sub m b
+end
+ret add a b
+end
+
+fn mulmod a ulong b ulong m ulong to ulong
+if eq m 0
+exit 65
+end
+x = rem a m
+y = rem b m
+if eq y 0
+ret 0
+end
+if le x div ulong 18446744073709551615 y
+ret rem mul x y m
+end
+r = ulong 0
+while gt y 0
+if ne and y 1 0
+r = addmod r x m
+end
+y = shr y 1
+if gt y 0
+x = addmod x x m
+end
+end
+ret r
+end
+
+fn powmod b ulong e ulong m ulong to ulong
+if eq m 0
+exit 65
+end
+r = rem ulong 1 m
+x = rem b m
+y = e
+while gt y 0
+if ne and y 1 0
+r = mulmod r x m
+end
+x = mulmod x x m
+y = shr y 1
+end
+ret r
+end
+
+fn base i ulong to ulong
+if eq i 0
+ret 2
+end
+if eq i 1
+ret 3
+end
+if eq i 2
+ret 5
+end
+if eq i 3
+ret 7
+end
+if eq i 4
+ret 11
+end
+if eq i 5
+ret 13
+end
+if eq i 6
+ret 17
+end
+if eq i 7
+ret 19
+end
+if eq i 8
+ret 23
+end
+if eq i 9
+ret 29
+end
+if eq i 10
+ret 31
+end
+ret 37
+end
+
+fn isprime n ulong to bool
+if lt n 2
+ret false
+end
+nb = ulong 12
+if lt n 3215031751
+nb = ulong 4
+end
+for i ulong nb
+p = base i
+if eq n p
+ret true
+end
+if eq rem n p 0
+ret false
+end
+end
+d = sub n 1
+s = ulong 0
+while eq rem d 2 0
+d = div d 2
+s = add s 1
+end
+for i ulong nb
+x = powmod base i d n
+ok = or eq x 1 eq x sub n 1
+j = ulong 1
+while and not ok lt j s
+x = mulmod x x n
+ok = eq x sub n 1
+j = add j 1
+end
+if not ok
+ret false
+end
+end
+ret true
+end
+
+note Bounded to the contract's separate scaling check, 10,000,000.
+note This is the correctness reference, never a timed benchmark implementation.
+global bitmap uchar 625000
+fn fillbits start ulong count ulong to void
+for local ulong count
+k = add start local
+if isprime add mul k 2 1
+j = div k 8
+shift = rem k 8
+mask = uchar shl ulong 1 shift
+value = or get bitmap j mask
+put bitmap j value
+end
+end
+end
+fn makebits limit ulong to ulong
+if gt limit 10000000
+exit 65
+end
+odds = div add limit 1 2
+bytes = mul div add odds 63 64 8
+for i ulong bytes
+put bitmap i 0
+end
+note Keep each variable-count loop below the seed's million-iteration guard.
+blocks = div add odds 499999 500000
+for block ulong blocks
+start = mul block 500000
+count = sub odds start
+if gt count 500000
+count = ulong 500000
+end
+fillbits start count
+end
+ret bytes
+end
+
+fn countbits bytes ulong limit ulong to ulong
+count = ulong 0
+if ge limit 2
+count = ulong 1
+end
+for i ulong bytes
+x = ulong get bitmap i
+while ne x 0
+x = and x sub x 1
+count = add count 1
+end
+end
+ret count
+end
+
+note comparebits requires makebits(limit) first. Returns 0 equal, 1 bit mismatch,
+note 2 wrong byte length. On mismatch: diff[0] odd, diff[1] tail, diff[2] expected prime.
+global diff ulong 3
+fn comparebits got view uchar 625000 size ulong limit ulong to ulong
+if gt limit 10000000
+exit 65
+end
+odds = div add limit 1 2
+bytes = mul div add odds 63 64 8
+for i ulong 3
+put diff i 0
+end
+if ne size bytes
+ret 2
+end
+for i ulong bytes
+x = xor get bitmap i get got i
+if ne x 0
+bit = ulong 0
+while eq and x 1 0
+x = shr x 1
+bit = add bit 1
+end
+k = add mul i 8 bit
+put diff 0 add mul k 2 1
+if ge k odds
+put diff 1 1
+end
+value = and shr get bitmap i bit 1
+put diff 2 ulong value
+ret 1
+end
+end
+ret 0
+end

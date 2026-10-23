@@ -87,15 +87,7 @@ end
 returner = strim ssub value 0 sub slen value 2
 ret msnumber returner
 end
-fn msprocessor raw ulong to ulong
-start = ulong 0
-for i ulong add slen raw 1
-split = eq i slen raw
-if not split
-split = eq schar raw i 10
-end
-if split
-line = ssub raw start sub i start
+fn msprocline line ulong to ulong
 for k ulong slen line
 if eq schar line k 58
 key = strim ssub line 0 k
@@ -108,6 +100,20 @@ end
 end
 end
 end
+end
+ret 0
+end
+fn msprocessor raw ulong to ulong
+start = ulong 0
+for i ulong add slen raw 1
+split = eq i slen raw
+if not split
+split = eq schar raw i 10
+end
+if split
+value = msprocline ssub raw start sub i start
+if ne slen value 0
+ret value
 end
 start = add i 1
 end
@@ -157,7 +163,7 @@ n = sub n 1
 end
 ret 0
 end
-fn msdetect concurrency ulong requests ulong warmup ulong to void
+fn msdetect conc ulong requests ulong warmup ulong to void
 for i ulong len mshost
 put mshost i msword 1
 end
@@ -167,7 +173,7 @@ end
 put mshost 2 msword 2
 put mshost 3 msword 3
 put mshost 4 msword 4
-put msnums 2 concurrency
+put msnums 2 conc
 put msnums 3 requests
 put msnums 4 warmup
 value = mslabel msword 5

@@ -1,14 +1,21 @@
 # Native compilation units. Each row is TARGET followed by its ordered Omega source files.
-om-test om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/test/support.om om/test/guard.om om/test/hash.om om/test/prime.om om/test/mutations.om om/test/process.om tests/om/test-coordinator-guard.om om/test/main.om
+om-test om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/test/support.om om/test/guard.om om/test/hash.om om/test/prime.om om/test/mutations.om om/test/process.om om/test/extended.om tests/om/test-coordinator-guard.om om/test/main.om
 om-no-python om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/test/support.om om/test/guard.om om/test/guard-main.om
 test-double-ops om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/data/double.om om/data/decimal.om tests/om/double-ops.om
 test-decimal om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/data/double.om om/data/decimal.om tests/om/decimal.om
 test-decimal-fixed om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/data/double.om om/data/decimal.om tests/om/decimal-fixed.om
+test-single-ops om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/data/double.om om/data/single.om tests/om/single-ops.om
+test-vector om/data/double.om om/data/single.om om/measure/vector.om tests/om/vector.om
+test-measure-system om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/measure/system.om tests/om/measure-system.om
+test-measure-memory om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/data/double.om om/measure/system.om om/measure/memory.om tests/om/measure-memory.om
 om-build om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/build/main.om
 prime-reference om/prime/reference.om om/prime/main.om
+prime_race om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/data/double.om om/data/decimal.om om/data/json.om om/data/json-write.om om/core/json-access.om om/prime/reference.om om/prime/sweep.om om/prime/tags.om om/prime/execute.om om/prime/validate.om om/prime/receipt.om om/prime/runner.om om/prime/cli.om
 om-sha256 om/data/sha256.om om/data/hash-main.om
 bench_verify_records om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/data/json.om om/core/json-access.om om/data/finite.om om/evidence/check.om om/evidence/bundles.om om/evidence/main.om
 bench_index om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/data/json.om om/core/json-access.om om/data/finite.om om/evidence/check.om om/evidence/bundles.om om/index/index.om om/index/issues.om om/index/main.om
+bench_dataset om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/data/json.om om/core/json-access.om om/data/double.om om/data/decimal.om om/dataset/model.om om/dataset/report.om om/dataset/markdown.om om/dataset/svg.om om/dataset/cli.om om/dataset/main.om
+bench_llm_stream om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/data/double.om om/data/decimal.om om/data/json.om om/data/json-write.om om/core/json-access.om om/stream/framing.om om/stream/accounting.om om/stream/cli.om om/stream/network.om om/stream/record.om om/stream/runner.om om/stream/main.om
 test-json-api om/data/json.om tests/om/json-api.om
 test-json-grammar om/data/json.om tests/om/json-grammar.om
 test-json-write om/data/json.om om/data/json-write.om tests/om/json-write.om
@@ -22,3 +29,24 @@ test-evidence-cli om/core/strings.om om/core/literals.om om/data/sha256.om om/co
 test-offline-records om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om tests/om/offline-records.om
 test-offline-bundles om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om tests/om/offline-bundles.om
 test-offline-index om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/data/json.om om/core/json-access.om om/data/finite.om om/evidence/check.om om/evidence/bundles.om om/index/index.om om/index/issues.om tests/om/offline-index.om
+test-dataset-cli om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/test/support.om tests/om/dataset-cli.om
+test-prime-sweep om/core/strings.om om/core/literals.om om/prime/reference.om om/prime/sweep.om tests/om/prime-sweep.om
+test-prime-tags om/core/strings.om om/core/literals.om om/prime/tags.om tests/om/prime-tags.om
+test-prime-run-child om/core/strings.om om/core/literals.om tests/om/prime-run-child.om
+test-prime-run-fixture om/core/strings.om om/core/literals.om om/prime/tags.om tests/om/prime-run-fixture.om
+test-prime-run-process om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/prime/execute.om tests/om/prime-run-process.om
+test-prime-run-stats om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/data/double.om om/data/decimal.om om/data/json.om om/data/json-write.om om/prime/execute.om om/prime/receipt.om tests/om/prime-run-stats.om
+test-prime-run-storage om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/data/double.om om/data/decimal.om om/data/json.om om/data/json-write.om om/prime/execute.om om/prime/receipt.om tests/om/prime-run-storage.om
+test-prime-run-validate om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/data/double.om om/data/decimal.om om/data/json.om om/data/json-write.om om/core/json-access.om om/prime/reference.om om/prime/tags.om om/prime/execute.om om/prime/validate.om om/prime/receipt.om tests/om/prime-run-validate.om
+test-stream-smoke om/stream/framing.om tests/om/stream-smoke.om
+test-stream-edges om/stream/framing.om tests/om/stream-edges.om
+test-stream-framing om/stream/framing.om tests/om/stream-framing.om
+test-stream-accounting om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/data/json.om om/core/json-access.om om/stream/framing.om om/stream/accounting.om tests/om/stream-accounting.om
+test-stream-accounting-edges om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/data/json.om om/core/json-access.om om/stream/framing.om om/stream/accounting.om tests/om/stream-accounting-edges.om
+test-stream-dns om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/data/json.om om/core/json-access.om om/stream/framing.om om/stream/accounting.om om/stream/cli.om om/stream/network.om tests/om/stream-run-dns.om
+test-stream-dnstcp om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/data/json.om om/core/json-access.om om/stream/framing.om om/stream/accounting.om om/stream/cli.om om/stream/network.om tests/om/stream-run-dnstcp.om
+test-stream-network om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/data/json.om om/core/json-access.om om/stream/framing.om om/stream/accounting.om om/stream/cli.om om/stream/network.om tests/om/stream-run-network.om
+test-stream-timeout om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/data/json.om om/core/json-access.om om/stream/framing.om om/stream/accounting.om om/stream/cli.om om/stream/network.om tests/om/stream-run-timeout.om
+test-stream-full om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/data/double.om om/data/decimal.om om/data/json.om om/data/json-write.om om/core/json-access.om om/stream/framing.om om/stream/accounting.om om/stream/cli.om om/stream/network.om om/stream/record.om om/stream/runner.om tests/om/stream-run-full.om
+test-stream-mixed om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/data/double.om om/data/decimal.om om/data/json.om om/data/json-write.om om/core/json-access.om om/stream/framing.om om/stream/accounting.om om/stream/cli.om om/stream/network.om om/stream/record.om om/stream/runner.om tests/om/stream-run-mixed.om
+test-stream-p95 om/core/strings.om om/core/literals.om om/data/sha256.om om/core/files.om om/core/process.om om/data/double.om om/data/decimal.om om/data/json.om om/data/json-write.om om/core/json-access.om om/stream/framing.om om/stream/accounting.om om/stream/cli.om om/stream/network.om om/stream/record.om om/stream/runner.om tests/om/stream-run-p95.om

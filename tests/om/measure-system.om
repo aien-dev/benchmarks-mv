@@ -1,0 +1,233 @@
+note Qualification tests for om/measure/system.om against synthetic fixture roots.
+text tms_pool "build/om/measure/sys-full~build/om/measure/sys-empty~build/om/measure/sys-host~build/om/measure/sys-alt~proc~proc/device-tree~proc/sys~proc/sys/kernel~proc/self~etc~proc/device-tree/model~etc/hostname~proc/cpuinfo~proc/meminfo~proc/sys/kernel/osrelease~proc/self/auxv~NVIDIA DGX Spark~ignored-host\n~processor\t: 0\nmodel name\t: ARM Neoverse-V2\nBogoMIPS\t: 2000.00\n~MemTotal:       134217728 kB\nMemFree:         67108864 kB\n~6.8.0-1018-nvidia-64k\n~dgx-spark-node01\n~Hardware\t: Generic ARM64 Board\n~MemTotal:       invalid MB\n~unknown~aarch64~linux unix~Omega native (compiler version not recorded)~ARM Neoverse-V2~6.8.0-1018-nvidia-64k~dgx-spark-node01~Generic ARM64 Board~"
+
+fn tms_lit index ulong to ulong
+p = get sp 0
+row = ulong 0
+for i ulong len tms_pool
+c = get tms_pool i
+if eq c 126
+if eq row index
+ret sdone p
+end
+row = add row 1
+else
+if eq row index
+sbyte c
+end
+end
+end
+ret sdone p
+end
+
+fn tms_mkdir path ulong to bool
+if not fvalid path
+ret false
+end
+for i ulong add slen path 1
+split = eq i slen path
+if not split
+split = eq schar path i 47
+end
+if and split gt i 0
+r = makedir sb soff path i 493
+if and ne r 0 ne r -17
+ret false
+end
+end
+end
+ret true
+end
+
+fn tms_write path ulong data ulong to bool
+fd = fopen sb soff path slen path 524865 420
+if lt fd 0
+ret false
+end
+w = write int fd sb soff data slen data
+c = fclose int fd
+ret and eq w long slen data eq c 0
+end
+
+fn tms_u64 v ulong to void
+for i ulong 8
+sbyte uchar and shr v mul i 8 255
+end
+end
+
+fn tms_auxv page ulong to ulong
+p = get sp 0
+tms_u64 3
+tms_u64 64
+tms_u64 6
+tms_u64 page
+tms_u64 0
+tms_u64 0
+ret sdone p
+end
+
+fn tms_tree root ulong to bool
+for i ulong 6
+if not tms_mkdir spath root tms_lit add 4 i
+ret false
+end
+end
+ret true
+end
+
+fn tms_file root ulong rel ulong val ulong to bool
+ret tms_write spath root tms_lit rel tms_lit val
+end
+
+fn tms_hosteq slot ulong lit ulong to bool
+ret seq get mshost slot tms_lit lit
+end
+
+fn tms_basehost to bool
+for i ulong 3
+if not tms_hosteq add 2 i add 25 i
+ret false
+end
+end
+ret true
+end
+
+fn tms_setup_full root ulong to bool
+if not tms_tree root
+ret false
+end
+base = tms_lit 16
+p = get sp 0
+sappend base
+sbyte 10
+sbyte 0
+model = sdone p
+if not tms_write spath root tms_lit 10 model
+ret false
+end
+for i ulong 4
+if not tms_file root add 11 i add 17 i
+ret false
+end
+end
+ret tms_write spath root tms_lit 15 tms_auxv 65536
+end
+
+fn tms_check_full_host to bool
+if not tms_hosteq 0 16
+ret false
+end
+if not tms_hosteq 1 28
+ret false
+end
+if not tms_basehost
+ret false
+end
+ret tms_hosteq 5 29
+end
+
+fn tms_check_full_nums to bool
+if or ne get msnums 0 128 ne get msnums 1 64
+ret false
+end
+if or ne get msnums 2 8 ne get msnums 3 64
+ret false
+end
+if ne get msnums 4 4
+ret false
+end
+ret and eq get msnums 5 1 eq get msnums 6 1
+end
+
+fn tms_case_full root ulong to bool
+if not tms_setup_full root
+ret false
+end
+msinit root
+msdetect 8 64 4
+if not tms_check_full_host
+ret false
+end
+ret tms_check_full_nums
+end
+
+fn tms_case_empty root ulong to bool
+if not tms_mkdir root
+ret false
+end
+msinit root
+msdetect 2 10 1
+if or not tms_hosteq 0 24 not tms_hosteq 1 24
+ret false
+end
+if or not tms_basehost not tms_hosteq 5 24
+ret false
+end
+if or ne get msnums 0 0 ne get msnums 1 0
+ret false
+end
+if or ne get msnums 5 0 ne get msnums 6 0
+ret false
+end
+ret and eq get msnums 2 2 and eq get msnums 3 10 eq get msnums 4 1
+end
+
+fn tms_case_hostname root ulong to bool
+if not tms_tree root
+ret false
+end
+if not tms_file root 11 21
+ret false
+end
+msinit root
+msdetect 1 5 0
+if or not tms_hosteq 0 30 not tms_hosteq 1 24
+ret false
+end
+if not tms_hosteq 5 24
+ret false
+end
+ret and eq get msnums 5 0 eq get msnums 6 0
+end
+
+fn tms_case_alt root ulong to bool
+if not tms_tree root
+ret false
+end
+if not tms_file root 12 22
+ret false
+end
+if not tms_file root 13 23
+ret false
+end
+if not tms_write spath root tms_lit 15 tms_auxv 4096
+ret false
+end
+msinit root
+msdetect 4 20 2
+if or not tms_hosteq 0 24 not tms_hosteq 1 31
+ret false
+end
+if or ne get msnums 0 0 ne get msnums 5 0
+ret false
+end
+ret and eq get msnums 1 4 eq get msnums 6 1
+end
+
+fn main to int
+sinit
+tag = scat L_dot suint ulong getpid
+if not tms_case_full scat tms_lit 0 tag
+ret 1
+end
+if not tms_case_empty scat tms_lit 1 tag
+ret 2
+end
+if not tms_case_hostname scat tms_lit 2 tag
+ret 3
+end
+if not tms_case_alt scat tms_lit 3 tag
+ret 4
+end
+ret 0
+end

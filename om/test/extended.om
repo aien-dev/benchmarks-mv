@@ -1,0 +1,199 @@
+note Extended native qualification for dataset, single/vector, prime_race, and llm_stream.
+text xsuites "test-single-ops\ntest-vector\ntest-measure-system\ntest-measure-memory\ntest-prime-sweep\ntest-prime-tags\ntest-prime-run-stats\ntest-stream-smoke\ntest-stream-edges\ntest-stream-framing\ntest-stream-accounting\ntest-stream-accounting-edges\ntest-stream-dns\ntest-stream-dnstcp\ntest-stream-network\ntest-stream-timeout\ntest-stream-full\ntest-stream-mixed\ntest-stream-p95\n"
+text xwords "test-dataset-cli\nbench_dataset\ntest-prime-run-child\nsweep-process-child\ntest-prime-run-fixture\nsweep-fixture\ntest-prime-run-process\ntest-prime-run-storage\ntest-prime-run-validate\nprime_race\n/tmp/om-test-prime.\nstorage\nrun\nom/build.plan\nverify\n--impl\n--name\nfixture\n--declare\nalgorithm=base,faithful=yes,bits=1,threads=1\n--limits\n0..20,100\n--audit-passes\n2\nfixture=\nfixture=algorithm=base,faithful=yes,bits=1,threads=1\n--evidence-dir\n--trials\n--warmup\n1\n--limit\n100\n--min-seconds\n0.001\npasses_per_second\nbuild/om/stream\nbuild/om/measure\n"
+global xpool ulong 2
+fn xword i ulong to ulong
+ret tline get xpool 1 i
+end
+fn xinit to void
+p = get sp 0
+for i ulong len xsuites
+sbyte get xsuites i
+end
+put xpool 0 sdone p
+p = get sp 0
+for i ulong len xwords
+sbyte get xwords i
+end
+put xpool 1 sdone p
+end
+fn xcopy src ulong dst ulong to bool
+infd = fopenread src
+if lt infd 0
+ret false
+end
+outfd = fopen sb soff dst slen dst 524865 493
+if lt outfd 0
+c = fclose int infd
+ret false
+end
+r = fchmod int outfd 493
+more = true
+good = eq r 0
+while and more good
+n = read int infd fi 0 len fi
+if ne n -4
+if lt n 0
+good = false
+else
+if eq n 0
+more = false
+else
+p = ulong 0
+while and good lt p ulong n
+w = write int outfd fi p sub ulong n p
+if ne w -4
+if le w 0
+good = false
+else
+p = add p ulong w
+end
+end
+end
+end
+end
+end
+end
+ca = fclose int infd
+cb = fclose int outfd
+ret and good and eq ca 0 eq cb 0
+end
+fn xrmrf path ulong to bool
+if not fexists path
+ret true
+end
+if not fwalk path
+ret false
+end
+for i ulong get fcounts 0
+item = get ffiles i
+r = unlink sb soff item slen item
+if ne r 0
+ret false
+end
+end
+n = get fcounts 1
+while gt n 0
+n = sub n 1
+item = get fqueue n
+r = rmdir sb soff item slen item
+if ne r 0
+ret false
+end
+end
+ret true
+end
+fn xrun0 to bool
+pool = get xpool 0
+for i ulong 19
+name = tline pool i
+preset
+parg tbin name
+if ne trun tnullpath tpath tconstant 2 false 0
+swrite 2 name
+swrite 2 L_newline
+ret false
+end
+end
+ret and xrmrf xword 35 xrmrf xword 36
+end
+fn xprime tmpdir ulong to bool
+if not xcopy tbin xword 2 tbin xword 3
+ret false
+end
+if not xcopy tbin xword 4 tbin xword 5
+ret false
+end
+preset
+parg tbin xword 6
+parg tbin xword 2
+if ne trun tnullpath tpath tconstant 2 false 0
+swrite 2 xword 6
+swrite 2 L_newline
+ret false
+end
+preset
+parg tbin xword 7
+parg spath tmpdir xword 11
+parg L_dot
+parg xword 13
+if ne trun tnullpath tpath tconstant 2 false 0
+swrite 2 xword 7
+swrite 2 L_newline
+ret false
+end
+preset
+parg tbin xword 8
+parg tbin xword 4
+if ne trun tnullpath tpath tconstant 2 false 0
+swrite 2 xword 8
+swrite 2 L_newline
+ret false
+end
+preset
+parg tbin xword 9
+parg xword 14
+parg xword 15
+parg tbin xword 4
+parg xword 16
+parg xword 17
+parg xword 18
+parg xword 19
+parg xword 20
+parg xword 21
+parg xword 22
+parg xword 23
+if ne trun tnullpath tpath tconstant 2 false 0
+swrite 2 xword 9
+swrite 2 L_newline
+ret false
+end
+preset
+parg tbin xword 9
+parg xword 12
+parg xword 15
+parg scat xword 24 tbin xword 4
+parg xword 18
+parg xword 25
+parg xword 26
+parg spath tmpdir xword 12
+parg xword 27
+parg xword 23
+parg xword 28
+parg xword 29
+parg xword 30
+parg xword 31
+parg xword 32
+parg xword 33
+parg xword 22
+parg xword 23
+if ne trun tnullpath tpath tconstant 2 false 0
+swrite 2 xword 9
+swrite 2 L_newline
+ret false
+end
+ret ge sfind tload tpath tconstant 2 xword 34 0
+end
+fn textended to bool
+xinit
+if not xrun0
+ret false
+end
+preset
+parg tbin xword 0
+parg tbin xword 1
+if ne trun tnullpath tpath tconstant 2 false 0
+swrite 2 xword 0
+swrite 2 L_newline
+ret false
+end
+tmpdir = scat xword 10 suint ulong getpid
+if not xrmrf tmpdir
+ret false
+end
+ok = xprime tmpdir
+clean = xrmrf tmpdir
+c1 = unlink sb soff tbin xword 3 slen tbin xword 3
+c2 = unlink sb soff tbin xword 5 slen tbin xword 5
+ret and ok and clean and eq c1 0 eq c2 0
+end

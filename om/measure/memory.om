@@ -4,6 +4,11 @@ global mpcount ulong 1
 global mperror long 1
 global mpvalue ulong 2
 note mpvalue: RSS KiB and binary64 MiB, valid only after mp_rss returns true.
+global mpsnap ulong 7
+note mpsnap: Rss, Pss, Pss_Dirty, Private_Dirty, Shared_Clean KiB, then Rss MiB and Pss MiB.
+global mptree ulong 4096
+global mptn ulong 1
+global mptotal ulong 5
 fn mpentry off ulong size ulong to bool
 record = fdirlen off
 if or lt record 20 gt record sub size off
@@ -130,4 +135,141 @@ put sp 0 mark
 end
 end
 ret found
+end
+fn mp_smaps pid ulong to bool
+for i ulong len mpsnap
+put mpsnap i 0
+end
+raw = ftext mppath pid msword 18
+if lt raw 0
+ret false
+end
+seen = false
+for i ulong 5
+name = msword add 22 i
+field = msfield ulong raw name
+if ne slen field 0
+if not mskb ulong raw name
+ret false
+end
+put mpsnap i get msvalue 0
+seen = true
+end
+end
+if not seen
+ret false
+end
+put mpsnap 5 dfdiv df_from_u64 get mpsnap 0 df_from_u64 1024
+put mpsnap 6 dfdiv df_from_u64 get mpsnap 1 df_from_u64 1024
+ret true
+end
+fn mptadd pid ulong to bool
+for i ulong get mptn 0
+if eq get mptree i pid
+ret true
+end
+end
+n = get mptn 0
+if eq n len mptree
+put mperror 0 -27
+ret false
+end
+put mptree n pid
+put mptn 0 add n 1
+ret true
+end
+fn mptchildren raw ulong to bool
+start = ulong 0
+inword = false
+for i ulong add slen raw 1
+split = eq i slen raw
+if not split
+split = swhite schar raw i
+end
+if split
+if inword
+tok = ssub raw start sub i start
+if msnumber tok
+child = get msvalue 0
+if and gt child 0 le child 4294967295
+if not mptadd child
+ret false
+end
+end
+end
+inword = false
+end
+else
+if not inword
+start = i
+inword = true
+end
+end
+end
+ret true
+end
+fn mp_tree pid ulong to bool
+put mptn 0 0
+put mperror 0 0
+if or eq pid 0 gt pid 4294967295
+ret false
+end
+put mptree 0 pid
+put mptn 0 1
+cursor = ulong 0
+while lt cursor get mptn 0
+parent = get mptree cursor
+tdir = mppath parent msword 19
+if mpdirs tdir
+for i ulong get mpcount 0
+tid = get mpids i
+mark = get sp 0
+cpath = spath spath tdir suint tid msword 20
+raw = ftext cpath
+if ge raw 0
+if not mptchildren ulong raw
+put sp 0 mark
+ret false
+end
+end
+put sp 0 mark
+end
+end
+cursor = add cursor 1
+end
+ret true
+end
+fn mp_tree_smaps pid ulong to bool
+for k ulong len mpsnap
+put mpsnap k 0
+end
+for k ulong len mptotal
+put mptotal k 0
+end
+if not mp_tree pid
+ret false
+end
+found = false
+for i ulong get mptn 0
+mark = get sp 0
+if mp_smaps get mptree i
+for k ulong 5
+put mptotal k add get mptotal k get mpsnap k
+end
+found = true
+end
+put sp 0 mark
+end
+for k ulong len mpsnap
+put mpsnap k 0
+end
+if not found
+ret false
+end
+for k ulong 5
+put mpsnap k get mptotal k
+end
+put mpsnap 5 dfdiv df_from_u64 get mptotal 0 df_from_u64 1024
+put mpsnap 6 dfdiv df_from_u64 get mptotal 1 df_from_u64 1024
+ret true
 end

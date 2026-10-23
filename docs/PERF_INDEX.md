@@ -33,7 +33,10 @@ Scanned: first-party source under `om/`, `src/` and `prime-drag-race/src/`. Text
 | `om/data/json-write.om` | SPDX-License-Identifier: AGPL-3.0-or-later |
 | `om/data/json.om` | SPDX-License-Identifier: AGPL-3.0-or-later |
 | `om/data/sha256.om` | SPDX-License-Identifier: AGPL-3.0-or-later |
+| `om/data/single.om` | Native binary32 represented as uint. Arithmetic rounds each operation to nearest-even. |
 | `om/data/stats.om` | SPDX-License-Identifier: AGPL-3.0-or-later |
+| `om/dataset/cli.om` | Offline dataset CLI. Each command validates the complete model before rendering or writing. |
+| `om/dataset/main.om` | Standalone entry point; the unified CLI calls ds_main directly. |
 | `om/dataset/markdown.om` | Markdown synchronization preserves surrounding bytes and performs no write in check mode. |
 | `om/dataset/model.om` | Native dataset model validation. Missing optional collections and environment retain historical defaults. |
 | `om/dataset/report.om` | Human-readable dataset summary and the historical service budget checks. |
@@ -44,6 +47,9 @@ Scanned: first-party source under `om/`, `src/` and `prime-drag-race/src/`. Text
 | `om/index/index.om` | SPDX-License-Identifier: AGPL-3.0-or-later |
 | `om/index/issues.om` | SPDX-License-Identifier: AGPL-3.0-or-later |
 | `om/index/main.om` | SPDX-License-Identifier: AGPL-3.0-or-later |
+| `om/measure/memory.om` | Native /proc process enumeration and resident-memory sampling. Discovery uses literal cmdline text. |
+| `om/measure/system.om` | Read-only Linux ARM64 metadata. Missing observations remain unknown, never inferred from hostnames. |
+| `om/measure/vector.om` | Exact binary32 workload. Software arithmetic; no SIMD or hardware-float claim. |
 | `om/prime/cli.om` | SPDX-License-Identifier: AGPL-3.0-or-later |
 | `om/prime/execute.om` | SPDX-License-Identifier: AGPL-3.0-or-later |
 | `om/prime/main.om` | SPDX-License-Identifier: AGPL-3.0-or-later |
@@ -60,6 +66,7 @@ Scanned: first-party source under `om/`, `src/` and `prime-drag-race/src/`. Text
 | `om/stream/network.om` | SPDX-License-Identifier: AGPL-3.0-or-later |
 | `om/stream/record.om` | SPDX-License-Identifier: AGPL-3.0-or-later |
 | `om/stream/runner.om` | SPDX-License-Identifier: AGPL-3.0-or-later |
+| `om/test/extended.om` | Extended native qualification for dataset, single/vector, prime_race, and llm_stream. |
 | `om/test/guard-main.om` | Native no-Python guard; find the repository root before checking every tracked file. |
 | `om/test/guard.om` | Tracked Python prohibition, preserving the former filename and first-line shebang rules. |
 | `om/test/hash.om` | Frozen zero-byte SHA-256 boundary vectors, independently obtained with sha256sum during migration. |
@@ -68,14 +75,6 @@ Scanned: first-party source under `om/`, `src/` and `prime-drag-race/src/`. Text
 | `om/test/prime.om` | Preserve all historical prime CLI and stdin assertions. |
 | `om/test/process.om` | Qualify nonzero child output, output bounds, deadlines, and offline CLI suites. |
 | `om/test/support.om` | Native qualification support. Child output goes to regular files, never bounded pipes. |
-| `prime-drag-race/src/exec.rs` | Run one implementation process once and capture everything it produced. |
-| `prime-drag-race/src/lib.rs` | AIEN Prime Drag Race suite runner. See CONTRACT.md next to this crate. |
-| `prime-drag-race/src/main.rs` | (item doc) Correctness sweep of one implementation. |
-| `prime-drag-race/src/receipt.rs` | Evidence storage: content-addressed blobs and receipts (mode 0444, no overwrite). |
-| `prime-drag-race/src/reference.rs` | Independent reference: deterministic Miller-Rabin on every odd n <= limit. |
-| `prime-drag-race/src/runner.rs` | `verify` (correctness sweep) and `run` (trial protocol + receipt). |
-| `prime-drag-race/src/sweep.rs` | Correctness sweep limits (DESIGN "Limits sweep"). |
-| `prime-drag-race/src/validate.rs` | Strict validation of one implementation run against the canonical result. |
 | `src/bin/bench_branching_neutral.rs` | Neutral out-of-process benchmark runner for agentic branching suites on NVIDIA DGX Spark GB10. |
 | `src/bin/bench_canonical_suite.rs` | Canonical Blackwell GB10 Inference Benchmark Suite |
 | `src/harness/http_bench.rs` | (no doc comment) |

@@ -144,6 +144,9 @@ end
 if not toffline
 ret tfail 12
 end
+if not textended
+ret tfail 14
+end
 if not tcleanup
 ret tfail 13
 end

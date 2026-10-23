@@ -177,10 +177,10 @@ remains with its existing compiler/runtime owners.
 
 | Existing component | Required work |
 | --- | --- |
-| Prime race runner, validation and receipts | Port declarations, trial scheduling, process execution, report parsing, statistics and content-addressed evidence storage. |
-| `llm-stream` | Port HTTP/SSE parsing and accounting; provide sockets, monotonic timing, deadlines and concurrency. Preserve usage-only token counting and failure exclusion. |
-| `measure` | Port system/memory sampling and endpoint workloads; replace in-process Rust runtime dependencies at an explicit boundary. |
-| `verify`, `report`, `generate`, `sync-docs` | Integrate native JSON; port schema and budget validation, decimal metrics, tables, SVGs and document updates. |
+| Prime race runner, validation and receipts (`build/om/prime_race`) | Native `verify` and `run` commands qualified across sweep, tag, child-process, statistics, content-addressed receipt storage, validation and end-to-end execution; `prime-drag-race/src/*.rs`, `prime-drag-race/tests/negative.rs`, `prime-drag-race/Cargo.toml` and `prime-drag-race/Cargo.lock` deleted. |
+| `llm-stream` (`build/om/bench_llm_stream`) | Native HTTP/SSE framing, usage-only token accounting, IPv4/IPv6/hosts/DNS transport, process-pool concurrency and record/sample emission qualified. Shared Rust `src/harness/llm_stream.rs` and `sse.rs` await retirement of the Rust `measure` command. |
+| `measure` | Native system/memory sampling (`om/measure/system.om`, `om/measure/memory.om`) and binary32 vector workload (`om/measure/vector.om`) qualified; active endpoint sweep and sibling-runtime boundary remain open. |
+| `verify`, `report`, `generate`, `sync-docs` (`build/om/bench_dataset`) | Native dataset CLI, schema/budget validation, markdown table sync and SVG rendering qualified (`tests/om/dataset-cli.om`). Gate cutover and deletion of `src/main.rs`, `src/models.rs` and `src/svg_chart.rs` await retirement of the Rust `measure` command. |
 | `bench_verify_records`, `bench_index` | Native commands qualified; old Rust implementations and corresponding Rust tests deleted. Shared dependencies await their last other consumer. |
 | `bench_branching_neutral`, `bench_canonical_suite` | Replace direct use of the five sibling Rust crates without changing measured work. |
 | Build and verification gates | Port scripts and project-owned tests to `.om`; switch qualified consumers, then delete superseded code and dependencies. Existing gates still test Rust. |

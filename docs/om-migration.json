@@ -5,7 +5,7 @@
   "working_branch": "refactor/om-rewrite",
   "owner": "Benchmark rewrite requested by Drake; primary agent with explicitly authorized worker agents",
   "governing_issue": "https://github.com/aien-dev/aien-architecture-mv/issues/300",
-  "completion": "OPEN: qualify native consumers, delete superseded active sources and obsolete dependencies, audit delivered closure",
+  "completion": "OPEN: qualify remaining measure and sibling-runtime consumers, cut over gates, delete superseded active sources and obsolete dependencies",
   "compiler": {
     "repository": "aien-dev/omega-mv",
     "commit": "f0499f41",
@@ -20,7 +20,7 @@
   "groups": [
     {
       "id": "prime-race",
-      "status": "OPEN",
+      "status": "QUALIFIED_AND_SOURCES_REMOVED",
       "old_sources": [
         "prime-drag-race/src/main.rs",
         "prime-drag-race/src/lib.rs",
@@ -29,29 +29,41 @@
         "prime-drag-race/src/exec.rs",
         "prime-drag-race/src/runner.rs",
         "prime-drag-race/src/sweep.rs",
-        "prime-drag-race/src/receipt.rs"
+        "prime-drag-race/src/receipt.rs",
+        "prime-drag-race/tests/negative.rs",
+        "prime-drag-race/Cargo.toml",
+        "prime-drag-race/Cargo.lock"
       ],
       "successor_sources": [
         "om/prime/reference.om",
         "om/prime/main.om",
+        "om/prime/sweep.om",
+        "om/prime/tags.om",
+        "om/prime/execute.om",
+        "om/prime/validate.om",
+        "om/prime/receipt.om",
+        "om/prime/runner.om",
+        "om/prime/cli.om",
         "om/data/"
       ],
       "qualification": [
         "tests/om/reference.om",
         "tests/om/reference.sha256",
-        "tests/om/measurement.om"
+        "tests/om/measurement.om",
+        "tests/om/prime-sweep.om",
+        "tests/om/prime-tags.om",
+        "tests/om/prime-run-process.om",
+        "tests/om/prime-run-stats.om",
+        "tests/om/prime-run-storage.om",
+        "tests/om/prime-run-validate.om",
+        "om/test/extended.om (prime_race verify and prime_race run end-to-end)"
       ],
-      "blockers": [
-        "Existing run/validate/sweep interfaces",
-        "declarations and scheduling",
-        "decimal metrics and standard deviation",
-        "content-addressed receipt publication and recovery"
-      ],
-      "deletion_gate": "Real run/validate/sweep consumers pass frozen contract and negative tests; delete all old sources, prime-drag-race/Cargo.toml and Cargo.lock, plus obsolete dependencies"
+      "blockers": [],
+      "deletion_gate": "PASSED: native prime_race verify/run and negative suites pass; deleted prime-drag-race/src/*.rs, prime-drag-race/tests/negative.rs, prime-drag-race/Cargo.toml and prime-drag-race/Cargo.lock"
     },
     {
       "id": "measurement-and-streaming",
-      "status": "OPEN",
+      "status": "OPEN: bench_llm_stream, vector, system and memory modules qualified; active measure CLI and sibling-runtime inference_bench remain open",
       "old_sources": [
         "src/harness/mod.rs",
         "src/harness/http_bench.rs",
@@ -65,43 +77,58 @@
         "src/harness/workloads.rs"
       ],
       "successor_sources": [
-        "om/data/"
+        "om/data/",
+        "om/stream/",
+        "om/measure/system.om",
+        "om/measure/memory.om",
+        "om/measure/vector.om"
       ],
       "qualification": [
         "tests/om/stats.om",
         "tests/om/json-grammar.om",
-        "tests/om/measurement.om"
+        "tests/om/measurement.om",
+        "tests/om/single-ops.om",
+        "tests/om/vector.om",
+        "tests/om/measure-system.om",
+        "tests/om/measure-memory.om",
+        "tests/om/stream-smoke.om",
+        "tests/om/stream-edges.om",
+        "tests/om/stream-framing.om",
+        "tests/om/stream-accounting.om",
+        "tests/om/stream-accounting-edges.om",
+        "tests/om/stream-run-dns.om",
+        "tests/om/stream-run-dnstcp.om",
+        "tests/om/stream-run-network.om",
+        "tests/om/stream-run-timeout.om",
+        "tests/om/stream-run-full.om",
+        "tests/om/stream-run-mixed.om",
+        "tests/om/stream-run-p95.om"
       ],
       "blockers": [
-        "HTTP/chunked/SSE framing",
-        "deadlines and concurrent request execution",
-        "backend usage-only accounting",
-        "failure exclusion",
-        "host sampling",
+        "Active measure CLI orchestration (http_bench, standalone, inference_bench)",
         "runtime consumer boundary"
       ],
       "deletion_gate": "Native measure and llm-stream consumers pass protocol, timeout, cancellation, metric and evidence tests; delete all old harness sources and unused runtime/network dependencies"
     },
     {
       "id": "dataset-and-presentation",
-      "status": "OPEN",
+      "status": "OPEN: native bench_dataset qualified; gate cutover and deletion of shared src/main.rs, src/models.rs and src/svg_chart.rs await measure CLI retirement",
       "old_sources": [
         "src/main.rs",
         "src/models.rs",
         "src/svg_chart.rs"
       ],
       "successor_sources": [
-        "om/data/"
+        "om/data/",
+        "om/dataset/"
       ],
       "qualification": [
         "tests/om/json-api.om",
-        "tests/om/json-write.om"
+        "tests/om/json-write.om",
+        "tests/om/dataset-cli.om"
       ],
       "blockers": [
-        "CLI compatibility",
-        "schema and budget validation",
-        "finite decimal arithmetic and formatting",
-        "table/SVG/document generation"
+        "Shared src/main.rs, src/models.rs and src/svg_chart.rs remain in use by the Rust measure subcommand and cargo gates"
       ],
       "deletion_gate": "Native report, verify, generate and sync-docs pass output and failure tests; delete old CLI, models, SVG implementation and obsolete dependencies"
     },
@@ -161,7 +188,6 @@
       "old_sources": [
         "tests/evidence_records.rs",
         "tests/perf_index.rs",
-        "prime-drag-race/tests/negative.rs",
         "scripts/build-om.sh",
         "scripts/test-om.sh",
         "scripts/check-no-python.sh",
@@ -170,8 +196,6 @@
       "configuration_to_cut_over": [
         "Cargo.toml",
         "Cargo.lock",
-        "prime-drag-race/Cargo.toml",
-        "prime-drag-race/Cargo.lock",
         ".forgejo/workflows/ci.yml",
         ".github/workflows/aien-verification.yml",
         "tests/gates/*.gate"
@@ -183,10 +207,11 @@
         "tests/om/"
       ],
       "qualification": [
-        "om-test: native build, JSON corpus, prime oracle, SHA boundaries, negative controls, process controls and offline consumers PASS",
+        "om-test: native build, JSON corpus, prime oracle, SHA boundaries, negative controls, process controls, offline consumers and extended dataset/prime/measure/stream suites PASS",
         "tests/om/double-ops.om: 1044 frozen binary64 operation vectors PASS",
         "tests/om/decimal.om: 316 frozen decimal parse/roundtrip vectors PASS",
-        "tests/om/decimal-fixed.om: 163 exact rational formatting vectors PASS"
+        "tests/om/decimal-fixed.om: 163 exact rational formatting vectors PASS",
+        "tests/om/single-ops.om: 1024 frozen binary32 operation vectors PASS"
       ],
       "blockers": [
         "native inventory and dependency checks",
@@ -237,6 +262,7 @@
       "category": "frozen_independent_numerical_oracles",
       "paths": [
         "tests/fixtures/numerics/binary64.tsv",
+        "tests/fixtures/numerics/binary32.tsv",
         "tests/fixtures/numerics/decimal.tsv",
         "tests/fixtures/numerics/fixed.tsv"
       ],

@@ -1,0 +1,227 @@
+note Qualification tests for om/measure/memory.om against synthetic /proc fixtures.
+text tmm_pool "build/om/measure/mem-fix~proc~proc/self~proc/net~proc/123abc~proc/0~proc/420~proc/1050~proc/1050/task~proc/1050/task/1050~proc/1080~proc/2040~proc/cpuinfo~processor : 0\n~aegis~--config~/etc/aegis.toml~cortex-rs~--port~18080~--worker~--config /etc/aegis.toml~nonexistent-daemon~Name:\taegis\nState:\tS (sleeping)\nVmSize:\t   16384 kB\nVmRSS:\t    3072 kB\nThreads:\t2\n~ffff00000000-ffffffffffff ---p 00000000 00:00 0 [rollup]\nRss:                3072 kB\nPss:                2560 kB\nPss_Dirty:          1024 kB\nPrivate_Dirty:       512 kB\nShared_Clean:       1536 kB\n~1080 9999\n~Name:\tcortex-rs\nVmRSS:\t    1536 kB\n~Rss:                1536 kB\nPss:                1024 kB\nPss_Dirty:           256 kB\nPrivate_Dirty:       128 kB\nShared_Clean:        512 kB\n~Name:\taegis\nVmRSS:\t   bad_value kB\n~Rss: 1024 kB\nPss: bad_value kB\n~proc/1050/cmdline~proc/1050/status~proc/1050/smaps_rollup~proc/1050/task/1050/children~proc/1080/cmdline~proc/1080/status~proc/1080/smaps_rollup~proc/2040/cmdline~proc/2040/status~proc/2040/smaps_rollup~"
+
+fn tmm_lit index ulong to ulong
+p = get sp 0
+row = ulong 0
+for i ulong len tmm_pool
+c = get tmm_pool i
+if eq c 126
+if eq row index
+ret sdone p
+end
+row = add row 1
+else
+if eq row index
+sbyte c
+end
+end
+end
+ret sdone p
+end
+
+fn tmm_mkdir path ulong to bool
+if not fvalid path
+ret false
+end
+for i ulong add slen path 1
+split = eq i slen path
+if not split
+split = eq schar path i 47
+end
+if and split gt i 0
+r = makedir sb soff path i 493
+if and ne r 0 ne r -17
+ret false
+end
+end
+end
+ret true
+end
+
+fn tmm_write path ulong data ulong to bool
+fd = fopen sb soff path slen path 524865 420
+if lt fd 0
+ret false
+end
+w = write int fd sb soff data slen data
+c = fclose int fd
+ret and eq w long slen data eq c 0
+end
+
+fn tmm_file root ulong rel ulong val ulong to bool
+ret tmm_write spath root tmm_lit rel tmm_lit val
+end
+
+fn tmm_cmd3 base ulong to ulong
+a = tmm_lit base
+b = tmm_lit add base 1
+c = tmm_lit add base 2
+p = get sp 0
+sappend a
+sbyte 0
+sappend b
+sbyte 0
+sappend c
+sbyte 0
+ret sdone p
+end
+
+fn tmm_cmd2 a ulong b ulong to ulong
+sa = tmm_lit a
+sb2 = tmm_lit b
+p = get sp 0
+sappend sa
+sbyte 0
+sappend sb2
+sbyte 0
+ret sdone p
+end
+
+fn tmm_setup_dirs root ulong to bool
+for i ulong 11
+if not tmm_mkdir spath root tmm_lit add 1 i
+ret false
+end
+end
+ret tmm_file root 12 13
+end
+
+fn tmm_setup_1050 root ulong to bool
+if not tmm_write spath root tmm_lit 30 tmm_cmd3 14
+ret false
+end
+for i ulong 3
+if not tmm_file root add 31 i add 23 i
+ret false
+end
+end
+ret true
+end
+
+fn tmm_setup_others root ulong to bool
+if not tmm_write spath root tmm_lit 34 tmm_cmd3 17
+ret false
+end
+if not tmm_file root 35 26
+ret false
+end
+if not tmm_file root 36 27
+ret false
+end
+if not tmm_write spath root tmm_lit 37 tmm_cmd2 14 20
+ret false
+end
+if not tmm_file root 38 28
+ret false
+end
+ret tmm_file root 39 29
+end
+
+fn tmm_check_find to bool
+if ne mp_find tmm_lit 14 1050
+ret false
+end
+if ne mp_find tmm_lit 21 1050
+ret false
+end
+if ne mp_find tmm_lit 17 1080
+ret false
+end
+if ne mp_find tmm_lit 22 0
+ret false
+end
+ret eq mp_find 0 0
+end
+
+fn tmm_check_rss to bool
+if not mp_rss 1050
+ret false
+end
+if or ne get mpvalue 0 3072 ne get mpvalue 1 df_from_u64 3
+ret false
+end
+if not mp_rss 1080
+ret false
+end
+half3 = dfdiv df_from_u64 3 df_from_u64 2
+if or ne get mpvalue 0 1536 ne get mpvalue 1 half3
+ret false
+end
+if or mp_rss 420 ne get mpvalue 0 0
+ret false
+end
+ret and not mp_rss 9999 not mp_rss 2040
+end
+
+fn tmm_check_smaps_single to bool
+if not mp_smaps 1050
+ret false
+end
+if or ne get mpsnap 0 3072 ne get mpsnap 1 2560
+ret false
+end
+if or ne get mpsnap 2 1024 ne get mpsnap 3 512
+ret false
+end
+if ne get mpsnap 4 1536
+ret false
+end
+if ne get mpsnap 5 df_from_u64 3
+ret false
+end
+half5 = dfdiv df_from_u64 5 df_from_u64 2
+if ne get mpsnap 6 half5
+ret false
+end
+ret and not mp_smaps 420 not mp_smaps 2040
+end
+
+fn tmm_check_smaps_tree to bool
+if not mp_tree_smaps 1050
+ret false
+end
+if or ne get mpsnap 0 4608 ne get mpsnap 1 3584
+ret false
+end
+if or ne get mpsnap 2 1280 ne get mpsnap 3 640
+ret false
+end
+if ne get mpsnap 4 2048
+ret false
+end
+half9 = dfdiv df_from_u64 9 df_from_u64 2
+half7 = dfdiv df_from_u64 7 df_from_u64 2
+if or ne get mpsnap 5 half9 ne get mpsnap 6 half7
+ret false
+end
+ret and not mp_tree_smaps 9999 not mp_tree_smaps 420
+end
+
+fn main to int
+sinit
+root = scat3 tmm_lit 0 L_dot suint ulong getpid
+if not tmm_setup_dirs root
+ret 1
+end
+if not tmm_setup_1050 root
+ret 2
+end
+if not tmm_setup_others root
+ret 3
+end
+msinit root
+if not tmm_check_find
+ret 4
+end
+if not tmm_check_rss
+ret 5
+end
+if not tmm_check_smaps_single
+ret 6
+end
+if not tmm_check_smaps_tree
+ret 7
+end
+ret 0
+end

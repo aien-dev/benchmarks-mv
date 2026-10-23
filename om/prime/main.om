@@ -1,8 +1,9 @@
 note SPDX-License-Identifier: AGPL-3.0-or-later
-note One request on stdin: p NUMBER (primality), b LIMIT (bitmap), c LIMIT (count).
+note Request on stdin, or native arguments: p NUMBER, b LIMIT [new-file], c LIMIT.
 note Decimal input is checked before arithmetic; no partial output on malformed input.
 global input uchar 64
 global output uchar 32
+global path uchar 4096
 fn putnum n ulong to void
 put output 31 10
 p = ulong 31
@@ -23,16 +24,35 @@ p = add p ulong w
 end
 end
 
-fn main to int
+fn request to long
+args = argcnt
+if or eq args 3 eq args 4
+r = argread 1 input 0 1
+if ne r 1
+ret neg long 64
+end
+if and eq args 4 ne get input 0 98
+ret neg long 64
+end
+put input 1 32
+r = argread 2 input 2 61
+if lt r 0
+ret neg long 64
+end
+ret add r 2
+end
+if ne args 1
+ret neg long 64
+end
 n = ulong 0
 reading = true
 while reading
 if eq n len input
-ret 64
+ret neg long 64
 end
 r = read 0 input n sub len input n
 if lt r 0
-ret 74
+ret neg long 74
 end
 if eq r 0
 reading = false
@@ -40,6 +60,50 @@ else
 n = add n ulong r
 end
 end
+ret long n
+end
+
+fn bitmapout bytes ulong to int
+fd = long 1
+owns = eq argcnt 4
+if owns
+n = argread 3 path 0 4095
+if le n 0
+ret 64
+end
+note O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC; never overwrite an existing output.
+fd = fopen path 0 ulong n 524481 384
+if lt fd 0
+ret 74
+end
+end
+p = ulong 0
+while lt p bytes
+w = write int fd bitmap p sub bytes p
+if le w 0
+if owns
+r = fclose int fd
+end
+ret 74
+end
+p = add p ulong w
+end
+if owns
+r = fsync int fd
+closed = fclose int fd
+if or ne r 0 ne closed 0
+ret 74
+end
+end
+ret 0
+end
+
+fn main to int
+req = request
+if lt req 0
+ret int neg req
+end
+n = ulong req
 if lt n 3
 ret 64
 end
@@ -50,7 +114,7 @@ end
 if ne get input 1 32
 ret 64
 end
-if eq get input sub n 1 10
+if and eq argcnt 1 eq get input sub n 1 10
 n = sub n 1
 end
 if lt n 3
@@ -82,14 +146,7 @@ bytes = makebits x
 if eq op 99
 putnum countbits bytes x
 else
-p = ulong 0
-while lt p bytes
-w = write 1 bitmap p sub bytes p
-if le w 0
-ret 74
-end
-p = add p ulong w
-end
+ret bitmapout bytes
 end
 ret 0
 end

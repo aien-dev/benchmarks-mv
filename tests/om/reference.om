@@ -1,6 +1,33 @@
 note SPDX-License-Identifier: AGPL-3.0-or-later
-note Deterministic differential corpus, compared byte-for-byte with the existing Rust reference.
+note Deterministic corpus checked against its previously verified digest and native trial division.
 global outbuf uchar 8
+fn trial n ulong to bool
+if lt n 2
+ret false
+end
+d = ulong 2
+while le d div n d
+if eq rem n d 0
+ret false
+end
+d = add d 1
+end
+ret true
+end
+fn checkbits limit ulong bytes ulong to void
+odds = div add limit 1 2
+for k ulong mul bytes 8
+want = false
+if lt k odds
+want = trial add mul k 2 1
+end
+b = ulong get bitmap div k 8
+bit = and shr b rem k 8 1
+if ne want ne bit 0
+exit 20
+end
+end
+end
 fn sendnum x ulong to void
 for i ulong 8
 shift = mul i 8
@@ -18,6 +45,9 @@ end
 end
 fn sendbits limit ulong to void
 bytes = makebits limit
+if le limit 2000
+checkbits limit bytes
+end
 sendnum countbits bytes limit
 p = ulong 0
 while lt p bytes
@@ -30,6 +60,9 @@ end
 end
 fn main to int
 for n ulong 100001
+if ne isprime n trial n
+ret 21
+end
 v = ulong 0
 if isprime n
 v = ulong 1

@@ -3,7 +3,7 @@
 set -eu
 cd "$(dirname "$0")/.."
 : "${OMC:?Set OMC to the qualified native Omega compiler executable}"
-expected=191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9
+expected=9c655bb98bc651f5dbada342df48eb9ef25a5aa19b4dec2a34c50174a8db26be
 actual=$(sha256sum "$OMC" | cut -d ' ' -f 1)
 [ "$actual" = "$expected" ] || { echo 'Unsupported Omega compiler identity' >&2; exit 65; }
 [ "$(uname -sm)" = 'Linux aarch64' ] || { echo 'This compiler requires Linux ARM64' >&2; exit 69; }

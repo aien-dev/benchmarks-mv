@@ -617,7 +617,7 @@ fn claims_tokens(key: &str) -> bool {
         .any(|s| matches!(s, "tok" | "tokens" | "itl"))
 }
 
-fn is_placeholder(s: &str) -> bool {
+pub(crate) fn is_placeholder(s: &str) -> bool {
     PLACEHOLDERS.contains(&s.trim().to_ascii_lowercase().as_str())
 }
 
@@ -638,11 +638,11 @@ fn is_inside_relative(p: &str) -> bool {
             .all(|c| matches!(c, Component::Normal(_) | Component::CurDir))
 }
 
-fn get<'a>(v: &'a Value, dotted: &str) -> Option<&'a Value> {
+pub(crate) fn get<'a>(v: &'a Value, dotted: &str) -> Option<&'a Value> {
     dotted.split('.').try_fold(v, |cur, k| cur.get(k))
 }
 
-fn collect_strings(v: &Value, prefix: String, out: &mut Vec<(String, String)>) {
+pub(crate) fn collect_strings(v: &Value, prefix: String, out: &mut Vec<(String, String)>) {
     match v {
         Value::String(s) => out.push((prefix, s.clone())),
         Value::Array(a) => {
@@ -664,7 +664,7 @@ fn collect_strings(v: &Value, prefix: String, out: &mut Vec<(String, String)>) {
     }
 }
 
-fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
+pub(crate) fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
     let Ok(entries) = fs::read_dir(dir) else {
         return;
     };
@@ -694,7 +694,7 @@ pub fn display_path(root: &Path, p: &Path) -> String {
         .join("/")
 }
 
-fn push(out: &mut Vec<Defect>, path: &str, field: &str, reason: String) {
+pub(crate) fn push(out: &mut Vec<Defect>, path: &str, field: &str, reason: String) {
     out.push(Defect {
         path: path.to_string(),
         field: field.to_string(),

@@ -1,0 +1,663 @@
+{
+  "schema": "aien-bench-prereg/1",
+  "manifest_version": "1.0.0",
+  "benchmark_suite": "si-genesis-e2",
+  "prereg_id": "si-genesis-e2-prereg-2026-10-24",
+  "created_at": "2026-10-24T18:10:04Z",
+  "status": "SCOPED",
+  "results_status": "NOT_RUN",
+  "issues": [
+    "aien-dev/benchmarks-mv#39",
+    "aien-dev/benchmarks-mv#38"
+  ],
+  "parent": "aien-dev/aien-architecture-mv#307",
+  "authority": {
+    "judge": "Existing independent signed Spark judge with spark-rsi-mv#67 adaptive holdout controls. This file declares the protocol; it is not a second judge or eval authority.",
+    "never_writable_by": "Any trained, tuned or teacher arm. No arm may write the sealed split, the scorer, this preregistration or the result table.",
+    "owners": {
+      "experience_records": "omega-mv#699 (World/Cortex, single authoritative store)",
+      "scratch_world_model_training": "aien-train#19",
+      "teacher_fusion_arm": "aien-train#18",
+      "training_lineage_and_withdrawal": "aien-train#20",
+      "revocation": "open-humanity#33",
+      "turing_instrument": "omega-mv#700",
+      "serving_27b_35b": "aien-sovereign-core-mv#737",
+      "microjob_wire_abi": "aien-protocols-mv#50"
+    },
+    "freeze_rule": "status SCOPED may still change by reviewed commit. FROZEN requires every G revision pinned, the file digest signed by the judge and no candidate trained yet. After FROZEN any change is a new prereg_id; the old one is SUPERSEDED, never edited."
+  },
+  "phases": [
+    "preregistration_freeze",
+    "seal_commitment",
+    "baseline_run",
+    "candidate_training",
+    "prediction_commit",
+    "sealed_eval",
+    "analysis",
+    "report"
+  ],
+  "phase_definitions": {
+    "preregistration_freeze": "Judge signs the sha256 of this file with status FROZEN.",
+    "seal_commitment": "Judge draws the sealed seed and publishes only its commitment (see heldout.sealing).",
+    "baseline_run": "Every baseline arm runs on the calibration split; its predictions, scores and the B coder are signed and frozen before any candidate trains.",
+    "candidate_training": "Candidate and control arms learn only from the training split within the fixed budget in sample_size.training_budget.",
+    "prediction_commit": "Each arm receives sealed (prior_state, action) inputs from the judge once and returns predictions whose sha256 is signed before reveal.",
+    "sealed_eval": "Judge reveals actual next states and scores every committed prediction file once.",
+    "analysis": "Only the tests in metrics.confirmatory, with the Holm correction declared there.",
+    "report": "Separate status columns per claim in claims; negative and missing results are kept."
+  },
+  "baseline_before_eval": {
+    "required": true,
+    "baseline_arms": [
+      "rules_engine",
+      "retrieval_only",
+      "frozen_pretrained_small",
+      "teacher_27b",
+      "teacher_35b"
+    ],
+    "rule": "No candidate or control arm is trained or scored before every listed baseline has completed baseline_run and its signed calibration scores exist. A missing baseline makes every dependent comparison NOT_RUN, never PASS."
+  },
+  "arms": [
+    {
+      "id": "rules_engine",
+      "role": "baseline",
+      "kind": "rules",
+      "description": "Exact hand-written rule engine per environment family; no learning, no model. Also the #38 no-model deterministic operations arm.",
+      "pretrained": false,
+      "initialization": "none",
+      "learns_from": [],
+      "background_refs": [
+        "rules_engine_spec"
+      ],
+      "requires_gpu": false,
+      "e1_label": "deterministic"
+    },
+    {
+      "id": "retrieval_only",
+      "role": "baseline",
+      "kind": "retrieval",
+      "description": "Nearest checked procedure / stored verified transition from the training split, returned unchanged. No parameter update.",
+      "pretrained": false,
+      "initialization": "none",
+      "learns_from": [
+        "training_split_verified_transitions"
+      ],
+      "background_refs": [
+        "cortex_checked_procedure_snapshot"
+      ],
+      "requires_gpu": false
+    },
+    {
+      "id": "frozen_pretrained_small",
+      "role": "baseline",
+      "kind": "frozen_pretrained",
+      "description": "Unchanged declared-pretrained 0.8B Reflex + 2B student, prompted with the same state/action encoding. Weights never updated.",
+      "pretrained": true,
+      "initialization": "pretrained_frozen",
+      "learns_from": [],
+      "background_refs": [
+        "model_0p8b",
+        "model_2b"
+      ],
+      "requires_gpu": true,
+      "e1_label": "D"
+    },
+    {
+      "id": "teacher_27b",
+      "role": "baseline",
+      "kind": "frozen_pretrained",
+      "description": "Unchanged Allen -> 27B route as currently qualified by Sovereign Core.",
+      "pretrained": true,
+      "initialization": "pretrained_frozen",
+      "learns_from": [],
+      "background_refs": [
+        "model_27b"
+      ],
+      "requires_gpu": true,
+      "e1_label": "B"
+    },
+    {
+      "id": "teacher_35b",
+      "role": "baseline",
+      "kind": "frozen_pretrained",
+      "description": "Unchanged Allen -> 35B route as currently qualified by Sovereign Core.",
+      "pretrained": true,
+      "initialization": "pretrained_frozen",
+      "learns_from": [],
+      "background_refs": [
+        "model_35b"
+      ],
+      "requires_gpu": true,
+      "e1_label": "A"
+    },
+    {
+      "id": "multi_teacher_verified",
+      "role": "candidate",
+      "kind": "fusion_selection",
+      "description": "Per-sample 27B/35B candidates; an answer counts only after the independent verifier accepts it; teacher output is a hypothesis until verified. Every candidate call is counted.",
+      "pretrained": true,
+      "initialization": "pretrained_frozen",
+      "learns_from": [],
+      "background_refs": [
+        "model_27b",
+        "model_35b"
+      ],
+      "requires_gpu": true,
+      "e1_label": "C"
+    },
+    {
+      "id": "fusion_distilled_student",
+      "role": "candidate",
+      "kind": "distilled_student",
+      "description": "#38 arm E: verified teacher-distilled SI student with Microforge. Distillation data are verified teacher outputs on the training split only.",
+      "pretrained": true,
+      "initialization": "pretrained_finetuned",
+      "learns_from": [
+        "training_split_verified_teacher_outputs"
+      ],
+      "background_refs": [
+        "model_2b",
+        "model_27b",
+        "model_35b",
+        "aien_train_engine"
+      ],
+      "requires_gpu": true,
+      "e1_label": "E"
+    },
+    {
+      "id": "si_experience_only",
+      "role": "candidate",
+      "kind": "scratch_world_model",
+      "description": "PRIMARY. New world model initialized from a declared seed (no pretrained weights, no corpus) and trained only on verified training-split transitions {goal, prior_state_digest, action, predicted next state, actual next state, verification, cost, consent}. Saved verified skills must survive restart.",
+      "pretrained": false,
+      "initialization": "scratch_seeded",
+      "learns_from": [
+        "training_split_verified_transitions"
+      ],
+      "background_refs": [
+        "aien_train_engine",
+        "om_seeded_compiler"
+      ],
+      "requires_gpu": false
+    },
+    {
+      "id": "si_plus_teacher",
+      "role": "candidate",
+      "kind": "scratch_world_model_with_advice",
+      "description": "Same scratch model and budget as si_experience_only, plus 27B/35B advice admitted only after independent verification (licensed use only).",
+      "pretrained": false,
+      "initialization": "scratch_seeded",
+      "learns_from": [
+        "training_split_verified_transitions",
+        "training_split_verified_teacher_outputs"
+      ],
+      "background_refs": [
+        "aien_train_engine",
+        "om_seeded_compiler",
+        "model_27b",
+        "model_35b"
+      ],
+      "uses_teacher": true,
+      "requires_gpu": true
+    },
+    {
+      "id": "shuffled_experience_control",
+      "role": "control",
+      "kind": "scratch_world_model",
+      "description": "Same scratch model, seed and budget as si_experience_only, but next states permuted within (family, action type) so marginals stay and the transition signal is destroyed.",
+      "pretrained": false,
+      "initialization": "scratch_seeded",
+      "learns_from": [
+        "training_split_shuffled_transitions"
+      ],
+      "background_refs": [
+        "aien_train_engine",
+        "om_seeded_compiler"
+      ],
+      "requires_gpu": false
+    },
+    {
+      "id": "revoked_experience_control",
+      "role": "control",
+      "kind": "scratch_world_model",
+      "description": "si_experience_only rebuilt from initialization after a signed revocation of a judge-chosen owner subset of training traces. Checks that revoked traces leave the training lineage and that performance on revoked-origin structure falls to the level of a model never given them.",
+      "pretrained": false,
+      "initialization": "scratch_seeded",
+      "learns_from": [
+        "training_split_verified_transitions_minus_revoked"
+      ],
+      "background_refs": [
+        "aien_train_engine",
+        "om_seeded_compiler"
+      ],
+      "requires_gpu": false
+    }
+  ],
+  "environments": [
+    {
+      "id": "seeded_stochastic_world",
+      "family": "stochastic_transition",
+      "description": "Seeded resettable grid/graph world with stochastic action outcomes; the simulator holds the exact next-state distribution.",
+      "resettable": true,
+      "verifier": "Simulator recomputes the exact transition distribution from (seed, state, action); no model judges.",
+      "correct_if": "Total variation distance between predicted and exact next-state distribution <= 0.10.",
+      "transfer_splits": [
+        "new_layouts",
+        "interventions_changed_transition_probabilities"
+      ],
+      "tasks_sealed": 10
+    },
+    {
+      "id": "math_transition_world",
+      "family": "numeric_physical_law",
+      "description": "Discrete-time dynamics with hidden constants (conservation, linear and nonlinear laws) in exact rational arithmetic.",
+      "resettable": true,
+      "verifier": "Exact rational recomputation of the next state.",
+      "correct_if": "Predicted next state equals the exact next state.",
+      "transfer_splits": [
+        "unseen_constants",
+        "interventions_changed_law_term"
+      ],
+      "tasks_sealed": 10
+    },
+    {
+      "id": "om_compile_repair",
+      "family": "om_compiler_repair",
+      "description": "State = .om source digest plus diagnostics; action = typed edit; next state = pinned seeded compiler result.",
+      "resettable": true,
+      "verifier": "Pinned seeded handwritten .om compiler (om_seeded_compiler in G) run by the judge.",
+      "correct_if": "Predicted diagnostics/result digest equals the compiler output digest.",
+      "transfer_splits": [
+        "unseen_programs",
+        "unseen_error_classes"
+      ],
+      "tasks_sealed": 10
+    },
+    {
+      "id": "constrained_orchestration",
+      "family": "constrained_orchestration",
+      "description": "Typed microjob DAG (aien-protocols-mv#50) under declared resource limits; action = admit/schedule/cancel.",
+      "resettable": true,
+      "verifier": "Deterministic DAG simulator applying the canonical microjob ABI.",
+      "correct_if": "Predicted next DAG state digest equals the simulator digest.",
+      "transfer_splits": [
+        "new_dag_shapes",
+        "changed_resource_limits"
+      ],
+      "tasks_sealed": 10
+    },
+    {
+      "id": "interrupted_objective",
+      "family": "interrupted_objective",
+      "description": "Multi-step objectives killed at a judge-chosen step and restarted from durable state; tests saved verified skill reuse after restart and no duplicated effects.",
+      "resettable": true,
+      "verifier": "Judge compares final effect log with the reference effect set; any duplicated or missing effect is incorrect.",
+      "correct_if": "Objective completes with exactly the reference effects after restart.",
+      "transfer_splits": [
+        "unseen_interruption_points"
+      ],
+      "tasks_sealed": 10
+    }
+  ],
+  "heldout": {
+    "splits": {
+      "training": "Seeds under domain tag train; the only split any arm may learn from.",
+      "validation": "Seeds under domain tag validation; candidate early stopping and ICC estimation only.",
+      "calibration": "Seeds under domain tag calibration; baseline_run only.",
+      "sealed": "Seeds under domain tag sealed; scored once per arm.",
+      "reserve": "Two further sealed sets (reserve-1, reserve-2) of the sealed size, used only for a re-evaluation after any change.",
+      "sealed_family": "One extra environment family defined by the judge after freeze, disclosed only by hash commitment, for cross-family transfer (secondary)."
+    },
+    "sealing": {
+      "mechanism": "Judge draws a 256-bit seed after preregistration_freeze, publishes only sha256(domain_tag || seed), and generates sealed episodes on judge-owned storage under a separate OS user on a separate process tree. Candidate processes have no filesystem or network route to that storage. Arms receive only (prior_state, action) inputs through the judge, once, and commit sha256 of their prediction file before the judge reveals next states. Every read of sealed material is logged by the judge; a read by anything other than the judge scorer is a breach.",
+      "hash_only_is_not_sealing": true,
+      "prediction_commit_before_reveal": true,
+      "judge_independent": true,
+      "single_use": true,
+      "collision_rule": "Episodes whose state digest appears in more than one split are removed from training, never from sealed.",
+      "breach_action": "Void the affected sealed set (INCONCLUSIVE), keep the record, regenerate from the next reserve."
+    }
+  },
+  "metrics": {
+    "primary": {
+      "e2": {
+        "id": "transition_correct",
+        "unit": "sealed episode",
+        "definition": "Binary per sealed episode using the environment correct_if rule; paired across arms on identical episodes.",
+        "test": "Exact conditional McNemar (one-sided), stratified by family for reporting."
+      },
+      "e1": {
+        "id": "objective_verified_complete",
+        "unit": "held-out objective",
+        "definition": "Binary per objective: completed, independently verified correct and authorized, with no silent context truncation.",
+        "test": "Exact conditional McNemar (one-sided)."
+      }
+    },
+    "confirmatory": {
+      "correction": "Holm within each study; planning used Bonferroni (conservative).",
+      "hypotheses": [
+        {
+          "id": "H1",
+          "study": "e2",
+          "claim": "si_experience_only > shuffled_experience_control"
+        },
+        {
+          "id": "H2",
+          "study": "e2",
+          "claim": "si_experience_only > retrieval_only"
+        },
+        {
+          "id": "H3",
+          "study": "e2",
+          "claim": "si_experience_only > frozen_pretrained_small"
+        },
+        {
+          "id": "H4",
+          "study": "e2",
+          "claim": "si_plus_teacher > si_experience_only"
+        },
+        {
+          "id": "H5",
+          "study": "e1",
+          "claim": "fusion_distilled_student > teacher_35b"
+        },
+        {
+          "id": "H6",
+          "study": "e1",
+          "claim": "fusion_distilled_student > teacher_27b"
+        }
+      ]
+    },
+    "secondary": [
+      "log_loss_bits_per_transition",
+      "calibration_expected_calibration_error",
+      "retention_on_earlier_families_after_later_training",
+      "transfer_new_layouts_and_interventions",
+      "transfer_sealed_family",
+      "skill_reuse_after_restart",
+      "failed_attempts_count",
+      "revoked_trace_ids_absent_from_training_lineage",
+      "revoked_origin_performance_vs_never_given_model",
+      "rules_engine_vs_each_candidate",
+      "teacher_27b_vs_teacher_35b",
+      "multi_teacher_verified_vs_each_teacher"
+    ],
+    "safety_ceilings": {
+      "privacy_or_authorization_violations": 0,
+      "silent_context_truncations": 0,
+      "unverified_effects": 0
+    },
+    "cost_accounting": {
+      "counted": [
+        "teacher_inference_and_mining",
+        "wrong_answers",
+        "retries",
+        "all_candidate_calls",
+        "tokenization_prefill_decode",
+        "queue_time",
+        "gpu_kernels_and_bytes",
+        "resident_and_peak_memory_bytes",
+        "verification",
+        "training_compute",
+        "checkpoint_io",
+        "cold_and_warm_setup",
+        "recovery_after_interruption"
+      ],
+      "throughput": "Independently verified objectives/sec with p50/p95 completion and TTFT; NOT_MEASURED unless instrumented on a scheduled uncontended run.",
+      "missing_counter_rule": "A counter that was not measured is NOT_MEASURED, never zero.",
+      "e1_job_profiles": [
+        "64/16",
+        "128/32"
+      ],
+      "e1_batch_sizes": [
+        1,
+        8,
+        16,
+        32,
+        64,
+        128
+      ],
+      "reuse_break_even": "Immutable preparation reused n times wins only when (n-1)P > nH + V with P, H, V measured; otherwise NOT_MEASURED."
+    }
+  },
+  "sample_size": {
+    "computed_with": "Wolfram Language evaluator 2026-10-24: approximate n by Connor (1987) normal formula, then exact power of the conditional binomial McNemar test, summed over the binomial number of discordant pairs, increasing n until power >= target.",
+    "studies": [
+      {
+        "id": "e2",
+        "unit": "sealed episode",
+        "sided": "one",
+        "alpha_familywise": 0.05,
+        "confirmatory_contrasts": 4,
+        "alpha_per_contrast": 0.0125,
+        "power_target": 0.9,
+        "min_effect_discordant_difference": 0.1,
+        "assumed_discordant_proportion": 0.3,
+        "normal_approx_n": 368,
+        "exact_min_effective_n": 381,
+        "exact_power_at_min": 0.9006,
+        "families": 5,
+        "tasks_planned": 50,
+        "units_per_cluster": 12,
+        "icc_assumed": 0.05,
+        "design_effect": 1.55,
+        "units_planned": 600,
+        "effective_n_planned": 387,
+        "exact_power_at_planned": 0.9057,
+        "sensitivity": "At ICC 0.10 the design effect is 2.1, effective n 285 and exact power 0.7825; see stopping_rules icc_check."
+      },
+      {
+        "id": "e1",
+        "unit": "held-out objective",
+        "sided": "one",
+        "alpha_familywise": 0.05,
+        "confirmatory_contrasts": 2,
+        "alpha_per_contrast": 0.025,
+        "power_target": 0.8,
+        "min_effect_discordant_difference": 0.15,
+        "assumed_discordant_proportion": 0.25,
+        "normal_approx_n": 85,
+        "exact_min_effective_n": 92,
+        "exact_power_at_min": 0.8014,
+        "families": 11,
+        "tasks_planned": 99,
+        "units_per_cluster": 1,
+        "icc_assumed": 0,
+        "design_effect": 1,
+        "units_planned": 99,
+        "effective_n_planned": 99,
+        "exact_power_at_planned": 0.8326,
+        "sensitivity": "The issue minimum of 30 objectives has exact power 0.2354 for this effect; 30 objectives is a pilot, not a confirmatory test.",
+        "categories": [
+          "om_compilation",
+          "math",
+          "reduction",
+          "semantic_joining",
+          "code_repair",
+          "research_grounding",
+          "wrong_tool",
+          "null_route",
+          "privacy_refusal",
+          "interrupted_restarted_task",
+          "multi_turn_corrections"
+        ]
+      }
+    ],
+    "fresh_reserves": 2,
+    "training_budget": "Equal for every learning arm: the same training-split transitions, the same number of optimizer steps and the same parameter count for scratch arms; budget fixed at FROZEN from validation-split pilot only."
+  },
+  "stopping_rules": [
+    {
+      "id": "fixed_n",
+      "trigger": "Always.",
+      "action": "Scoring happens once, after all arms commit predictions. No interim efficacy or futility look at sealed data, no optional stopping, no adding episodes after reveal."
+    },
+    {
+      "id": "icc_check",
+      "trigger": "Before FROZEN, the ICC estimated on the validation split exceeds the assumed value.",
+      "action": "Increase tasks_planned until effective_n_planned >= exact_min_effective_n, recompute in Wolfram, then freeze. Never after freeze."
+    },
+    {
+      "id": "seal_breach",
+      "trigger": "Any non-judge access to sealed material, or a prediction commitment missing before reveal.",
+      "action": "Void that sealed set as INCONCLUSIVE, keep the record, continue only on the next reserve."
+    },
+    {
+      "id": "reserve_exhausted",
+      "trigger": "Both reserves used.",
+      "action": "Campaign ends INCONCLUSIVE; a new campaign needs a new prereg_id."
+    },
+    {
+      "id": "safety_ceiling",
+      "trigger": "An arm exceeds any metrics.safety_ceilings value.",
+      "action": "That arm is FAIL for promotion regardless of accuracy; scoring of the other arms continues."
+    },
+    {
+      "id": "training_budget",
+      "trigger": "A learning arm reaches the fixed training budget.",
+      "action": "Training stops; early stopping may use the validation split only."
+    },
+    {
+      "id": "hardware_not_granted",
+      "trigger": "An arm with requires_gpu true has no scheduled uncontended GPU window and signed receipt.",
+      "action": "That arm and every comparison using it are NOT_RUN or BLOCKED, never estimated."
+    }
+  ],
+  "turing_profile": {
+    "formula": "T(M;B,D,G,P) = [L(B|G) + L(D|B,G)] - [L(M|G) + L(D|M,G)]",
+    "source": "https://doi.org/10.5281/zenodo.23437498 (formal preprint v1.14)",
+    "unit": "bits",
+    "applies_to": "Learned predictive explanatory gain of candidate arms on D only; not service price, a single answer or a per-job metric.",
+    "B": {
+      "arm": "rules_engine",
+      "description": "Rules engine predictions coded under P; frozen at baseline_run."
+    },
+    "D": {
+      "split": "sealed",
+      "blinded": true,
+      "description": "Sealed transitions of heldout.splits.sealed, coded under P after reveal."
+    },
+    "G": {
+      "version": "si-genesis-e2-G/1",
+      "background": [
+        {
+          "id": "rules_engine_spec",
+          "kind": "source",
+          "owner": "aien-dev/benchmarks-mv",
+          "revision": "PENDING_PIN"
+        },
+        {
+          "id": "environment_generators_and_verifiers",
+          "kind": "source",
+          "owner": "aien-dev/benchmarks-mv",
+          "revision": "PENDING_PIN"
+        },
+        {
+          "id": "om_seeded_compiler",
+          "kind": "toolchain",
+          "owner": "aien-dev/omega-mv",
+          "revision": "PENDING_PIN"
+        },
+        {
+          "id": "aien_train_engine",
+          "kind": "toolchain",
+          "owner": "aien-dev/aien-train",
+          "revision": "PENDING_PIN"
+        },
+        {
+          "id": "cortex_checked_procedure_snapshot",
+          "kind": "data",
+          "owner": "aien-dev/omega-mv",
+          "revision": "PENDING_PIN"
+        },
+        {
+          "id": "model_0p8b",
+          "kind": "pretrained_adviser",
+          "owner": "aien-dev/omega-mv#694",
+          "revision": "PENDING_PIN"
+        },
+        {
+          "id": "model_2b",
+          "kind": "pretrained_adviser",
+          "owner": "aien-dev/omega-mv#694",
+          "revision": "PENDING_PIN"
+        },
+        {
+          "id": "model_27b",
+          "kind": "pretrained_adviser",
+          "owner": "aien-dev/aien-sovereign-core-mv#737",
+          "revision": "PENDING_PIN"
+        },
+        {
+          "id": "model_35b",
+          "kind": "pretrained_adviser",
+          "owner": "aien-dev/aien-sovereign-core-mv#737",
+          "revision": "PENDING_PIN"
+        },
+        {
+          "id": "reference_coder",
+          "kind": "toolchain",
+          "owner": "aien-dev/omega-mv#700",
+          "revision": "PENDING_PIN"
+        }
+      ]
+    },
+    "P": {
+      "encoding": "Canonical state/action/next-state serialization of the environment family, arithmetic-coded by reference_coder with fixed 32-bit precision; L(M|G) is the reference-coded size of the model checkpoint plus its code given G.",
+      "baseline": "B as declared above.",
+      "sampling": "All sealed episodes, no subsampling; seeds as in heldout.",
+      "energy": "Joules only from an instrumented, reconciled measurement; otherwise NOT_MEASURED.",
+      "statistical_test": "Per-episode paired code-length differences; one-sided sign-flip permutation test with 100000 permutations at alpha 0.05, reported beside but separate from metrics.confirmatory."
+    },
+    "T_ideal": {
+      "definition": "Code lengths as sum of -log2 of the probability each model assigns to the actual next state, plus ideal L(M|G).",
+      "status": "NOT_RUN"
+    },
+    "T_real": {
+      "definition": "Actual reference_coder output bits for B and M, valid only after the H1 reference coder round-trip (decode reproduces the exact input bytes).",
+      "requires": [
+        "H1_reference_coder_round_trip"
+      ],
+      "status": "NOT_RUN"
+    },
+    "energy": {
+      "status": "NOT_MEASURED",
+      "instrument": "none declared",
+      "reconciliation": "Required before any T/J: measured joules reconciled against an independent meter for the same interval."
+    },
+    "tj": {
+      "allowed": false,
+      "reason": "No energy instrument is declared and no joules are measured; T/J is not reported."
+    },
+    "attribution": "One joint gain under one profile is counted once; it is never minted per contributor. Scientific T, measured utility and spendable credits are separate columns."
+  },
+  "claims": [
+    {
+      "id": "correctness_retention_safety",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "performance_full_cost",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "turing_scientific",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "deployment_promotion",
+      "status": "NOT_RUN"
+    }
+  ],
+  "claim_rules": [
+    "A scientific negative result is acceptable research but gives no performance or deployment promotion.",
+    "Never claim SI superiority without positive sealed quality and full-cost evidence.",
+    "Simulated time or energy is never reported as measured.",
+    "Hardware and two-real-owner results count only when separately consented and signed."
+  ],
+  "out_of_scope_here": [
+    "Lattice vs serial compute (aien-architecture-mv#308, omega-mv#698): needs its own prereg.",
+    "Discovery Capsule transfer (aien-architecture-mv#310, open-humanity#34): needs its own prereg.",
+    "Two-owner network test-credit pilot (spark-connector#3, aien-sovereign-core-mv#738): needs its own prereg."
+  ]
+}

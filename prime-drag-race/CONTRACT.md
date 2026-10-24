@@ -110,7 +110,7 @@ Results are only comparable inside one class:
 
 The format follows the upstream Drag Race, PlummersSoftwareLLC/Primes `drag-race`, pinned at
 commit a2899c96752b65ac1b08a0e1418ab7e708040ed0. Our entries are NONCONFORMING for upstream:
-our license is AGPL-3.0-or-later where upstream requires BSD-3-Clause, and the native GPU entry
+our license is Apache-2.0 where upstream requires BSD-3-Clause, and the native GPU entry
 uses a language upstream does not accept. They are published as experimental, never as upstream
 leaderboard entries. We do not compare our scores with upstream entries.
 

@@ -1,6 +1,6 @@
 # AIEN Benchmarks
 
-[![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](LICENSE)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
 This repository holds AIEN's performance measurements and the Rust tools that take and check them. Every measurement in it comes from one machine, the NVIDIA DGX Spark (Grace Blackwell GB10, aarch64). It has two parts: the Prime Drag Race suite runner in [prime-drag-race/](prime-drag-race/CONTRACT.md), which builds on its own, and the main measurement harness (the `aien-benchmarks` crate at the root), which needs a sibling checkout to build (see [Build and test](#build-and-test)).
 
@@ -277,10 +277,10 @@ The program that produced it is `bench_canonical_suite` (`cargo run --release --
 
 ## License
 
-Licensed under the GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later). See [LICENSE](LICENSE).
+Licensed under the Apache License, Version 2.0 (Apache-2.0). See [LICENSE](LICENSE).
 Copyright (c) 2026 Drake Stapleton and AIEN Contributors. See [NOTICE](NOTICE) for attribution.
 
-- **Code and harness:** [AGPL-3.0-or-later](LICENSE).
+- **Code and harness:** [Apache-2.0](LICENSE).
 - **Benchmark data:** the raw JSON telemetry, timing records and SVG charts are dedicated to the public domain under [CC0-1.0](https://creativecommons.org/publicdomain/zero/1.0/).
 - **Development charter:** [CONSTITUTION.md](CONSTITUTION.md) sets the rules for upstream development. It does not bind people who use this code.
 

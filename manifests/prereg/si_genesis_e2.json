@@ -556,13 +556,15 @@
           "id": "om_seeded_compiler",
           "kind": "toolchain",
           "owner": "aien-dev/omega-mv",
-          "revision": "PENDING_PIN"
+          "revision": "3eff14f02a31abf18498ae9dbcd27cf22d4d8003",
+          "pin_basis": "aien-dev/omega-mv main HEAD on 2026-10-24 (merge of PR #701), contains seed/; verified with git ls-remote and a local checkout. Re-pin before FROZEN if the compiler changes."
         },
         {
           "id": "aien_train_engine",
           "kind": "toolchain",
           "owner": "aien-dev/aien-train",
-          "revision": "PENDING_PIN"
+          "revision": "ed8b6ea2562efdda7913234ca8f34b443714a987",
+          "pin_basis": "aien-dev/aien-train main HEAD on 2026-10-24 (skeleton, plan, thesis); verified with git ls-remote and a local checkout. The T2 learner (aien-train#19) is not on main yet; re-pin before FROZEN."
         },
         {
           "id": "cortex_checked_procedure_snapshot",
@@ -574,7 +576,11 @@
           "id": "model_0p8b",
           "kind": "pretrained_adviser",
           "owner": "aien-dev/omega-mv#694",
-          "revision": "PENDING_PIN"
+          "revision": "sha256:d8a08838a613b025eb7952ed9db11696213e57e76a375661ef5c12f9dd5dcf4e",
+          "model_id": "qwen3.5-0.8b",
+          "model_dir": "~/models/qwen3.5-0.8b-2fc06364",
+          "config_sha256": "b90b86f35c8e6925ef74ee04d0e758f0a845c83a42089ad82bbaa948de9b4204",
+          "pin_basis": "revision is sha256 of model.safetensors.index.json; config.json hashed separately; weight shard bytes not hashed. Read locally 2026-10-24."
         },
         {
           "id": "model_2b",
@@ -586,13 +592,21 @@
           "id": "model_27b",
           "kind": "pretrained_adviser",
           "owner": "aien-dev/aien-sovereign-core-mv#737",
-          "revision": "PENDING_PIN"
+          "revision": "sha256:f0838c766951bdfe76d6afbdb2771a8f67aaa2231dedb3d33cebd817729843a2",
+          "model_id": "qwen3.8-27b-fp8-017b9c7a",
+          "model_dir": "~/models/qwen3.8-27b-fp8-017b9c7a",
+          "config_sha256": "74227dd615bf1ea975aa676bdf355a0379858c12f394b5365cd9dfa5fc2c70bc",
+          "pin_basis": "On-disk 27B per aien-sovereign-core-mv#737 audit (not serving). revision is sha256 of model.safetensors.index.json; config.json hashed separately; 64 layer shard bytes not hashed. Read locally 2026-10-24."
         },
         {
           "id": "model_35b",
           "kind": "pretrained_adviser",
           "owner": "aien-dev/aien-sovereign-core-mv#737",
-          "revision": "PENDING_PIN"
+          "revision": "sha256:6f176f344e41d35b17af12904e33401da5ebff3b49fccb8bfa0185bc2d50f9d6",
+          "model_id": "qwen3.6-35b-a3b-fp8-95a723d0",
+          "model_dir": "~/models/qwen3.6-35b-a3b-fp8-95a723d0",
+          "config_sha256": "570ef7ea45a7e1d3de2b1d3c70c4ac3562d0e768acdc195778cb4f4d95025845",
+          "pin_basis": "Live 35B seat per aien-sovereign-core-mv#737 audit. revision is sha256 of model.safetensors.index.json; config.json hashed separately; 40 layer shard bytes not hashed (read-only, no load on the live service). Read locally 2026-10-24."
         },
         {
           "id": "reference_coder",

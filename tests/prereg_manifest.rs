@@ -195,11 +195,20 @@ fn refuses_tj_without_measured_energy() {
 fn frozen_prereg_needs_pinned_background() {
     let mut v = committed();
     v["status"] = json!("FROZEN");
-    let n = v["turing_profile"]["G"]["background"]
+    let pending: Vec<usize> = v["turing_profile"]["G"]["background"]
         .as_array()
         .unwrap()
-        .len();
-    let lines: Vec<String> = (0..n)
+        .iter()
+        .enumerate()
+        .filter(|(_, e)| e["revision"] == "PENDING_PIN")
+        .map(|(i, _)| i)
+        .collect();
+    assert!(
+        !pending.is_empty(),
+        "the SCOPED manifest still has unpinned entries"
+    );
+    let lines: Vec<String> = pending
+        .iter()
         .map(|i| {
             format!(
                 "turing_profile.G.background[{i}].revision: PENDING_PIN is allowed only while status is SCOPED"
@@ -208,13 +217,16 @@ fn frozen_prereg_needs_pinned_background() {
         .collect();
     let want: Vec<&str> = lines.iter().map(String::as_str).collect();
     expect(&v, &want);
-    for e in v["turing_profile"]["G"]["background"]
-        .as_array_mut()
-        .unwrap()
-    {
-        e["revision"] = json!(format!("sha256:{}", "0".repeat(64)));
+    for i in &pending {
+        v["turing_profile"]["G"]["background"][*i]["revision"] =
+            json!(format!("sha256:{}", "0".repeat(64)));
     }
     expect(&v, &[]);
+    v["turing_profile"]["G"]["background"][0]["revision"] = json!("main");
+    expect(
+        &v,
+        &["turing_profile.G.background[0].revision: \"main\" is not a commit id or sha256:<64 hex>"],
+    );
 }
 
 #[test]

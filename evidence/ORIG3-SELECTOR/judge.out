@@ -1,0 +1,7 @@
+core 0 n 120 SEALED H1+H2: mlp/oracle 1.0002 aff/oracle 1.0003 rule/oracle 1.7053 ref/oracle 1.6292 static/oracle 1.0116 retrieval/oracle 1.0002 shuffled/oracle 1.0143 untrained/oracle 1.2175
+core 0 A(<=0.95 rule)=1 [0.587] B(<=ref)=1 [0.614] C(<=affine)=1 [0.9999] D(sign vs rule 120/0 >= 70)=1 E(<=min(static,retrieval))=1 [1.0000] F(controls fail A: shuffled 0.595 untrained 0.714)=0
+core 0 reported: sign vs retrieval +0/-0, vs static +24/-0
+core 1 n 120 SEALED H1+H2: mlp/oracle 1.0019 aff/oracle 1.0908 rule/oracle 1.7967 ref/oracle 1.1412 static/oracle 1.0285 retrieval/oracle 1.0025 shuffled/oracle 1.1809 untrained/oracle 1.0479
+core 1 A(<=0.95 rule)=1 [0.558] B(<=ref)=1 [0.878] C(<=affine)=1 [0.9185] D(sign vs rule 120/0 >= 70)=1 E(<=min(static,retrieval))=1 [0.9995] F(controls fail A: shuffled 0.657 untrained 0.583)=0
+core 1 reported: sign vs retrieval +6/-12, vs static +62/-5
+ORIG3_VERDICT=INCONCLUSIVE

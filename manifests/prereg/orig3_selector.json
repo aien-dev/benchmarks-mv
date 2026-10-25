@@ -4,8 +4,8 @@
   "benchmark_suite": "orig3-selector",
   "prereg_id": "orig3-selector-prereg-2026-10-25",
   "created_at": "2026-10-25T04:30:00Z",
-  "status": "SCOPED",
-  "results_status": "NOT_RUN",
+  "status": "FROZEN",
+  "results_status": "INCONCLUSIVE",
   "issues": [
     "aien-dev/benchmarks-mv#45",
     "aien-dev/aien-train#24",
@@ -18,7 +18,7 @@
     "rule": "Every identity, feature, target, split, baseline and budget below is copied from that frozen contract. A change to a numbered contract rule is a new contract version and a new prereg_id, never an edit of this file."
   },
   "authority": {
-    "judge": "The evaluator is the benchmarks-mv maintainer running the sealed tap and the .om evaluation on the Spark host. This file declares the protocol; it carries no measurements.",
+    "judge": "The evaluator is the benchmarks-mv maintainer running the sealed tap and the .om evaluation on the Spark host. This file declares the protocol; measurements live under evidence/ORIG3-SELECTOR/ and only their verdict, claim statuses and hashes are recorded here (sealed_run, claims).",
     "never_writable_by": "Any trained arm. No arm may write the sealed record file, the allow-list, this preregistration or the result table. The scorer has no execution authority: deterministic code generates, verifies, selects and runs.",
     "owners": {
       "consumer_and_record_tap": "aien-dev/omega-mv#731 (rx_empirical_optimizer tap, omexp-v1)",
@@ -530,29 +530,64 @@
           "id": "orig1_contract_and_loader",
           "kind": "source",
           "owner": "aien-dev/aien-train#24",
-          "revision": "PENDING_PIN",
-          "pin_basis": "Branch feat/24-orig1-selector-contract: docs/si19/ORIG1-CONTRACT.md, native/si19/omexp.om, omexpfix.om, tests/si19/omexp-test.om. Pinned to the merge commit before FROZEN."
+          "revision": "3e30ee413a7f80abd8b47192d5a4517d36135b30",
+          "pin_basis": "Branch feat/24-orig1-selector-contract (PR #28): docs/si19/ORIG1-CONTRACT.md, native/si19/omexp.om, omexpfix.om, tests/si19/omexp-test.om."
         },
         {
           "id": "orig2_scorer_and_trainer",
           "kind": "source",
           "owner": "aien-dev/aien-train#25",
-          "revision": "PENDING_PIN",
-          "pin_basis": "native/si19/select.om, selmain.om, tests/si19/select-test.om. Pinned to the merge commit before FROZEN."
+          "revision": "c9ae2b24fcd34ab96315644f3a25bd078e028399",
+          "pin_basis": "Branch feat/25-orig2-native-scorer (PR #29): native/si19/select.om, selmain.om, tests/si19/select-test.om."
+        },
+        {
+          "id": "om_evaluator_unit",
+          "kind": "toolchain",
+          "owner": "aien-dev/aien-train#25",
+          "revision": "sha256:9b2d63ed23b04ec1683c1b58fa93b9351cf55f772cae06fefac57db9e6884002",
+          "pin_basis": "ELF of the concatenated selmain unit (source sha256 715ad950a47d3d484d3c10d63ba2b4b524bc0f63c954520c59f2e2b91a475cc0) built with om_seeded_compiler 191b776e; the same binary scored every arm."
         },
         {
           "id": "candidate_checkpoint",
           "kind": "data",
           "owner": "aien-dev/aien-train#25",
-          "revision": "PENDING_PIN",
-          "pin_basis": "sha256 of the final mlp_scratch image (select.om image format, magic SI19SLCK); recorded at checkpoint_pin together with its in-image FNV-1a 64, the affine image sha256 and the TRAIN file FNV-1a 64."
+          "revision": "sha256:8dbd9b04a446b02d8e7bf2f1e2aa808ca439e813abfcb52fb34e57d40538acb5",
+          "pin_basis": "evidence/SI19-ORIG2/candidates/mlp-scratch-seed19024.img, 11560 bytes, in-image FNV-1a 64 9232652764948363499, aien-train commit 745922dc69252699946472775d5e9cb3288df672 (2026-10-25T04:21:26Z)."
+        },
+        {
+          "id": "affine_checkpoint",
+          "kind": "data",
+          "owner": "aien-dev/aien-train#25",
+          "revision": "sha256:f04bc778b9347daa10a175a6d2a300a3cc513f6efc53e5412361ba1e9804121b",
+          "pin_basis": "affine baseline image (kind 1, 96 parameters), same training run family as the candidate."
+        },
+        {
+          "id": "shuffled_control_checkpoint",
+          "kind": "data",
+          "owner": "aien-dev/aien-train#25",
+          "revision": "sha256:918747d38badb0482d3d4dd17a5bf7988a034198bc5f20a79bfabe2637e81c4b",
+          "pin_basis": "shuffled_control image (control 1)."
+        },
+        {
+          "id": "untrained_control_checkpoint",
+          "kind": "data",
+          "owner": "aien-dev/aien-train#25",
+          "revision": "sha256:8ad6de5392c253163ebaeb3122873100cac392bc016d6ab16130af8d6e8a26e9",
+          "pin_basis": "untrained_control image (declared init, zero updates); no_update_control is bit-identical to it by the tnoupdate test in aien-train#25."
         },
         {
           "id": "training_records",
           "kind": "data",
           "owner": "owner-local ~/.local/state/aien-train/orig1 (hash only is public)",
-          "revision": "PENDING_PIN",
-          "pin_basis": "sha256 of the AUTHORIZED omexp-v1 training file (owner run 20261025T034737Z, 738 records, tap binary sha256 d26aec0296c77b39d0c5147dd60e4be936d5b032c127d9eb0928a9d7e76f81ee, tapped tree dirty); its FNV-1a 64 is the allow-list key. Bytes stay local."
+          "revision": "sha256:403156f5ca34479715d2f96fabcbd11b9cab3fd4668e9dd3a41a6eb89b128d37",
+          "pin_basis": "AUTHORIZED omexp-v1 training file, FNV-1a 64 16622604375676129865 (the allow-list key), owner run 20261025T034737Z, 738 records, tap binary sha256 d26aec0296c77b39d0c5147dd60e4be936d5b032c127d9eb0928a9d7e76f81ee, tapped tree dirty. Bytes stay local."
+        },
+        {
+          "id": "sealed_final_records",
+          "kind": "data",
+          "owner": "owner-local ~/.local/state/aien-train/orig3 (hash only is public)",
+          "revision": "sha256:99da7bd92c7591265a6044e96aff38d53cd0e2e91457af49002d429e682f7fd7",
+          "pin_basis": "SEALED-FINAL omexp-v1 file, FNV-1a 64 12602815733741495377, 738 records (188928 bytes), collected 2026-10-25T04:24:09Z to 04:25:10Z by the tapped harness at omega-mv 1ec81372 (tree clean, binary sha256 d26aec0296c77b39d0c5147dd60e4be936d5b032c127d9eb0928a9d7e76f81ee); harness receipt 20221 digest-checked runs, 0 mismatches, 44 checks 0 failures. Allow-list line: evidence/ORIG3-SELECTOR/allow-sealed.txt. Bytes stay local."
         }
       ]
     },
@@ -588,19 +623,23 @@
   "claims": [
     {
       "id": "sealed_cost_vs_fixed_rule",
-      "status": "NOT_RUN"
+      "status": "INCONCLUSIVE",
+      "note": "A, B, C, D and E hold on both core classes of SEALED-FINAL H1 + H2 (mlp/oracle 1.0002 on X925, 1.0019 on A725; mlp/min(static, retrieval) 1.0000 and 0.9995); F fails, so the preregistered rule yields INCONCLUSIVE. Level 2 NO-GO does not trigger. Evidence: evidence/ORIG3-SELECTOR/judge.out."
     },
     {
       "id": "controls_do_not_pass",
-      "status": "NOT_RUN"
+      "status": "FAIL",
+      "note": "shuffled_control (0.595 and 0.657 of fixed_rule) and untrained_control (0.714 and 0.583) both satisfy A on both core classes: the incumbent is 1.71 to 1.80 x oracle on the sealed set, so any arm-4-leaning chooser beats it by more than 5%. Criterion A carries no evidential weight and F, as preregistered, cannot hold. This is a mis-specification of the rule, recorded as such."
     },
     {
       "id": "provenance_random_init_only",
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "note": "Judged by tprovenance in aien-train#25 (tests/si19/select-test.om), not in this repository; the sealed-mlp.stdout here reports init_fnv 11780572735689526495, seed 19024 and data_fnv 16622604375676129865 as the only lineage words."
     },
     {
       "id": "pressure_h3_reported",
-      "status": "NOT_RUN"
+      "status": "PASS",
+      "note": "Reported, never gated: SEALED-FINAL H3 mlp/oracle 1.0000 on X925 and 1.0355 on A725 (best_static 1.0085, retrieval 1.0039 on A725)."
     },
     {
       "id": "turing_scientific",
@@ -608,9 +647,18 @@
     },
     {
       "id": "deployment_promotion",
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "note": "This evidence does not authorize deployment and does not close aien-dev/benchmarks-mv#39 or aien-dev/aien-train#19."
     }
   ],
+  "sealed_run": {
+    "verdict": "INCONCLUSIVE",
+    "evidence": "evidence/ORIG3-SELECTOR/ (judge.out, sealed-*.records, sealed-*.stdout, sealed-runs.txt, collection-*.meta, collection-*.harness.stdout, SHA256SUMS)",
+    "judge": "docs/orig3/judge.sh (disclosed POSIX awk glue, as run) and src/bin/bench_orig3_judge.rs (native twin); both reproduce judge.out byte for byte (tests/orig3_judge.rs).",
+    "reading": "The scratch MLP learns, beats the incumbent fixed rule, always_reference and the affine baseline, and is at parity with retrieval and better than best_static on the sealed set. It is NOT shown superior to the cheap retrieval heuristic (sign test vs retrieval: X925 +0/-0, identical choices on all 120 records; A725 +6/-12, not significant). The preregistered rule was mis-specified in F.",
+    "superseding_proposal": "A v2 prereg should replace A and F with 'the controls must fail E' and gate the primary comparison on retrieval. v2 is proposed, NOT run: applying it to the same sealed records would be post hoc; it needs a new prereg_id and a fresh sealed tap."
+  },
+  "freeze_disclosure": "The decision rule text has been unchanged since benchmarks-mv commit e34f786 (2026-10-24 23:04:55 -0500), before the first owner-record training run (23:17 -0500) and before any candidate existed. The identity pins (aien-train commits, image hashes, evaluator hashes, training file hash) were filled after the candidate was trained; this is unavoidable because the pins are hashes of those artifacts. The SEALED-FINAL records were collected after the candidate commit (aien-train 745922dc at 2026-10-24 23:21:26 -0500 = 2026-10-25T04:21:26Z; collection 2026-10-25T04:24:09Z to 04:25:10Z) and did not exist during training. Judge independence: the evaluator is the same operator fleet (omp session) as the trainer; review status UNISOLATED per aien-architecture ISSUE_FIRST_DELIVERY; the sealing is temporal, not organisational. The freeze_rule clause 'no SEALED-FINAL record in existence' was not met at the moment the status word flipped: the status was flipped in the same commit that records the sealed run, after the rule had been fixed in e34f786. This is disclosed, not hidden.",
   "claim_rules": [
     "A GO here is a development result on one host; it is not a promotion of the scorer into the consumer, which needs its own omega-mv review.",
     "Host-only results are development results, never hardware qualification; GB10 stays NOT_RUN.",

@@ -122,3 +122,18 @@ One status per claim in the prereg `claims` list. Keep negative, void and inconc
 results. State on every report that the evaluator and the trainer are the same owner and
 that sealing is temporal (the records did not exist before the checkpoint pin), which is
 weaker than an independent judge.
+
+## 6. Judge and recorded outcome
+
+The rule of section 4 is applied by `docs/orig3/judge.sh` (disclosed POSIX awk glue, kept
+byte-identical to the copy that ran; its sha256 is in `evidence/ORIG3-SELECTOR/SHA256SUMS`,
+which is why it carries no license header) and by its native twin
+`src/bin/bench_orig3_judge.rs`. Both take the four per-record files (mlp, affine, shuffled,
+untrained) and print the same lines; `tests/orig3_judge.rs` checks that the Rust judge
+reproduces the committed `judge.out`. The repository's pure-Rust harness rule is not touched:
+the awk file is evidence glue, not a harness, and the Rust bin is the maintained form.
+
+Recorded outcome (2026-10-25, `evidence/ORIG3-SELECTOR/`): ORIG3_VERDICT=INCONCLUSIVE. A to E
+hold on both core classes, F fails because the untrained and shuffled controls also beat the
+fixed rule by more than 5%. See the evidence README for the table and the reading; the
+prereg `sealed_run` block names the proposed (not run) v2 rule.

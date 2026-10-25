@@ -1,0 +1,4 @@
+mlp rc=0 wall_ms=227 image_sha256=8dbd9b04a446b02d8e7bf2f1e2aa808ca439e813abfcb52fb34e57d40538acb5
+affine rc=0 wall_ms=120 image_sha256=f04bc778b9347daa10a175a6d2a300a3cc513f6efc53e5412361ba1e9804121b
+shuffled rc=0 wall_ms=163 image_sha256=918747d38badb0482d3d4dd17a5bf7988a034198bc5f20a79bfabe2637e81c4b
+untrained rc=0 wall_ms=229 image_sha256=8ad6de5392c253163ebaeb3122873100cac392bc016d6ab16130af8d6e8a26e9

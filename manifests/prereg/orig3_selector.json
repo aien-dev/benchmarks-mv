@@ -1,0 +1,616 @@
+{
+  "schema": "aien-bench-prereg/1",
+  "manifest_version": "1.0.0",
+  "benchmark_suite": "orig3-selector",
+  "prereg_id": "orig3-selector-prereg-2026-10-25",
+  "created_at": "2026-10-25T04:30:00Z",
+  "status": "SCOPED",
+  "results_status": "NOT_RUN",
+  "issues": [
+    "aien-dev/benchmarks-mv#45",
+    "aien-dev/aien-train#24",
+    "aien-dev/aien-train#25",
+    "aien-dev/omega-mv#731"
+  ],
+  "parent": "aien-dev/aien-train#19",
+  "contract": {
+    "file": "aien-dev/aien-train docs/si19/ORIG1-CONTRACT.md (branch feat/24-orig1-selector-contract)",
+    "rule": "Every identity, feature, target, split, baseline and budget below is copied from that frozen contract. A change to a numbered contract rule is a new contract version and a new prereg_id, never an edit of this file."
+  },
+  "authority": {
+    "judge": "The evaluator is the benchmarks-mv maintainer running the sealed tap and the .om evaluation on the Spark host. This file declares the protocol; it carries no measurements.",
+    "never_writable_by": "Any trained arm. No arm may write the sealed record file, the allow-list, this preregistration or the result table. The scorer has no execution authority: deterministic code generates, verifies, selects and runs.",
+    "owners": {
+      "consumer_and_record_tap": "aien-dev/omega-mv#731 (rx_empirical_optimizer tap, omexp-v1)",
+      "task_and_dataset_contract": "aien-dev/aien-train#24 (ORIG-1)",
+      "scorer_and_trainer": "aien-dev/aien-train#25 (ORIG-2)",
+      "evaluation_protocol": "aien-dev/benchmarks-mv#45 (ORIG-3, this file)",
+      "programme": "aien-dev/aien-train#19"
+    },
+    "freeze_rule": "status SCOPED may still change by reviewed commit. FROZEN requires every turing_profile.G.background revision pinned (no PENDING_PIN), the candidate checkpoint sha256 recorded, the sha256 of this file recorded in the benchmarks-mv commit that flips the status, and no SEALED-FINAL record in existence. After FROZEN any change is a new prereg_id; the old one is SUPERSEDED, never edited."
+  },
+  "phases": [
+    "preregistration_freeze",
+    "baseline_run",
+    "candidate_training",
+    "checkpoint_pin",
+    "sealed_tap",
+    "sealed_eval",
+    "analysis",
+    "report"
+  ],
+  "phase_definitions": {
+    "preregistration_freeze": "This file reaches FROZEN with every G revision pinned; its sha256 is recorded in the commit message.",
+    "baseline_run": "fixed_rule, always_reference, best_static, retrieval and affine are computed or trained on the development families (TRAIN for fitting, DEV for the affine lr choice) and their receipts are committed before mlp_scratch trains. best_static and retrieval are pure functions of the TRAIN partition and change only if the TRAIN file changes.",
+    "candidate_training": "mlp_scratch and the three controls train on TRAIN under the budgets in sample_size.training_budget (ORIG1-CONTRACT.md section 8); DEV is used for the lr choice and early stopping only; the development TEST families are read only by the evaluation mode after the checkpoint is final and give development-only numbers.",
+    "checkpoint_pin": "The final mlp_scratch checkpoint image and the affine checkpoint image are hashed (sha256 and the FNV-1a 64 stored in the image) and the hashes are committed to benchmarks-mv docs/orig3 before the sealed tap runs. A checkpoint retrained after this point is a new prereg_id.",
+    "sealed_tap": "The evaluator runs the record tap once (docs/orig3/PROTOCOL.md) and produces the SEALED-FINAL file; its FNV-1a 64 is added to the allow-list as AUTHORIZED. The records do not exist before this phase, so no arm can have learned from them.",
+    "sealed_eval": "Every arm is scored once on SEALED-FINAL with selmain mode E against the pinned images; per-record lines are kept.",
+    "analysis": "Only the decision rule in metrics.decision_rule and the tests in metrics.confirmatory are applied to SEALED-FINAL. Development TEST-H1/H2/H3 numbers are reported under a separate development-only heading and never enter the decision.",
+    "report": "One status per claim; negative and inconclusive results are kept. Fixture evidence and real-record evidence stay under separate headings and are never mixed in one number."
+  },
+  "baseline_before_eval": {
+    "required": true,
+    "baseline_arms": [
+      "fixed_rule",
+      "always_reference",
+      "best_static",
+      "retrieval",
+      "affine"
+    ],
+    "rule": "No candidate or control arm is trained or scored before every listed baseline has completed baseline_run and its receipt is committed. A missing baseline makes every dependent comparison NOT_RUN, never PASS."
+  },
+  "consumer": {
+    "decision": "Omega empirical cost model matvec realization choice, rx_cm_decide in src/runtime/rx_costmodel.{c,h}, exercised by tests/runtime/rx_empirical_optimizer.c (make test-empirical)",
+    "repository_revision": "aien-dev/omega-mv 18c653b3101fa09c157dca8d222efab41ab5e89d (main, 2026-10-25); consumer files byte-identical to a0eafa39",
+    "record_tap": "tests/runtime/rx_empirical_optimizer.c at 1ec813726aef5f5abf8ab449c5d8bd9738f88d2e (branch feat/731-orig4-shadow-advice); OMEGA_EMPIRICAL_RECORDS=<path> appends one omexp-v1 record per cost table; default off; nothing in the consumer reads it",
+    "admissible_candidates": "the consumer's eligible bit mask: an arm is admissible only when its forked differential verification passed (g_verified) and the caller allows it; arm 0 (reference) is always admissible",
+    "transformation_family": "integer matvec y = A x on one AArch64 core: 0 reference (compiled), 1 scalar, 2 unroll2, 3 unroll4_dual, 4 quad4, 5 planted_wrong (never admissible); cap 8 arms (RX_CM_ARMS)",
+    "incumbent_planner": "omega_matvec_dispatch fixed rule: unroll2 when N <= 8, else unroll4_dual",
+    "verifier": "every timed run's output digest equals the reference digest for that job (time_arm); a table with any mismatch is ineligible (word 31 != 0 refuses the record)",
+    "cost_unit": "picoseconds per call, best of 5 rounds per arm, rotating order (truth_table)",
+    "hardware_profile": "DGX Spark host, Linux 7.0.0-1019-nvidia aarch64; core classes from MIDR: 0 Cortex-X925 (last private cache 2097152 B), 1 Cortex-A725 (524288 B), 2 other (1048576 B). The 2026-10-25 owner tap run observed classes 0 and 1 only.",
+    "record_format": "omexp-v1: 32 little-endian 64-bit words per record (ORIG1-CONTRACT.md section 2); a file is a whole number of records, at most 2048",
+    "features": "ORIG1-CONTRACT.md section 3: state vector x of 12 integers in 1/16 units (bias, lg16 M, lg16 N, lg16 M * lg16 N >> 8, lg16 N squared >> 8, N <= 3 flag, N rem 4 != 0 flag, cache doublings capped at 256, core one-hot x3, 16 * min(pressure, 15)); candidate one-hot c of 8; thermal, calls, seed, sequence and time are never features",
+    "target": "ORIG1-CONTRACT.md section 4: t16 = lg16 ps_a - lg16 ps_0 per (record, admissible arm); normalization mu16, sh fitted on TRAIN only; y = (t16 - mu16) / 2^(4 + sh) as binary32; selection is the smallest score among admissible arms, lowest index on a tie; loss is squared error summed over admissible arms, averaged over records"
+  },
+  "arms": [
+    {
+      "id": "fixed_rule",
+      "role": "baseline",
+      "kind": "rules",
+      "description": "Incumbent planner: arm 2 when N <= 8 else arm 3, if admissible, else arm 0. No learning.",
+      "pretrained": false,
+      "initialization": "none",
+      "learns_from": [],
+      "requires_gpu": false
+    },
+    {
+      "id": "always_reference",
+      "role": "baseline",
+      "kind": "rules",
+      "description": "Arm 0 (compiled reference) for every record. No learning.",
+      "pretrained": false,
+      "initialization": "none",
+      "learns_from": [],
+      "requires_gpu": false
+    },
+    {
+      "id": "best_static",
+      "role": "baseline",
+      "kind": "statistic",
+      "description": "The single arm with the lowest total TRAIN cost for that core class (oxstatic). Fitted once on TRAIN; no parameters.",
+      "pretrained": false,
+      "initialization": "none",
+      "learns_from": [
+        "TRAIN"
+      ],
+      "requires_gpu": false
+    },
+    {
+      "id": "retrieval",
+      "role": "baseline",
+      "kind": "retrieval",
+      "description": "The TRAIN record of the same core class nearest in (lg16 M, lg16 N) by L1 distance, lowest sequence on a tie (oxnear); choose its cheapest admissible arm. No parameter update.",
+      "pretrained": false,
+      "initialization": "none",
+      "learns_from": [
+        "TRAIN"
+      ],
+      "requires_gpu": false
+    },
+    {
+      "id": "affine",
+      "role": "baseline",
+      "kind": "scratch_linear",
+      "description": "Per-arm linear scorer on x (8 x 12 = 96 parameters, select.om kind 1), random init from the declared LCG, trained as in ORIG-2 under the same budget as mlp_scratch; lr chosen on DEV.",
+      "pretrained": false,
+      "initialization": "lcg_seed_19024",
+      "learns_from": [
+        "TRAIN"
+      ],
+      "requires_gpu": false
+    },
+    {
+      "id": "mlp_scratch",
+      "role": "candidate",
+      "primary": true,
+      "kind": "scratch_mlp",
+      "description": "PRIMARY candidate. Handwritten seeded .om MLP (select.om kind 2): 20 inputs (12 state + 8 arm one-hot), 32 hidden relu, 1 output, 705 parameters, binary32 via add32/mul32, random init from the declared LCG, SGD on TRAIN, early stopping on DEV. Random initialization only: no pretrained weights, teacher outputs, distilled answers or external traces anywhere (tprovenance).",
+      "pretrained": false,
+      "uses_teacher": false,
+      "initialization": "lcg_seed_19024",
+      "learns_from": [
+        "TRAIN"
+      ],
+      "requires_gpu": false
+    },
+    {
+      "id": "untrained_control",
+      "role": "control",
+      "kind": "scratch_mlp",
+      "description": "mlp_scratch at its declared initialization, zero updates. Same architecture, seed and image format.",
+      "pretrained": false,
+      "initialization": "lcg_seed_19024",
+      "learns_from": [],
+      "requires_gpu": false
+    },
+    {
+      "id": "shuffled_control",
+      "role": "control",
+      "kind": "scratch_mlp",
+      "description": "mlp_scratch trained on TRAIN with t16 permuted among train pairs by the trainer RNG (select.om control 1, SX permutation). Same budget as mlp_scratch.",
+      "pretrained": false,
+      "initialization": "lcg_seed_19024",
+      "learns_from": [
+        "TRAIN_shuffled_targets"
+      ],
+      "requires_gpu": false
+    },
+    {
+      "id": "no_update_control",
+      "role": "control",
+      "kind": "scratch_mlp",
+      "description": "mlp_scratch run through the full training loop with lr = 0 (select.om control 2); parameters must stay bit-identical to the initialization (tnoupdate), so its selections equal untrained_control. Detects any update path that bypasses the learning rate.",
+      "pretrained": false,
+      "initialization": "lcg_seed_19024",
+      "learns_from": [],
+      "requires_gpu": false
+    },
+    {
+      "id": "oracle",
+      "role": "control",
+      "kind": "analysis_bound",
+      "description": "The cheapest admissible arm of each record (oxbest). Analysis bound only: it reads the outcome and is never a deployable policy, never a teacher and never enters a GO decision except as the denominator of the primary metric.",
+      "pretrained": false,
+      "initialization": "none",
+      "learns_from": [
+        "outcome_of_the_same_record"
+      ],
+      "requires_gpu": false
+    },
+    {
+      "id": "existing_c_costmodel",
+      "role": "control",
+      "optional": true,
+      "kind": "existing_learned_model",
+      "description": "Optional, separately costed comparison: the consumer's own learned C cost model (rx_costmodel durable model) as promoted by rx_empirical_optimizer at the tap commit, scored from the same records if its per-record choice is recoverable from the tap or the harness log. Reported under its own heading with its own training cost; NOT a teacher: no output of it enters any .om arm. NOT_RUN when the choice is not recoverable.",
+      "pretrained": false,
+      "uses_teacher": false,
+      "initialization": "consumer_online_learner",
+      "learns_from": [
+        "the consumer's own training grid at the tap commit"
+      ],
+      "background_refs": [
+        "omega_consumer"
+      ],
+      "requires_gpu": false
+    }
+  ],
+  "environments": [
+    {
+      "id": "TRAIN",
+      "family": 0,
+      "description": "The consumer's training grid, M in {1,4,16,64,256,1024}, N in {1,2,3,5,8,12,16,33,64,100,256,512,1024}; two timing passes of each shape stay together. Owner tap run 2026-10-25: 154 records per core class.",
+      "role": "training only",
+      "verifier": "tap digest check (word 31 == 0) plus oxload admission",
+      "pressure": 0
+    },
+    {
+      "id": "DEV",
+      "family": 1,
+      "description": "Validation grid, M in {2,8,32,128,512}, N in {4,6,10,24,48,200,700}: no M or N value shared with TRAIN. Owner tap run 2026-10-25: 35 records per core class.",
+      "role": "lr choice and early stopping only",
+      "verifier": "tap digest check (word 31 == 0) plus oxload admission",
+      "pressure": 0
+    },
+    {
+      "id": "TEST-H1",
+      "family": 2,
+      "description": "60 log-uniform shapes per core class with no M or N value seen in TRAIN or DEV (unseen_shapes, seed 7000 + core). Development-only in the owner run; the loader refuses any file where a TEST-H1 (M, N) key also appears in TRAIN or DEV.",
+      "role": "development-only test; also the H1 distribution of SEALED-FINAL",
+      "verifier": "tap digest check plus oxload admission including the -11 contamination refusal",
+      "pressure": 0
+    },
+    {
+      "id": "TEST-H2",
+      "family": 3,
+      "description": "Thin-heavy mix (thin_mix, seed 8000 + core), 60 records per core class: unseen M values; 70% reuse TRAIN N values in 1..7 (declared partial lineage overlap).",
+      "role": "development-only test; also the H2 distribution of SEALED-FINAL",
+      "verifier": "tap digest check plus oxload admission",
+      "pressure": 0
+    },
+    {
+      "id": "TEST-H3",
+      "family": 4,
+      "description": "The H1 shapes under memory pressure (pressure bucket 1), 60 records per core class; a condition absent from TRAIN and DEV (out-of-distribution).",
+      "role": "reported, never gated",
+      "verifier": "tap digest check plus oxload admission",
+      "pressure": 1
+    },
+    {
+      "id": "SEALED-FINAL",
+      "family": "2, 3 and 4 of a fresh tap run",
+      "description": "A fresh run of the same tap binary at the same commit, executed by the evaluator only after checkpoint_pin: same harness and generators, new timings, new sequence numbers and monotonic clock. The records do not exist at training time. The gated part is H1 + H2 (families 2 and 3, pressure 0), 120 records per core class present; H3 (family 4) is reported, not gated.",
+      "role": "the only partition that enters the decision rule",
+      "verifier": "tap digest check plus oxload admission plus the profile check (word 10 equals the core class cache size); a file with any refusal is void",
+      "pressure": "0 for H1/H2, 1 for H3",
+      "expected_records_per_core_class": {
+        "H1": 60,
+        "H2": 60,
+        "H3": 60
+      }
+    }
+  ],
+  "heldout": {
+    "splits": {
+      "TRAIN": "family 0; the only partition any arm may learn from.",
+      "DEV": "family 1; lr choice and early stopping only.",
+      "TEST_development": "families 2, 3, 4 of the owner run; read only by the evaluation mode after the checkpoint is final; development-only numbers.",
+      "SEALED-FINAL": "families 2, 3, 4 of the post-pin tap run; scored once per arm.",
+      "reserve": "One further post-pin tap run (SEALED-RESERVE), executed only if SEALED-FINAL is void (see stopping_rules seal_void)."
+    },
+    "sealing": {
+      "mechanism": "Temporal sealing by construction: SEALED-FINAL is generated by rerunning the measurement harness after the candidate checkpoint hash is committed. Prediction commitment is the pinned checkpoint image (its sha256 and in-image FNV-1a 64) committed to benchmarks-mv before the tap runs; the selector is a pure function of the image and the record, so every prediction is fixed before the sealed data exists. The evaluator runs the tap under its own shell, writes the file mode 0600 under ~/.local/state/aien-train/orig1/sealed/, records the file's FNV-1a 64 and record counts publicly, and scores every arm once with selmain mode E against the pinned image. The .om evaluation mode refuses an image whose data-binding FNV differs from the loaded file only in training and resume modes; in mode E the image's recorded data fnv is reported beside the sealed file fnv so the reader can see the image predates the file.",
+      "hash_only_is_not_sealing": true,
+      "prediction_commit_before_reveal": true,
+      "judge_independent": true,
+      "judge_independence_caveat": "There is no second operator on this machine. The evaluator and the trainer are the same owner; independence here means the sealed records cannot have influenced training because they did not exist, and the pinned image cannot change after the pin. This is weaker than an independent judge and is stated on every report.",
+      "single_use": true,
+      "collision_rule": "A SEALED-FINAL (M, N, core) key that also appears in TRAIN or DEV of the training file is dropped from the gated set before scoring (the H2 generator reuses small TRAIN N values by design; the key, not N alone, decides). Dropped keys are counted in the report.",
+      "breach_action": "If any arm, trainer process or checkpoint write is observed after the sealed file exists but before scoring, or the sealed file fails admission, SEALED-FINAL is void (INCONCLUSIVE); the record is kept and SEALED-RESERVE is used once."
+    }
+  },
+  "metrics": {
+    "primary": {
+      "id": "chosen_over_oracle_ps",
+      "unit": "sealed record",
+      "definition": "Total chosen cost over oracle cost: sum over the partition's records of ps per call of the arm the policy chose, divided by the sum of the oracle's ps per call (unweighted by calls), per core class on SEALED-FINAL H1 + H2 (families 2 and 3). Also reported per distribution (H1, H2 separately), overall, and on H3.",
+      "direction": "lower is better; 1.0 is the oracle bound"
+    },
+    "secondary": [
+      "top1_agreement_with_oracle",
+      "paired_per_record_wins_and_losses_vs_each_baseline",
+      "chosen_over_oracle_on_H3_pressure_reported_not_gated",
+      "development_only_chosen_over_oracle_on_owner_run_TEST_families",
+      "dev_loss_and_best_epoch_of_each_trained_arm",
+      "parameter_count_and_image_bytes_of_each_trained_arm",
+      "updates_and_wall_seconds_of_training_per_arm",
+      "fixture_only_results_under_a_separate_heading"
+    ],
+    "confirmatory": {
+      "correction": "GO is an intersection-union decision: every component (a) to (e) must hold, so the familywise error of a false GO is at most the per-component alpha and no multiplicity correction is applied. The only hypothesis test is the sign test (d); (a), (b), (c), (e) are threshold comparisons of totals.",
+      "hypotheses": [
+        {
+          "id": "A",
+          "claim": "mlp_scratch total chosen ps <= 0.95 x fixed_rule total chosen ps on every core class present and on each of H1 and H2 of SEALED-FINAL"
+        },
+        {
+          "id": "B",
+          "claim": "mlp_scratch total chosen ps <= always_reference total chosen ps on SEALED-FINAL H1 + H2 overall"
+        },
+        {
+          "id": "C",
+          "claim": "mlp_scratch total chosen ps <= affine total chosen ps on SEALED-FINAL H1 + H2 overall"
+        },
+        {
+          "id": "D",
+          "claim": "paired per-record one-sided sign test of mlp_scratch chosen ps < fixed_rule chosen ps on SEALED-FINAL H1 + H2 per core class, p < 0.05; records where both chose the same arm (equal cost) are ties and are excluded, so n is the number of discordant records"
+        },
+        {
+          "id": "E",
+          "claim": "neither untrained_control nor shuffled_control satisfies A (no_update_control is identical to untrained_control by construction and is checked for bit identity instead)"
+        }
+      ]
+    },
+    "sign_test": {
+      "null": "P(mlp_scratch cheaper) = 1/2 per discordant record",
+      "statistic": "k = number of discordant records where mlp_scratch chosen ps < fixed_rule chosen ps",
+      "rule": "reject when the exact one-sided binomial tail P(X >= k | n, 1/2) < 0.05",
+      "thresholds": {
+        "n_60": {
+          "min_wins": 37,
+          "p_at_threshold": 0.04623,
+          "p_one_below": 0.0775
+        },
+        "n_120": {
+          "min_wins": 70,
+          "p_at_threshold": 0.0412,
+          "p_one_below": 0.06016
+        },
+        "other_n": "the smallest k with 1 - CDF[BinomialDistribution[n, 1/2], k - 1] < 1/20, computed the same way before scoring"
+      },
+      "computed_with": "Wolfram Language evaluator 2026-10-25: crit[n_] := First@Select[Range[0, n], 1 - CDF[BinomialDistribution[n, 1/2], # - 1] < 1/20 &]; {crit[60], crit[120]} gives {37, 70}; tail probabilities N[1 - CDF[BinomialDistribution[60, 1/2], 36], 6] = 0.0462305 and N[1 - CDF[BinomialDistribution[120, 1/2], 69], 6] = 0.0412037"
+    },
+    "decision_rule": {
+      "GO": "A, B, C, D and E all hold on SEALED-FINAL.",
+      "NO-GO": "A, B and C all fail and the sign test D is significant in the other direction (fixed_rule cheaper on at least 37 of 60 or 70 of 120 discordant records per core class, same thresholds mirrored).",
+      "INCONCLUSIVE": "Every other outcome, including a void sealed set, a missing baseline, or a control that satisfies A.",
+      "minimum_useful_effect": "5% total cost reduction against fixed_rule (the 0.95 factor in A); a smaller gain is reported as INCONCLUSIVE even when D is significant.",
+      "not_gated": "H3 (pressure) is reported only. Development TEST numbers never enter the rule."
+    },
+    "energy": {
+      "status": "NOT_MEASURED",
+      "reason": "No energy meter is instrumented for the evaluation; joules are never estimated."
+    },
+    "gb10": {
+      "status": "NOT_RUN",
+      "reason": "The consumer and the scorer run on the AArch64 host cores; no GPU work exists in ORIG-1..3, and no model is loaded beside the resident service."
+    },
+    "cost_accounting": {
+      "counted": [
+        "feature_extraction",
+        "scoring",
+        "model_loading_and_validation",
+        "fallback_to_fixed_rule_on_refusal",
+        "retries",
+        "compile_of_the_om_units",
+        "amortized_record_collection_one_tap_run_about_64_s_host_wall",
+        "training_updates_and_wall_seconds"
+      ],
+      "collection_basis": "The 2026-10-25 owner tap run took 62 s host wall (start 03:47:37Z, end 03:48:39Z) for 738 records; this is counted once per training file and once per sealed file.",
+      "missing_counter_rule": "A counter that was not measured is NOT_MEASURED, never zero.",
+      "existing_c_costmodel": "Costed separately (its own online learning inside the harness); never added to any .om arm's cost."
+    }
+  },
+  "mutants": {
+    "rule": "Each mutant is fed to the evaluation path before the sealed run; the expected outcome is a refusal or a fixed-rule fallback, never a score. A mutant that scores is a FAIL of the harness, and the sealed run does not proceed.",
+    "list": [
+      {
+        "id": "stale_or_wrong_profile",
+        "input": "record word 10 (cache bytes) or word 9 (state bytes) inconsistent with the core class of section 1",
+        "expected": "oxload refusal -9; RC[0] = 0; nothing scored"
+      },
+      {
+        "id": "missing_or_ood_feature",
+        "input": "M or N outside 1..8192, core class outside 0..2, pressure bucket above 15, or eligible mask bit above the arm count",
+        "expected": "oxload refusal -3, -4 or -5"
+      },
+      {
+        "id": "corrupt_checkpoint",
+        "input": "image with wrong length, magic, version, kind, nparams, FNV, out-of-range state or a non-finite parameter",
+        "expected": "slload refusal -1 to -7; state unchanged; selmain exit 65; consumer falls back to fixed_rule"
+      },
+      {
+        "id": "revoked_or_unauthorized_data",
+        "input": "record file whose FNV-1a 64 is REVOKED or absent from the allow-list",
+        "expected": "oxallow -12 or -13; selmain exit 67"
+      },
+      {
+        "id": "forged_outcome_label",
+        "input": "record with word 31 (mismatches) != 0, or an eligible arm with ps 0 or verified flag 0",
+        "expected": "oxload refusal -7 or -6"
+      },
+      {
+        "id": "budget_exhaustion",
+        "input": "image claiming epoch > 64, updates > 2^20, cursor > ntrain, or lr outside {0, 2^-8, 2^-10, 2^-12}",
+        "expected": "slload refusal -6"
+      },
+      {
+        "id": "stale_dataset_binding",
+        "input": "resume (mode R) of an image whose data fnv differs from the loaded TRAIN file",
+        "expected": "slload refusal -8"
+      }
+    ]
+  },
+  "sample_size": {
+    "computed_with": "Wolfram Language evaluator 2026-10-25, exact binomial sign test: crit[n_] := First@Select[Range[0, n], 1 - CDF[BinomialDistribution[n, 1/2], # - 1] < 1/20 &]; pow[n_, p_] := N[1 - CDF[BinomialDistribution[n, p], crit[n] - 1], 6]; nmin = First@Select[Range[10, 200], pow[#, 0.65] >= 0.8 &] gives 69 with crit 42 and power 0.802056; pow[120, 0.65] = 0.946686; pow[60, 0.65] = 0.752884.",
+    "studies": [
+      {
+        "id": "sealed_sign_test_per_core_class",
+        "unit": "discordant sealed record (H1 + H2 of one core class)",
+        "sided": "one",
+        "alpha_familywise": 0.05,
+        "confirmatory_contrasts": 1,
+        "alpha_per_contrast": 0.05,
+        "power_target": 0.8,
+        "min_effect_win_probability": 0.65,
+        "exact_min_effective_n": 69,
+        "exact_power_at_min": 0.802056,
+        "families": 2,
+        "tasks_planned": 120,
+        "units_per_cluster": 1,
+        "icc_assumed": 0,
+        "design_effect": 1,
+        "units_planned": 120,
+        "effective_n_planned": 120,
+        "exact_power_at_planned": 0.946686,
+        "sensitivity": "Ties (both policies choose the same arm) reduce n below 120; at n = 60 the exact power at win probability 0.65 is 0.752884, below target, and the result is reported with its n. H1 alone (60 records) is therefore reported, not gated on its own."
+      }
+    ],
+    "fresh_reserves": 1,
+    "training_budget": "ORIG1-CONTRACT.md section 8: trainer seed 19024, lr in {2^-8, 2^-10, 2^-12} chosen on DEV, at most 64 epochs with early stop after 16 without DEV improvement, at most 2^20 updates, at most 100000 parameters (mlp_scratch uses 705, affine 96), at most 2048 records per file, image under 16 MiB, checkpoint under 64 KiB, compile + tests + one training run under 30 minutes on the host. Equal for affine, mlp_scratch and the controls."
+  },
+  "stopping_rules": [
+    {
+      "id": "fixed_n",
+      "trigger": "Always.",
+      "action": "SEALED-FINAL is scored once after the checkpoint pin. No interim look, no optional stopping, no retraining after the sealed file exists, no adding records after scoring."
+    },
+    {
+      "id": "seal_void",
+      "trigger": "SEALED-FINAL fails admission (any oxload refusal), or any arm, trainer or checkpoint write is observed between the sealed tap and scoring.",
+      "action": "SEALED-FINAL is void (INCONCLUSIVE), the file and its hash are kept in the report, and SEALED-RESERVE is generated and scored once."
+    },
+    {
+      "id": "reserve_exhausted",
+      "trigger": "SEALED-RESERVE is also void.",
+      "action": "Campaign ends INCONCLUSIVE; a new campaign needs a new prereg_id."
+    },
+    {
+      "id": "control_passes",
+      "trigger": "untrained_control or shuffled_control satisfies hypothesis A, or no_update_control is not bit-identical to untrained_control.",
+      "action": "The campaign result is INCONCLUSIVE regardless of mlp_scratch; the defect is investigated and any fix is a new prereg_id."
+    },
+    {
+      "id": "training_budget",
+      "trigger": "A trained arm reaches any limit in sample_size.training_budget.",
+      "action": "Training stops; the best-on-DEV snapshot is the checkpoint; nothing is chosen on TEST or SEALED-FINAL."
+    },
+    {
+      "id": "missing_core_class",
+      "trigger": "A core class present in the training file is absent from SEALED-FINAL or has fewer than 100 H1 + H2 records.",
+      "action": "That class is reported with its n and the campaign is INCONCLUSIVE for that class; GO requires every class present in TRAIN."
+    },
+    {
+      "id": "hardware_not_granted",
+      "trigger": "The host is contended (another measurement or model load observed during the sealed tap).",
+      "action": "The sealed tap is aborted and rerun later; a completed tap under contention is void (seal_void)."
+    }
+  ],
+  "turing_profile": {
+    "formula": "T(M;B,D,G,P) = [L(B|G) + L(D|B,G)] - [L(M|G) + L(D|M,G)]",
+    "source": "https://doi.org/10.5281/zenodo.23437498 (formal preprint v1.14)",
+    "unit": "bits",
+    "applies_to": "Learned predictive explanatory gain of the candidate scorer on D only; not service price, a single decision or a per-job metric. Reported beside, never inside, the GO decision.",
+    "B": {
+      "arm": "fixed_rule",
+      "description": "The incumbent planner coded under P; frozen at baseline_run."
+    },
+    "D": {
+      "split": "SEALED-FINAL H1 + H2",
+      "blinded": true,
+      "description": "Sealed records' oracle arm per record, coded under P after the sealed tap."
+    },
+    "G": {
+      "version": "orig3-selector-G/1",
+      "background": [
+        {
+          "id": "omega_consumer",
+          "kind": "source",
+          "owner": "aien-dev/omega-mv",
+          "revision": "18c653b3101fa09c157dca8d222efab41ab5e89d",
+          "pin_basis": "ORIG1-CONTRACT.md section 1: main on 2026-10-25; consumer files byte-identical to a0eafa39."
+        },
+        {
+          "id": "record_tap",
+          "kind": "source",
+          "owner": "aien-dev/omega-mv#731",
+          "revision": "1ec813726aef5f5abf8ab449c5d8bd9738f88d2e",
+          "pin_basis": "tests/runtime/rx_empirical_optimizer.c on branch feat/731-orig4-shadow-advice; the sealed tap and the training tap use this exact commit."
+        },
+        {
+          "id": "om_seeded_compiler",
+          "kind": "toolchain",
+          "owner": "aien-dev/omega-bridge",
+          "revision": "sha256:191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+          "pin_basis": "aien-train docs/si19/dependencies.json (R5b, source omega-bridge 0fc7d8662cb799e7c206b17c18ea4c3ec2b8fea9); every unit must also compile unchanged under the R6 compiler 734f0a39 (omega-mv main seed/out/omc)."
+        },
+        {
+          "id": "orig1_contract_and_loader",
+          "kind": "source",
+          "owner": "aien-dev/aien-train#24",
+          "revision": "PENDING_PIN",
+          "pin_basis": "Branch feat/24-orig1-selector-contract: docs/si19/ORIG1-CONTRACT.md, native/si19/omexp.om, omexpfix.om, tests/si19/omexp-test.om. Pinned to the merge commit before FROZEN."
+        },
+        {
+          "id": "orig2_scorer_and_trainer",
+          "kind": "source",
+          "owner": "aien-dev/aien-train#25",
+          "revision": "PENDING_PIN",
+          "pin_basis": "native/si19/select.om, selmain.om, tests/si19/select-test.om. Pinned to the merge commit before FROZEN."
+        },
+        {
+          "id": "candidate_checkpoint",
+          "kind": "data",
+          "owner": "aien-dev/aien-train#25",
+          "revision": "PENDING_PIN",
+          "pin_basis": "sha256 of the final mlp_scratch image (select.om image format, magic SI19SLCK); recorded at checkpoint_pin together with its in-image FNV-1a 64, the affine image sha256 and the TRAIN file FNV-1a 64."
+        },
+        {
+          "id": "training_records",
+          "kind": "data",
+          "owner": "owner-local ~/.local/state/aien-train/orig1 (hash only is public)",
+          "revision": "PENDING_PIN",
+          "pin_basis": "sha256 of the AUTHORIZED omexp-v1 training file (owner run 20261025T034737Z, 738 records, tap binary sha256 d26aec0296c77b39d0c5147dd60e4be936d5b032c127d9eb0928a9d7e76f81ee, tapped tree dirty); its FNV-1a 64 is the allow-list key. Bytes stay local."
+        }
+      ]
+    },
+    "P": {
+      "encoding": "Per record: the chosen arm index coded with a fixed uniform code over the admissible arms of that record (log2 of the admissible count bits when the policy picks the oracle arm, plus the cost penalty code of the chosen arm's t16 under a fixed Laplace model fitted on TRAIN); L(M|G) is the byte length of the checkpoint image plus the .om source of select.om times 8, both given G.",
+      "baseline": "B as declared above (fixed_rule has L(B|G) equal to its .om source bits).",
+      "sampling": "All SEALED-FINAL H1 + H2 records, no subsampling.",
+      "energy": "Joules only from an instrumented, reconciled measurement; otherwise NOT_MEASURED.",
+      "statistical_test": "Per-record paired code-length differences; one-sided sign-flip permutation test with 100000 permutations at alpha 0.05, reported beside but separate from metrics.confirmatory."
+    },
+    "T_ideal": {
+      "definition": "Code lengths as the sum of -log2 of the probability the policy's score distribution assigns to the oracle arm (softmin of negated scores at a temperature fixed on DEV), plus ideal L(M|G).",
+      "status": "NOT_RUN"
+    },
+    "T_real": {
+      "definition": "Actual bits under the P encoding for B and M computed by an .om coder in the evaluation unit; valid only after a round-trip check (decode reproduces the chosen arm sequence).",
+      "requires": [
+        "om_coder_round_trip"
+      ],
+      "status": "NOT_RUN"
+    },
+    "energy": {
+      "status": "NOT_MEASURED",
+      "instrument": "none declared",
+      "reconciliation": "Required before any T/J: measured joules reconciled against an independent meter for the same interval."
+    },
+    "tj": {
+      "allowed": false,
+      "reason": "No energy instrument is declared and no joules are measured; T/J is not reported."
+    },
+    "attribution": "One joint gain under one profile is counted once; it is never minted per contributor."
+  },
+  "claims": [
+    {
+      "id": "sealed_cost_vs_fixed_rule",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "controls_do_not_pass",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "provenance_random_init_only",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "pressure_h3_reported",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "turing_scientific",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "deployment_promotion",
+      "status": "NOT_RUN"
+    }
+  ],
+  "claim_rules": [
+    "A GO here is a development result on one host; it is not a promotion of the scorer into the consumer, which needs its own omega-mv review.",
+    "Host-only results are development results, never hardware qualification; GB10 stays NOT_RUN.",
+    "Fixture (SYNTHETIC) evidence and real-record evidence are never mixed in one number.",
+    "A missing sealed run, a void sealed set or a missing baseline is INCONCLUSIVE or NOT_RUN, never PASS.",
+    "Simulated time or energy is never reported as measured."
+  ],
+  "out_of_scope_here": [
+    "ORIG-4 shadow advice inside the consumer (omega-mv#731): needs its own prereg once the scorer has a GO.",
+    "A second-operator sealed holdout: not available on this machine; stated as a caveat, not solved here.",
+    "Core class 2 (other): absent from the owner run; a class absent from TRAIN is never gated."
+  ]
+}

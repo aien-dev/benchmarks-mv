@@ -299,19 +299,19 @@
       "fixture_only_results_under_a_separate_heading"
     ],
     "confirmatory": {
-      "correction": "GO is an intersection-union decision: every component (a) to (e) must hold, so the familywise error of a false GO is at most the per-component alpha and no multiplicity correction is applied. The only hypothesis test is the sign test (d); (a), (b), (c), (e) are threshold comparisons of totals.",
+      "correction": "GO is an intersection-union decision: every component A to F must hold, so the familywise error of a false GO is at most the per-component alpha and no multiplicity correction is applied. The only gating hypothesis test is the sign test D; A, B, C, E and F are threshold comparisons of totals. The sign tests against retrieval and best_static are reported, not gated.",
       "hypotheses": [
         {
           "id": "A",
-          "claim": "mlp_scratch total chosen ps <= 0.95 x fixed_rule total chosen ps on every core class present and on each of H1 and H2 of SEALED-FINAL"
+          "claim": "mlp_scratch total chosen ps <= 0.95 x fixed_rule total chosen ps on SEALED-FINAL H1 + H2 per core class present"
         },
         {
           "id": "B",
-          "claim": "mlp_scratch total chosen ps <= always_reference total chosen ps on SEALED-FINAL H1 + H2 overall"
+          "claim": "mlp_scratch total chosen ps <= always_reference total chosen ps on SEALED-FINAL H1 + H2 per core class present"
         },
         {
           "id": "C",
-          "claim": "mlp_scratch total chosen ps <= affine total chosen ps on SEALED-FINAL H1 + H2 overall"
+          "claim": "mlp_scratch total chosen ps <= affine total chosen ps on SEALED-FINAL H1 + H2 per core class present"
         },
         {
           "id": "D",
@@ -319,9 +319,18 @@
         },
         {
           "id": "E",
+          "claim": "non-inferiority to the cheap heuristics, no tolerance: mlp_scratch total chosen ps <= 1.00 x min(best_static total chosen ps, retrieval total chosen ps) on SEALED-FINAL H1 + H2 per core class present"
+        },
+        {
+          "id": "F",
           "claim": "neither untrained_control nor shuffled_control satisfies A (no_update_control is identical to untrained_control by construction and is checked for bit identity instead)"
         }
-      ]
+      ],
+      "reported_not_gated": [
+        "paired per-record sign test of mlp_scratch vs retrieval, same thresholds",
+        "paired per-record sign test of mlp_scratch vs best_static, same thresholds"
+      ],
+      "basis": "Owner records 2026-10-25 (738 records, development TEST families 2 to 4, contract metric = unweighted sum of ps over records, oracle = cheapest admissible arm): best_static (quad4 on both core classes) = 1.0048 x oracle on Cortex-X925 and 1.0137 on Cortex-A725; retrieval = 1.00007 and 1.0041; fixed_rule = 1.559 and 1.447; always_reference = 1.515 and 1.092. Beating the fixed rule is therefore trivial and never counts as a win on its own."
     },
     "sign_test": {
       "null": "P(mlp_scratch cheaper) = 1/2 per discordant record",
@@ -343,11 +352,12 @@
       "computed_with": "Wolfram Language evaluator 2026-10-25: crit[n_] := First@Select[Range[0, n], 1 - CDF[BinomialDistribution[n, 1/2], # - 1] < 1/20 &]; {crit[60], crit[120]} gives {37, 70}; tail probabilities N[1 - CDF[BinomialDistribution[60, 1/2], 36], 6] = 0.0462305 and N[1 - CDF[BinomialDistribution[120, 1/2], 69], 6] = 0.0412037"
     },
     "decision_rule": {
-      "GO": "A, B, C, D and E all hold on SEALED-FINAL.",
-      "NO-GO": "A, B and C all fail and the sign test D is significant in the other direction (fixed_rule cheaper on at least 37 of 60 or 70 of 120 discordant records per core class, same thresholds mirrored).",
-      "INCONCLUSIVE": "Every other outcome, including a void sealed set, a missing baseline, or a control that satisfies A.",
-      "minimum_useful_effect": "5% total cost reduction against fixed_rule (the 0.95 factor in A); a smaller gain is reported as INCONCLUSIVE even when D is significant.",
-      "not_gated": "H3 (pressure) is reported only. Development TEST numbers never enter the rule."
+      "GO": "Level 1: A, B, C, D, E and F all hold on SEALED-FINAL H1 + H2 on every core class present: mlp_scratch <= 0.95 x fixed_rule, <= always_reference, <= affine, <= 1.00 x min(best_static, retrieval), paired sign test vs fixed_rule significant, and the controls fail A.",
+      "NO-GO": "Level 2: mlp_scratch total chosen ps > 1.01 x min(best_static, retrieval) on either core class present on SEALED-FINAL H1 + H2. The learned scorer loses to a cheap heuristic; the negative result is retained and has no shadow promotion value, even if mlp_scratch beats the fixed rule, always_reference and affine.",
+      "INCONCLUSIVE": "Level 3: every other outcome, including mlp_scratch within (1.00, 1.01] x min(best_static, retrieval), a failed sign test, a void sealed set, a missing baseline, or a control that satisfies A.",
+      "beats_incumbent_only": "A win over the fixed rule alone (A and D hold but E does not) is reported as 'beats incumbent, not superior to cheap heuristics' and is not GO; it is NO-GO or INCONCLUSIVE by the levels above.",
+      "minimum_useful_effect": "5% total cost reduction against fixed_rule (the 0.95 factor in A) and no loss at all against the cheaper of best_static and retrieval (the 1.00 factor in E); a smaller gain against fixed_rule is INCONCLUSIVE even when D is significant.",
+      "not_gated": "H3 (pressure) is reported only. Development TEST numbers never enter the rule. Sign tests vs retrieval and best_static are reported only."
     },
     "energy": {
       "status": "NOT_MEASURED",

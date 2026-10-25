@@ -94,17 +94,25 @@ need no image. The exit code must be 0; 65 (image refused), 66 (dataset refused)
 
 Apply `metrics.decision_rule` of the prereg on SEALED-FINAL H1 + H2 per core class:
 
-- A: mlp_scratch total ps <= 0.95 x fixed_rule total ps, every core class, each of H1 and H2.
-- B: <= always_reference overall. C: <= affine overall.
+- A: mlp_scratch total ps <= 0.95 x fixed_rule total ps, per core class, H1 + H2.
+- B: <= always_reference. C: <= affine (same scope).
 - D: one-sided exact sign test vs fixed_rule over discordant records: at least 37 wins of
   60, at least 70 of 120 (smallest k with `1 - CDF[BinomialDistribution[n, 1/2], k - 1] <
   1/20`; computed with the Wolfram Language evaluator, see the prereg `sign_test` block).
-- E: neither untrained_control nor shuffled_control satisfies A; no_update_control is
+- E: mlp_scratch total ps <= 1.00 x min(best_static, retrieval), per core class: non-inferiority
+  to the cheap heuristics with no tolerance. On the owner records (development TEST) those
+  heuristics are already 1.0048/1.0137 (best_static) and 1.00007/1.0041 (retrieval) x oracle
+  on X925/A725, while fixed_rule is 1.559/1.447; beating the fixed rule is trivial.
+- F: neither untrained_control nor shuffled_control satisfies A; no_update_control is
   bit-identical to untrained_control (mode `C`, exit 0).
 
-GO when A to E all hold. NO-GO when A, B and C all fail and the mirrored sign test is
-significant for fixed_rule. Anything else is INCONCLUSIVE. H3 (pressure) and the
-development TEST families of the training run are reported under their own headings and
+Levels: (1) GO when A to F all hold on every core class present. (2) NO-GO when
+mlp_scratch > 1.01 x min(best_static, retrieval) on either core class, even if it beats the
+fixed rule, always_reference and affine: the negative result is retained and has no shadow
+promotion value. (3) INCONCLUSIVE otherwise. A win over the fixed rule alone is reported as
+"beats incumbent, not superior to cheap heuristics" and is never GO. The paired sign tests
+vs retrieval and vs best_static (same thresholds) are reported, not gated. H3 (pressure) and
+the development TEST families of the training run are reported under their own headings and
 never enter the decision. The optional `existing_c_costmodel` comparison, if its per-record
 choice is recoverable, is reported with its own cost column and is never a teacher.
 

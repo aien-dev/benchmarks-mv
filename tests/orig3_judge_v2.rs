@@ -196,3 +196,24 @@ fn refuses_malformed_and_inconsistent_input() {
     assert_eq!(code, 2);
     assert!(err.contains("differs between files"), "{err}");
 }
+
+#[test]
+fn committed_v2_evidence_reproduces_judge_out() {
+    let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("evidence/ORIG3-SELECTOR-v2");
+    let out = Command::new(env!("CARGO_BIN_EXE_bench_orig3_judge_v2"))
+        .arg("--mlp")
+        .arg(dir.join("v2-mlp.records"))
+        .arg("--shuffled")
+        .arg(dir.join("v2-shuffled.records"))
+        .arg("--untrained")
+        .arg(dir.join("v2-untrained.records"))
+        .arg("--overhead-dir")
+        .arg(dir.join("overhead"))
+        .args(["--train-wall-ms", "10017", "--collect-wall-ms", "70575"])
+        .output()
+        .expect("run bench_orig3_judge_v2");
+    let want = fs::read_to_string(dir.join("judge.out")).expect("judge.out");
+    assert_eq!(String::from_utf8(out.stdout).unwrap(), want);
+    assert_eq!(out.status.code(), Some(0));
+    assert!(want.ends_with("ORIG3_V2_VERDICT=NO-GO\n"));
+}

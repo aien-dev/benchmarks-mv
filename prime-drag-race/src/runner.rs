@@ -136,6 +136,14 @@ fn record(
 }
 
 pub fn run(a: &RunArgs) -> Result<RunResult, String> {
+    // `run` produces qualification receipts, not smoke or audit-only verdicts.
+    // Keep the frozen protocol in CONTRACT.md authoritative at the API boundary,
+    // even for callers that bypass the CLI defaults.
+    if a.impls.is_empty() || a.audit_passes != 5 || a.warmup != 1 || a.trials != 10
+        || !a.min_seconds.is_finite() || a.min_seconds < 5.0
+    {
+        return Err("qualification requires implementations, one audit (K=5), one warm-up, 10 timed trials and min_seconds >= 5".into());
+    }
     let evidence = check_evidence_dir(&a.evidence_dir)?;
     fs::create_dir_all(evidence.join("blobs")).map_err(|e| e.to_string())?;
     let io = |e: std::io::Error| e.to_string();

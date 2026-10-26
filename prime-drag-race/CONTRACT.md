@@ -74,6 +74,12 @@ Per trial the runner records passes per second, the raw line, the report, and th
 before and after. Statistics (median, min, max, mean, sample standard deviation, coefficient of
 variation of passes per second) are computed only when every audit and trial passed.
 
+`prime_race run` emits qualification receipts only for this frozen protocol:
+exactly K=5, one warm-up, 10 timed trials and a finite minimum of at least 5
+seconds, with at least one implementation. Nonconforming options are refused
+before evidence is written; use `prime_race verify` for a bounded correctness
+check rather than calling an audit-only run a trial PASS.
+
 ## Correctness gates (before any speed number)
 
 1. Exit code 0, exactly one valid stdout line, status COMPLETE, passes >= 1, elapsed >= min seconds.

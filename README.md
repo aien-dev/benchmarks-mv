@@ -95,7 +95,7 @@ On the Spark on 2026-10-19 with the sibling in place: `verify`, `report`, `bench
 
 ### How changes are tested
 
-The Spark is the only test judge for this repository. For each pull request head, a worker on the Spark runs the gates in `tests/gates/` that the change touches, plus the always-run gates in `.aien/always`, signs the result and publishes it to [aien-receipts/benchmarks](https://github.com/aien-dev/aien-receipts/tree/main/benchmarks). The one GitHub check, `AIEN Verification` (`.github/workflows/aien-verification.yml`), only checks that signed bundle; it does not build or test this repository's code. The full process, including how a pull request gets merged, is in [docs/PIPELINE.md](docs/PIPELINE.md).
+The `AIEN Checks` GitHub job on pull requests and `main` is advisory. It runs `crumb verify` and, for enrolled repositories, portable smoke gates from the base ref; it does **not** download a signed Spark bundle or attest that the full gate set ran. On `alpha/*` tag pushes, `AIEN Alpha` verifies a full signed Spark bundle for a commit on `main`. The Spark judge and signed receipts remain available for qualification. See [docs/PIPELINE.md](docs/PIPELINE.md) for the current process and the historical PR bridge.
 
 The gates, each a step of `tests/gates/run.sh`:
 

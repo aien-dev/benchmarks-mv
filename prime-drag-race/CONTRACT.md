@@ -74,6 +74,14 @@ Per trial the runner records passes per second, the raw line, the report, and th
 before and after. Statistics (median, min, max, mean, sample standard deviation, coefficient of
 variation of passes per second) are computed only when every audit and trial passed.
 
+`prime_race run` emits qualification receipts only for the frozen counts/timing:
+exactly K=5, one warm-up, 10 timed trials and a finite minimum of at least 5
+seconds, with at least one implementation. It also refuses a missing or empty
+operator quiet flag before writing evidence. A nonempty file is necessary
+recorded context, **not** proof of an actually exclusive machine; the owner
+must authorize and maintain that window separately. Use `prime_race verify`
+for a bounded correctness check rather than calling an audit-only run PASS.
+
 ## Correctness gates (before any speed number)
 
 1. Exit code 0, exactly one valid stdout line, status COMPLETE, passes >= 1, elapsed >= min seconds.

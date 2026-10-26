@@ -94,6 +94,27 @@ fn script(f: &Fake) -> PathBuf {
     fs::set_permissions(&p, fs::Permissions::from_mode(0o755)).unwrap();
     p
 }
+// A deterministic fixture for testing the frozen receipt path. These reported
+// elapsed values are synthetic and stay inside the temporary test directory.
+fn protocol_script() -> PathBuf {
+    let d = dir();
+    let mut timed: serde_json::Value = serde_json::from_str(&report("aien-fake", 10, 5.5, "timed")).unwrap();
+    timed["min_seconds"] = json!(5.0);
+    fs::write(d.join("timed-report"), timed.to_string()).unwrap();
+    fs::write(d.join("timed-line"), line("aien-fake", 10, 5.5)).unwrap();
+    let audit = report("aien-fake", 5, 0.2, "audit");
+    fs::write(d.join("audit-report"), audit).unwrap();
+    fs::write(d.join("audit-bitmap"), canonical_bytes(LIMIT).repeat(5)).unwrap();
+    fs::write(d.join("timed-bitmap"), canonical_bytes(LIMIT)).unwrap();
+    let body = format!(
+        "#!/bin/sh\nB= R= K=\nwhile [ $# -gt 0 ]; do case \"$1\" in --bitmap-out) B=\"$2\"; shift;; --report-out) R=\"$2\"; shift;; --audit-passes) K=\"$2\"; shift;; esac; shift; done\nif [ -n \"$K\" ]; then cp '{d}/audit-bitmap' \"$B\"; cp '{d}/audit-report' \"$R\"; else cp '{d}/timed-bitmap' \"$B\"; cp '{d}/timed-report' \"$R\"; cat '{d}/timed-line'; fi\n",
+        d = d.display()
+    );
+    let p = d.join("impl.sh");
+    fs::write(&p, body).unwrap();
+    fs::set_permissions(&p, fs::Permissions::from_mode(0o755)).unwrap();
+    p
+}
 
 fn check(f: &Fake, audit: Option<u32>) -> Result<(), Reject> {
     let p = script(f);
@@ -282,8 +303,8 @@ fn verify_subcommand_logic_and_run_receipt() {
     let out = verify(&spec, &[LIMIT + 2], 3);
     assert_eq!(out.failures.len(), 1);
 
-    // run: audit uses the same limit, so give a script that handles both modes via two bitmaps is
-    // not possible with fixtures; use trials=0 warmup=0 to exercise the audit + receipt path.
+    // run is a qualification command, not an audit-only smoke command.
+    // A valid audit with no timed trials must never produce a PASS receipt.
     let ev = std::env::temp_dir().join(format!("pr-ev-{}-{}", std::process::id(), N.fetch_add(1, Ordering::SeqCst)));
     let args = RunArgs {
         impls: vec![spec],
@@ -299,11 +320,57 @@ fn verify_subcommand_logic_and_run_receipt() {
         quiet_file: "/nonexistent".into(),
         argv: vec!["prime_race".into()],
     };
+    assert!(run(&args).is_err(), "an audit-only run must not qualify as PASS");
+    assert!(!ev.exists(), "rejected protocol must not write a receipt");
+}
+
+#[test]
+fn frozen_run_protocol_refuses_shortcuts_and_accepts_complete_fixture() {
+    let spec = ImplSpec { name: "fake".into(), path: protocol_script(), tags: tags() };
+    let ev = std::env::temp_dir().join(format!("pr-ev-{}-{}", std::process::id(), N.fetch_add(1, Ordering::SeqCst)));
+    let quiet = ev.with_extension("quiet");
+    let mut args = RunArgs {
+        impls: vec![spec],
+        trials: 10,
+        warmup: 1,
+        limit: LIMIT,
+        min_seconds: 5.0,
+        audit_passes: 5,
+        evidence_dir: ev.clone(),
+        sources: BTreeMap::new(),
+        builds: BTreeMap::new(),
+        runner_commit: Some("test".into()),
+        quiet_file: quiet.clone(),
+        argv: vec!["prime_race".into()],
+    };
+    args.trials = 0;
+    assert!(run(&args).is_err());
+    args.trials = 10;
+    args.warmup = 0;
+    assert!(run(&args).is_err());
+    args.warmup = 1;
+    args.audit_passes = 3;
+    assert!(run(&args).is_err());
+    args.audit_passes = 5;
+    args.min_seconds = f64::NAN;
+    assert!(run(&args).is_err());
+    args.min_seconds = 1.0;
+    assert!(run(&args).is_err());
+    assert!(!ev.exists(), "invalid protocol never writes qualification evidence");
+    args.min_seconds = 5.0;
+    assert!(run(&args).err().unwrap().contains("quiet flag"), "missing operator marker must refuse");
+    fs::write(&quiet, "").unwrap();
+    assert!(run(&args).err().unwrap().contains("empty"), "empty operator marker must refuse");
+    assert!(!ev.exists());
+    fs::write(&quiet, "offline test fixture, not proof of exclusive hardware").unwrap();
     let r = run(&args).unwrap();
     assert!(r.pass, "{}", r.summary);
-    let body = fs::read_to_string(&r.receipt_path).unwrap();
-    assert!(body.contains("aien-prime-race/receipt/v1"));
+    let v: serde_json::Value = serde_json::from_str(&fs::read_to_string(&r.receipt_path).unwrap()).unwrap();
+    assert_eq!(v["verdict"], "PASS");
+    assert_eq!(v["protocol"]["trials"], 10);
+    assert!(v["summary"]["fake"].is_object());
     let _ = fs::remove_dir_all(&ev);
+    let _ = fs::remove_file(&quiet);
 }
 
 #[test]
@@ -311,18 +378,20 @@ fn run_failure_keeps_evidence_and_no_stats() {
     let f = audit_fake(true);
     let spec = ImplSpec { name: "fake".into(), path: script(&f), tags: tags() };
     let ev = std::env::temp_dir().join(format!("pr-ev-{}-{}", std::process::id(), N.fetch_add(1, Ordering::SeqCst)));
+    let quiet = ev.with_extension("quiet");
+    fs::write(&quiet, "offline fixture").unwrap();
     let args = RunArgs {
         impls: vec![spec],
-        trials: 2,
-        warmup: 0,
+        trials: 10,
+        warmup: 1,
         limit: LIMIT,
-        min_seconds: MIN,
-        audit_passes: 3,
+        min_seconds: 5.0,
+        audit_passes: 5,
         evidence_dir: ev.clone(),
         sources: BTreeMap::new(),
         builds: BTreeMap::new(),
         runner_commit: Some("test".into()),
-        quiet_file: "/nonexistent".into(),
+        quiet_file: quiet.clone(),
         argv: vec![],
     };
     let r = run(&args).unwrap();
@@ -332,6 +401,7 @@ fn run_failure_keeps_evidence_and_no_stats() {
     assert!(v["summary"].is_null());
     assert!(fs::read_dir(ev.join("blobs")).unwrap().count() > 0);
     let _ = fs::remove_dir_all(&ev);
+    let _ = fs::remove_file(&quiet);
 }
 
 #[test]

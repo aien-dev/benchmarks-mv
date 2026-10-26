@@ -144,6 +144,13 @@ pub fn run(a: &RunArgs) -> Result<RunResult, String> {
     {
         return Err("qualification requires implementations, one audit (K=5), one warm-up, 10 timed trials and min_seconds >= 5".into());
     }
+    // A marker is necessary evidence of the operator's quiet window, not proof
+    // that the machine was actually exclusive; that remains an operator gate.
+    let quiet = fs::read_to_string(&a.quiet_file)
+        .map_err(|e| format!("quiet flag {} is not readable: {e}", a.quiet_file.display()))?;
+    if quiet.trim().is_empty() {
+        return Err(format!("quiet flag {} is empty", a.quiet_file.display()));
+    }
     let evidence = check_evidence_dir(&a.evidence_dir)?;
     fs::create_dir_all(evidence.join("blobs")).map_err(|e| e.to_string())?;
     let io = |e: std::io::Error| e.to_string();

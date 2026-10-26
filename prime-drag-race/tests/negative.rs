@@ -323,10 +323,12 @@ fn verify_subcommand_logic_and_run_receipt() {
     assert!(run(&args).is_err(), "an audit-only run must not qualify as PASS");
     assert!(!ev.exists(), "rejected protocol must not write a receipt");
 }
+
 #[test]
 fn frozen_run_protocol_refuses_shortcuts_and_accepts_complete_fixture() {
     let spec = ImplSpec { name: "fake".into(), path: protocol_script(), tags: tags() };
     let ev = std::env::temp_dir().join(format!("pr-ev-{}-{}", std::process::id(), N.fetch_add(1, Ordering::SeqCst)));
+    let quiet = ev.with_extension("quiet");
     let mut args = RunArgs {
         impls: vec![spec],
         trials: 10,
@@ -338,7 +340,7 @@ fn frozen_run_protocol_refuses_shortcuts_and_accepts_complete_fixture() {
         sources: BTreeMap::new(),
         builds: BTreeMap::new(),
         runner_commit: Some("test".into()),
-        quiet_file: "/nonexistent".into(),
+        quiet_file: quiet.clone(),
         argv: vec!["prime_race".into()],
     };
     args.trials = 0;
@@ -356,6 +358,11 @@ fn frozen_run_protocol_refuses_shortcuts_and_accepts_complete_fixture() {
     assert!(run(&args).is_err());
     assert!(!ev.exists(), "invalid protocol never writes qualification evidence");
     args.min_seconds = 5.0;
+    assert!(run(&args).err().unwrap().contains("quiet flag"), "missing operator marker must refuse");
+    fs::write(&quiet, "").unwrap();
+    assert!(run(&args).err().unwrap().contains("empty"), "empty operator marker must refuse");
+    assert!(!ev.exists());
+    fs::write(&quiet, "offline test fixture, not proof of exclusive hardware").unwrap();
     let r = run(&args).unwrap();
     assert!(r.pass, "{}", r.summary);
     let v: serde_json::Value = serde_json::from_str(&fs::read_to_string(&r.receipt_path).unwrap()).unwrap();
@@ -363,6 +370,7 @@ fn frozen_run_protocol_refuses_shortcuts_and_accepts_complete_fixture() {
     assert_eq!(v["protocol"]["trials"], 10);
     assert!(v["summary"]["fake"].is_object());
     let _ = fs::remove_dir_all(&ev);
+    let _ = fs::remove_file(&quiet);
 }
 
 #[test]
@@ -370,6 +378,8 @@ fn run_failure_keeps_evidence_and_no_stats() {
     let f = audit_fake(true);
     let spec = ImplSpec { name: "fake".into(), path: script(&f), tags: tags() };
     let ev = std::env::temp_dir().join(format!("pr-ev-{}-{}", std::process::id(), N.fetch_add(1, Ordering::SeqCst)));
+    let quiet = ev.with_extension("quiet");
+    fs::write(&quiet, "offline fixture").unwrap();
     let args = RunArgs {
         impls: vec![spec],
         trials: 10,
@@ -381,7 +391,7 @@ fn run_failure_keeps_evidence_and_no_stats() {
         sources: BTreeMap::new(),
         builds: BTreeMap::new(),
         runner_commit: Some("test".into()),
-        quiet_file: "/nonexistent".into(),
+        quiet_file: quiet.clone(),
         argv: vec![],
     };
     let r = run(&args).unwrap();
@@ -391,6 +401,7 @@ fn run_failure_keeps_evidence_and_no_stats() {
     assert!(v["summary"].is_null());
     assert!(fs::read_dir(ev.join("blobs")).unwrap().count() > 0);
     let _ = fs::remove_dir_all(&ev);
+    let _ = fs::remove_file(&quiet);
 }
 
 #[test]

@@ -284,7 +284,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let pool_blocks = 20_000;
 
     println!("--- 1. Initializing Blackwell Batch Executor & Weights ---");
-    let model_path = PathBuf::from("/home/drakestapleton/.cache/huggingface/hub/models--TinyLlama--TinyLlama-1.1B-Chat-v1.0/snapshots/fe8a4ea1ffedaf415f4da2f062534de366a451e6/model.safetensors");
+    let hf_home = std::env::var_os("HF_HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| {
+            PathBuf::from(std::env::var_os("HOME").unwrap_or_default()).join(".cache/huggingface")
+        });
+    let model_path = hf_home.join("hub/models--TinyLlama--TinyLlama-1.1B-Chat-v1.0/snapshots/fe8a4ea1ffedaf415f4da2f062534de366a451e6/model.safetensors");
     let weights = if model_path.exists() {
         println!(
             "  Loading weights from safetensors checkpoint at {}",

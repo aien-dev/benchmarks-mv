@@ -179,7 +179,7 @@ Status words in a record (source: `src/evidence.rs`):
 
 ## Hardware
 
-All measurements here come from one NVIDIA DGX Spark (`spark-b87b`), Grace Blackwell GB10, aarch64. The withdrawn dataset `data/benchmarks_latest.json` records kernel `7.0.0-1019-nvidia` and `rustc 1.98.1 (48a229cea 2026-09-01)`. On 2026-10-19 the Spark reported the same kernel and compiler, a 4096-byte page size (`getconf PAGESIZE`) and 121 GiB of memory (`free -g`). Nothing in this repository measures or tests any other platform. Work across other machines is planned in issues #31 and #32 and has no results yet.
+All measurements here come from one NVIDIA DGX Spark (`spark`), Grace Blackwell GB10, aarch64. The withdrawn dataset `data/benchmarks_latest.json` records kernel `7.0.0-1019-nvidia` and `rustc 1.98.1 (48a229cea 2026-09-01)`. On 2026-10-19 the Spark reported the same kernel and compiler, a 4096-byte page size (`getconf PAGESIZE`) and 121 GiB of memory (`free -g`). Nothing in this repository measures or tests any other platform. Work across other machines is planned in issues #31 and #32 and has no results yet.
 
 ---
 

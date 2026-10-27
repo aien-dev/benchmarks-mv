@@ -4,7 +4,9 @@
 
 This repository holds AIEN's performance measurements and the Rust tools that take and check them. Every measurement in it comes from one machine, the NVIDIA DGX Spark (Grace Blackwell GB10, aarch64). It has two parts: the Prime Drag Race suite runner in [prime-drag-race/](prime-drag-race/CONTRACT.md), which builds on its own, and the main measurement harness (the `aien-benchmarks` crate at the root), which needs a sibling checkout to build (see [Build and test](#build-and-test)).
 
-AIEN does not compare itself with other people's systems. Speed is measured against the machine's physical limit and our own previous run, and correctness against our own reference.
+AIEN does not compare itself with other people's systems, with one exception. Speed is measured against the machine's physical limit and our own previous run, and correctness against our own reference.
+
+**Exception: same-machine head-to-head (bar P0, added 2026-10-27 on Drake's order).** llama.cpp and vLLM, each at its own current release built for sm_121, may be run against our stack on the same DGX Spark, with the same model (Qwen3.6-35B-A3B), the same prompts and the same measurement definition; the bar is defined in [omega-mv docs/OMEGA.md](https://github.com/aien-dev/omega-mv/blob/main/docs/OMEGA.md). Every number in such a table is measured by us on this machine and labelled that way, with raw logs and SHA-256 digests. The result is published whether we win or lose. Numbers published by others are never placed in the same table as ours, and nothing from the other systems enters our serving path. The 2026-10-15 withdrawals below stand; this exception does not restore them.
 
 ## Where this fits in AIEN
 

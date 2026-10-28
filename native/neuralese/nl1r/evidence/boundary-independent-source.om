@@ -1,0 +1,1379 @@
+note SPDX-License-Identifier: Apache-2.0
+note Host synthetic one-shot CLI: receiver-context-file expected-op expected-operand.
+note This harness cannot authorize effects or reserve a production microjob.
+om2 debug
+note Closed compiled ordinary Omega operations, never dynamically execute vector bytes.
+fn nlinc x uint to uint
+requires le x 16
+ensures le result 32
+ret add x 1
+end
+fn nldouble x uint to uint
+requires le x 16
+ensures le result 32
+ret mul x 2
+end
+fn nlident x uint to uint
+requires le x 16
+ensures le result 32
+ret x
+end
+text nlrhead "NL4R1 0 "
+text nlrtail " 1 1 0 1 0 "
+text nlrno "NL4R1 "
+text nlzeros " 0 0 0 0 0 0 0 0 0\n"
+text nlendl "\n"
+text nlspace " "
+fn nlout b view uchar * fd int to void
+pos = ulong 0
+while lt pos len b bound 8192
+r = write fd b pos sub len b pos
+if le r 0
+exit 81
+end
+pos = add pos ulong r
+end
+end
+fn nlnumber v uint fd int to void
+b = new uchar 10 0
+pos = ulong 10
+x = v
+while true bound 10
+pos = sub pos 1
+put b pos uchar add rem x 10 48
+x = div x 10
+if eq x 0
+break
+end
+end
+nlout part b pos sub 10 pos fd
+end
+fn nlfail code int to int
+nlout nlrno 2
+nlnumber uint code 2
+nlout nlzeros 2
+ret code
+end
+fn nlread fd int b edit uchar * to long
+pos = ulong 0
+while lt pos len b bound 5121
+r = read fd b pos sub len b pos
+if lt r 0
+ret r
+end
+if eq r 0
+break
+end
+pos = add pos ulong r
+end
+ret long pos
+end
+fn nlcontext c edit uchar 1025 to int
+path = new uchar 4096 0
+n = argread 1 path 0 4096
+if le n 0
+ret 80
+end
+fd = fopen path 0 ulong n 0 0
+if lt fd 0
+ret 80
+end
+r = nlread int fd c
+cl = fclose int fd
+if or ne r 1024 ne cl 0
+ret 80
+end
+ret 0
+end
+fn nlrequest e edit uint 16 to int
+argbuf = new uchar 2 0
+r = argread 2 argbuf 0 2
+if ne r 1
+ret 80
+end
+v = get argbuf 0
+if or lt v 49 gt v 51
+ret 80
+end
+put e 0 uint sub v 48
+r = argread 3 argbuf 0 2
+if ne r 1
+ret 80
+end
+v = get argbuf 0
+if or lt v 48 gt v 51
+ret 80
+end
+put e 1 uint sub v 48
+if eq get e 0 1
+put e 2 1
+end
+if eq get e 0 2
+put e 2 2
+end
+put e 3 1
+put e 4 1
+put e 5 1
+put e 6 4
+put e 7 1
+put e 8 0
+put e 9 1
+ret 0
+end
+fn nlexec p view uint 16 to void
+z = uint 0
+if eq get p 0 1
+z = nlinc get p 1
+end
+if eq get p 0 2
+z = nldouble get p 1
+end
+if eq get p 0 3
+z = nlident get p 1
+end
+nlout nlrhead 1
+for i ulong 3
+if ne i 0
+nlout nlspace 1
+end
+nlnumber get p i 1
+end
+nlout nlrtail 1
+nlnumber z 1
+nlout nlendl 1
+end
+note SPDX-License-Identifier: AGPL-3.0-only
+note Verification adapter, not a receiver or authority. Reuses unchanged NL4 functions.
+note Compose after host-proposal.om lines1..144, before pinned h/proposal/v/sha2.
+note CLI context-file predicted-bits trusted-target-bits task abstain frame-output-fd.
+note Trusted target is evaluator-owned and never flows back to sender or receiver.
+global BARG uchar 5
+global BCFG ulong 5
+fn barg ix ulong to ulong
+n = argread ix BARG 0 5
+if or le n 0 gt n 4
+exit 80
+end
+v = ulong 0
+for i ulong ulong n
+c = get BARG i
+if or lt c 48 gt c 57
+exit 80
+end
+v = add mul v 10 ulong sub c 48
+end
+ret v
+end
+fn bargs to int
+put BCFG 0 barg 2
+put BCFG 1 barg 3
+put BCFG 2 barg 4
+put BCFG 3 barg 6
+put BCFG 4 barg 5
+if or gt get BCFG 0 15 gt get BCFG 1 15
+ret 80
+end
+if or gt get BCFG 2 2 gt get BCFG 4 1
+ret 80
+end
+if or lt get BCFG 3 3 gt get BCFG 3 1023
+ret 80
+end
+if eq get BCFG 2 1
+if or gt get BCFG 0 1 gt get BCFG 1 1
+ret 80
+end
+end
+if eq get BCFG 4 1
+ret 2
+end
+if eq get BCFG 2 1
+put BCFG 2 1
+else
+put BCFG 2 2
+end
+ret 0
+end
+fn bheader frame edit uchar 1056 ctx view uchar 1025 to void
+for i ulong 1024
+put frame i get ctx i
+end
+note Fresh one-shot SYNTHETIC sequence, checked with existing lastseq0 rule.
+for i ulong 8
+put frame add 80 i uchar 0
+end
+put frame 87 uchar 1
+end
+fn bexpect e edit uint 16 value uint to void
+put e 0 3
+put e 1 value
+put e 3 1
+put e 4 1
+put e 5 1
+put e 6 4
+put e 7 1
+put e 9 1
+end
+fn bframe frame edit uchar 1056 value ulong to int
+f = new f64 4 0.0f64
+put f 0 1.0f64
+put f 1 1.0f64
+put f 2 f64 and value 1
+put f 3 f64 and shr value 1 1
+wire = new uchar 32 0
+rc = nlencode f wire
+if ne rc 0
+ret rc
+end
+for i ulong 32
+put frame add 1024 i get wire i
+end
+state = new ulong 40 0
+sha256_init state
+sha256_update state part frame 0 992
+sha256_update state part frame 1024 32
+sha256_final state part frame 992 32
+note Raw actual envelope bytes are audit output, not an execution receipt.
+z = write int get BCFG 3 frame 0 1056
+if ne z 1056
+ret 81
+end
+ret 0
+end
+fn bverify frame edit uchar 1056 ctx view uchar 1025 p edit uint 16 to int
+value = and shr get BCFG 0 mul get BCFG 4 2 3
+rc = bframe frame value
+if ne rc 0
+ret rc
+end
+now = lpbe64 ctx 64
+rc = lpvalid frame part ctx 0 1024 now 0
+if ne rc 0
+ret rc
+end
+rc = nlproposal frame p
+if ne rc 0
+ret rc
+end
+e = new uint 16 0
+sh = mul get BCFG 4 2
+want = and shr get BCFG 1 sh 3
+bexpect e uint want
+if not nlmatch p e
+ret 49
+end
+ret 0
+end
+fn main to int
+if ne argcnt 7
+ret nlfail 80
+end
+rc = bargs
+if ne rc 0
+ret nlfail rc
+end
+ctx = new uchar 1025 0
+frame = new uchar 1056 0
+props = new uint 32 0
+rc = nlcontext ctx
+if ne rc 0
+ret nlfail rc
+end
+bheader frame ctx
+p = new uint 16 0
+q = new uint 16 0
+for chunk ulong get BCFG 2
+put BCFG 4 chunk
+for i ulong 16
+put p i uint 0
+end
+rc = bverify frame ctx p
+if ne rc 0
+ret nlfail rc
+end
+for i ulong 16
+put props add mul chunk 16 i get p i
+end
+end
+note Every chunk must verify BEFORE any pure execution or execution receipt.
+for chunk ulong get BCFG 2
+for i ulong 16
+put q i get props add mul chunk 16 i
+end
+nlexec q
+end
+ret 0
+end
+note SPDX-License-Identifier: AGPL-3.0-only
+note NL1 G0 fixed eight-coordinate mathematical decoder, not a learned channel.
+note Input scores propose information only. No effects, threshold, or authority.
+global NM f64 8
+global NF f64 4
+global NT f64 4
+
+fn ndcol j ulong to ulong
+if eq j 0
+ret 1
+end
+if eq j 1
+ret 2
+end
+if eq j 2
+ret 4
+end
+ret 7
+end
+
+fn ndsign r ulong c ulong to f64
+x = and r c
+p = ulong 0
+for b ulong 3
+p = xor p and shr x b 1
+end
+if eq p 0
+ret 1.0f64
+end
+ret -1.0f64
+end
+
+fn ndelem r ulong j ulong to f64
+ret div ndsign r ndcol j fsqrt 8.0f64
+end
+
+fn nddec n ulong to int
+if ne n 8
+ret 1
+end
+note Ordered comparison rejects NaN, infinities, and outside the frozen range.
+for r ulong 8
+if not le fabs get NM r 4.0f64
+ret 2
+end
+end
+for j ulong 4
+v = 0.0f64
+for r ulong 8
+v = add v mul get NM r ndelem r j
+end
+put NT j v
+end
+for j ulong 4
+put NF j get NT j
+end
+ret 0
+end
+note SPDX-License-Identifier: Apache-2.0
+note NL4 consumes NL3 lpvalid and NL1 nddec; neither is execution authority.
+note Caller must run lpvalid against receiver-owned context before this decoder.
+note No host words, executable payload, capability, allocation from input or effects.
+note Concatenate after an om2 debug entry, NL1 hadamard.om and NL3 validator.om.
+fn nlencode f view f64 4 wire edit uchar 32 to int
+stage = new uint 8 0
+for i ulong 4
+if not and ge get f i 0.0f64 le get f i 1.0f64
+ret 50
+end
+end
+for i ulong 8
+v = 0.0f64
+for j ulong 4
+v = add v mul get f j ndelem i j
+end
+put stage i bitcast uint f32 v
+end
+for i ulong 8
+u = get stage i
+off = mul i 4
+for j ulong 4
+sh = mul sub ulong 3 j 8
+c = uchar and shr u sh 255
+put wire add off j c
+end
+end
+ret 0
+end
+fn nlbe32 a view uchar * off ulong to uint
+v = uint 0
+for i ulong 4
+v = or shl v 8 uint get a add off i
+end
+ret v
+end
+fn nlbit v f64 to int
+note Closed synthetic codebook tolerance; ambiguous and nonfinite scores refuse.
+if and ge v -0.0625f64 le v 0.0625f64
+ret 0
+end
+if and ge v 0.9375f64 le v 1.0625f64
+ret 1
+end
+ret -1
+end
+fn nlproposal a view uchar * p edit uint 16 to int
+note This function proposes only; it does not validate context, reserve or execute.
+b = new uint 4 0
+if lt len a 1024
+ret 40
+end
+if ne get a 5 1
+ret 41
+end
+dtype = get a 10
+width = uint 4
+if eq dtype 2
+width = 1
+else
+if ne dtype 1
+ret 41
+end
+end
+if ne len a add ulong 1024 ulong mul width 8
+ret 40
+end
+if or ne get a 11 1 ne nlbe32 a 24 8
+ret 42
+end
+if or ne nlbe32 a 16 mul width 8 ne nlbe32 a 20 8
+ret 42
+end
+if ne get a 101 0
+ret 43
+end
+if lt nlbe32 a 104 1
+ret 44
+end
+factor = 1.0f64
+zero = int 0
+if eq dtype 2
+scale = nlbe32 a 56
+zero = bitcast int nlbe32 a 60
+if or eq scale 0 ge scale 0x7f800000
+ret 45
+end
+if or lt zero -128 gt zero 127
+ret 45
+end
+factor = f64 bitcast f32 scale
+end
+for i ulong 8
+if eq dtype 1
+u = nlbe32 a add 1024 mul i 4
+note Exponent255 includes every NaN and infinity, without floating comparison.
+if eq and shr u 23 255 255
+ret 45
+end
+put NM i f64 bitcast f32 u
+else
+q = int get a add 1024 i
+if ge q 128
+q = sub q 256
+end
+put NM i mul f64 sub q zero factor
+end
+end
+r = nddec 8
+if ne r 0
+ret 46
+end
+for i ulong 4
+v = nlbit get NF i
+if lt v 0
+ret 47
+end
+put b i uint v
+end
+op = add get b 0 mul get b 1 2
+if eq op 0
+ret 48
+end
+arg = add get b 2 mul get b 3 2
+note All checks precede output writes: refusal preserves the caller's proposal.
+for i ulong 16
+put p i 0
+end
+put p 0 op
+put p 1 arg
+if eq op 1
+put p 2 1
+end
+if eq op 2
+put p 2 2
+end
+put p 3 1
+put p 4 1
+put p 5 1
+put p 6 4
+put p 7 1
+put p 8 0
+put p 9 1
+ret 0
+end
+fn nlmatch p view uint 16 e view uint 16 to bool
+note Independent receiver expectation, never sourced from the numerical message.
+for i ulong 16
+if ne get p i get e i
+ret false
+end
+end
+ret true
+end
+note SPDX-License-Identifier: Apache-2.0
+note LTP0 pure admission-template validator. No main, effects or authority.
+note Compose after om2 debug and before pinned om/tls/sha2.om.
+fn lpbe64 a view uchar * off ulong to ulong
+v = ulong 0
+for i ulong 8
+v = or shl v 8 ulong get a add off i
+end
+ret v
+end
+fn lpbe32 a view uchar * off ulong to ulong
+v = ulong 0
+for i ulong 4
+v = or shl v 8 ulong get a add off i
+end
+ret v
+end
+fn lpeq a view uchar * c view uchar * off ulong n ulong to bool
+for i ulong n
+p = add off i
+if ne get a p get c p
+ret false
+end
+end
+ret true
+end
+fn lpnonzero a view uchar * off ulong n ulong to bool
+v = uchar 0
+for i ulong n
+v = or v get a add off i
+end
+ret ne v 0
+end
+fn lpenums a view uchar * to bool
+if or lt get a 5 1 gt get a 5 2
+ret false
+end
+if or ne get a 6 1 ne get a 7 1
+ret false
+end
+if or ne get a 14 1 ne get a 15 0
+ret false
+end
+if or lt get a 100 1 gt get a 100 3
+ret false
+end
+if gt get a 101 2
+ret false
+end
+if or lt get a 102 2 gt get a 102 3
+ret false
+end
+ret true
+end
+fn lpquant a view uchar * to bool
+scale = lpbe32 a 56
+zero = lpbe32 a 60
+if eq get a 10 1
+if or ne get a 12 1 ne get a 13 0
+ret false
+end
+ret and eq scale 0x3f800000 eq zero 0
+end
+if eq get a 10 2
+if or ne get a 12 5 ne get a 13 1
+ret false
+end
+if or eq scale 0 ge scale 0x7f800000
+ret false
+end
+ret or le zero 127 ge zero 0xffffff80
+end
+ret false
+end
+fn lpshape a view uchar * to bool
+rank = ulong get a 11
+srank = ulong get a 103
+if or lt rank 1 gt rank 4
+ret false
+end
+if or lt srank 1 gt srank 4
+ret false
+end
+for i ulong 4
+sdim = lpbe32 a add 112 mul i 4
+if lt i srank
+if eq sdim 0
+ret false
+end
+else
+if ne sdim 0
+ret false
+end
+end
+end
+width = ulong 1
+if eq get a 10 1
+width = 4
+end
+prod = ulong 1
+stride = width
+for k ulong 4
+i = sub 3 k
+dim = lpbe32 a add 24 mul i 4
+st = lpbe32 a add 40 mul i 4
+if ge i rank
+if or ne dim 0 ne st 0
+ret false
+end
+else
+if or eq dim 0 gt dim 4096
+ret false
+end
+if gt prod div ulong 4096 dim
+ret false
+end
+if ne st stride
+ret false
+end
+prod = mul prod dim
+stride = mul prod width
+end
+end
+ret eq prod lpbe32 a 20
+end
+fn lpsize a view uchar * to bool
+n = lpbe32 a 16
+cap = lpbe32 a 108
+if or eq n 0 gt n 4096
+ret false
+end
+if or eq cap 0 gt cap 4096
+ret false
+end
+if gt n cap
+ret false
+end
+if ne len a add 1024 n
+ret false
+end
+width = ulong 1
+if eq get a 10 1
+width = 4
+end
+ret eq n mul lpbe32 a 20 width
+end
+fn lpids a view uchar * to bool
+if or eq lpbe32 a 88 0 eq lpbe32 a 96 0
+ret false
+end
+if eq lpbe32 a 104 0
+ret false
+end
+for i ulong 2
+if not lpnonzero a add 128 mul i 16 16
+ret false
+end
+end
+for i ulong 18
+if not lpnonzero a add 160 mul i 32 32
+ret false
+end
+end
+for i ulong 2
+if not lpnonzero a add 736 mul i 16 16
+ret false
+end
+end
+for i ulong 3
+if not lpnonzero a add 768 mul i 32 32
+ret false
+end
+end
+ret true
+end
+fn lpfinite a view uchar * to bool
+if eq get a 10 1
+n = lpbe32 a 20
+for i ulong n
+bits = lpbe32 a add 1024 mul i 4
+if eq and bits 0x7f800000 0x7f800000
+ret false
+end
+end
+end
+ret true
+end
+fn lphash a view uchar * to bool
+state = new ulong 40 0
+digest = new uchar 32 0
+sha256_init state
+sha256_update state part a 0 992
+sha256_update state part a 1024 sub len a 1024
+sha256_final state digest
+for i ulong 32
+if ne get digest i get a add 992 i
+ret false
+end
+end
+ret true
+end
+fn lpvalid a view uchar * c view uchar * now ulong lastseq ulong to int
+if or lt len a 1024 gt len a 5120
+ret 10
+end
+if ne len c 1024
+ret 10
+end
+if ne lpbe32 a 0 0x4c545030
+ret 11
+end
+if or ne get a 4 0 ne get a 8 4
+ret 11
+end
+if ne get a 9 0
+ret 11
+end
+if not lpenums a
+ret 12
+end
+if not lpquant a
+ret 13
+end
+if not lpshape a
+ret 14
+end
+if not lpsize a
+ret 15
+end
+for i ulong 128
+if ne get a add 864 i 0
+ret 16
+end
+end
+if not lpids a
+ret 17
+end
+issued = lpbe64 a 64
+expiry = lpbe64 a 72
+if or eq issued 0 gt issued now
+ret 18
+end
+if or le expiry now le expiry issued
+ret 18
+end
+if gt expiry lpbe64 c 72
+ret 18
+end
+if le lpbe64 a 80 lastseq
+ret 19
+end
+if not lpeq a c 0 16
+ret 20
+end
+if not lpeq a c 24 40
+ret 20
+end
+if not lpeq a c 88 776
+ret 20
+end
+if not lpfinite a
+ret 21
+end
+if not lphash a
+ret 22
+end
+ret 0
+end
+note SPDX-License-Identifier: Apache-2.0
+note om/tls/sha2.om: SHA-256, SHA-384, SHA-512 (FIPS 180-4) streaming, as an OM-2 library unit
+note (no om2 line, no main, no globals). Module code SH; functions sha2_*, sha256_*, sha384_*, sha512_*.
+note
+note API
+note   sha256_init c edit ulong *            c: 40 ulong cells (caller owns all state)
+note   sha256_update c edit ulong * m view uchar *   any length, any chunking
+note   sha256_final c edit ulong * o edit uchar *    writes 32 bytes (o shorter traps 3)
+note   sha384_* / sha512_* the same; final writes 48 / 64 bytes
+note   sha2_copy d edit ulong * s view ulong *       copies len s cells (a context snapshot)
+note   sha2_digest alg ulong m view uchar * o edit uchar * to ulong
+note     alg 256|384|512: one-shot digest into o, returns 32|48|64; any other alg returns 0, writes nothing
+note After final the context is spent (its state cells hold the last chaining value); init it again.
+note A context initialised for one algorithm must be used with that algorithm's update/final; the
+note common code reads the algorithm from cell 9, so sha256_update on a sha512 context hashes SHA-512.
+note
+note Context cells: 0..7 chaining value H (32-bit words zero-extended for SHA-256), 8 = bytes absorbed
+note mod 2^64, 9 = algorithm (256, 384, 512), 16..31 = pending block bytes packed big-endian (byte i
+note in cell 16 + i/8, bits 56 - 8*(i mod 8)), 10..15 and 32..39 = 0.
+note Constant time: every branch, loop count and index depends only on lengths and the algorithm,
+note never on message or state bytes. Local schedule/state/padding arrays are zeroed before return
+note (HMAC keys pass through them). omc emits plain AArch64; MUL/ADD/EOR/ROR/shift data-independent.
+note Message length: any length below 2^64 bytes; update cuts its input into runs of 2^25 bytes so no
+note loop passes 2^20 times (a rolled for traps 4 after 10^6 passes; the while bound 999999 of runs
+note allows inputs up to 999999 * 32 MiB per update call).
+
+note K{256}[0..64): first 32 bits of the fractional parts of the cube roots of the first 64 primes
+note (FIPS 180-4 4.2.2). Same values as om/sha256/sha256-om2.om; recomputed with Wolfram:
+note IntegerString[Floor[FractionalPart[N[CubeRoot[Prime[i]],60]]*2^32],16,8] for i = 1..64.
+fn sha2_k256 k edit uint 64 to void
+put k 0 0x428a2f98
+put k 1 0x71374491
+put k 2 0xb5c0fbcf
+put k 3 0xe9b5dba5
+put k 4 0x3956c25b
+put k 5 0x59f111f1
+put k 6 0x923f82a4
+put k 7 0xab1c5ed5
+put k 8 0xd807aa98
+put k 9 0x12835b01
+put k 10 0x243185be
+put k 11 0x550c7dc3
+put k 12 0x72be5d74
+put k 13 0x80deb1fe
+put k 14 0x9bdc06a7
+put k 15 0xc19bf174
+put k 16 0xe49b69c1
+put k 17 0xefbe4786
+put k 18 0x0fc19dc6
+put k 19 0x240ca1cc
+put k 20 0x2de92c6f
+put k 21 0x4a7484aa
+put k 22 0x5cb0a9dc
+put k 23 0x76f988da
+put k 24 0x983e5152
+put k 25 0xa831c66d
+put k 26 0xb00327c8
+put k 27 0xbf597fc7
+put k 28 0xc6e00bf3
+put k 29 0xd5a79147
+put k 30 0x06ca6351
+put k 31 0x14292967
+put k 32 0x27b70a85
+put k 33 0x2e1b2138
+put k 34 0x4d2c6dfc
+put k 35 0x53380d13
+put k 36 0x650a7354
+put k 37 0x766a0abb
+put k 38 0x81c2c92e
+put k 39 0x92722c85
+put k 40 0xa2bfe8a1
+put k 41 0xa81a664b
+put k 42 0xc24b8b70
+put k 43 0xc76c51a3
+put k 44 0xd192e819
+put k 45 0xd6990624
+put k 46 0xf40e3585
+put k 47 0x106aa070
+put k 48 0x19a4c116
+put k 49 0x1e376c08
+put k 50 0x2748774c
+put k 51 0x34b0bcb5
+put k 52 0x391c0cb3
+put k 53 0x4ed8aa4a
+put k 54 0x5b9cca4f
+put k 55 0x682e6ff3
+put k 56 0x748f82ee
+put k 57 0x78a5636f
+put k 58 0x84c87814
+put k 59 0x8cc70208
+put k 60 0x90befffa
+put k 61 0xa4506ceb
+put k 62 0xbef9a3f7
+put k 63 0xc67178f2
+end
+
+note K{512}[0..80): first 64 bits of the fractional parts of the cube roots of the first 80 primes
+note (FIPS 180-4 4.2.3). Wolfram: IntegerString[Floor[FractionalPart[N[CubeRoot[Prime[i]],60]]*2^64],16,16];
+note equal to the decimal table of omnet om/sha512/sha512.om.
+fn sha2_k512 k edit ulong 80 to void
+put k 0 0x428a2f98d728ae22
+put k 1 0x7137449123ef65cd
+put k 2 0xb5c0fbcfec4d3b2f
+put k 3 0xe9b5dba58189dbbc
+put k 4 0x3956c25bf348b538
+put k 5 0x59f111f1b605d019
+put k 6 0x923f82a4af194f9b
+put k 7 0xab1c5ed5da6d8118
+put k 8 0xd807aa98a3030242
+put k 9 0x12835b0145706fbe
+put k 10 0x243185be4ee4b28c
+put k 11 0x550c7dc3d5ffb4e2
+put k 12 0x72be5d74f27b896f
+put k 13 0x80deb1fe3b1696b1
+put k 14 0x9bdc06a725c71235
+put k 15 0xc19bf174cf692694
+put k 16 0xe49b69c19ef14ad2
+put k 17 0xefbe4786384f25e3
+put k 18 0x0fc19dc68b8cd5b5
+put k 19 0x240ca1cc77ac9c65
+put k 20 0x2de92c6f592b0275
+put k 21 0x4a7484aa6ea6e483
+put k 22 0x5cb0a9dcbd41fbd4
+put k 23 0x76f988da831153b5
+put k 24 0x983e5152ee66dfab
+put k 25 0xa831c66d2db43210
+put k 26 0xb00327c898fb213f
+put k 27 0xbf597fc7beef0ee4
+put k 28 0xc6e00bf33da88fc2
+put k 29 0xd5a79147930aa725
+put k 30 0x06ca6351e003826f
+put k 31 0x142929670a0e6e70
+put k 32 0x27b70a8546d22ffc
+put k 33 0x2e1b21385c26c926
+put k 34 0x4d2c6dfc5ac42aed
+put k 35 0x53380d139d95b3df
+put k 36 0x650a73548baf63de
+put k 37 0x766a0abb3c77b2a8
+put k 38 0x81c2c92e47edaee6
+put k 39 0x92722c851482353b
+put k 40 0xa2bfe8a14cf10364
+put k 41 0xa81a664bbc423001
+put k 42 0xc24b8b70d0f89791
+put k 43 0xc76c51a30654be30
+put k 44 0xd192e819d6ef5218
+put k 45 0xd69906245565a910
+put k 46 0xf40e35855771202a
+put k 47 0x106aa07032bbd1b8
+put k 48 0x19a4c116b8d2d0c8
+put k 49 0x1e376c085141ab53
+put k 50 0x2748774cdf8eeb99
+put k 51 0x34b0bcb5e19b48a8
+put k 52 0x391c0cb3c5c95a63
+put k 53 0x4ed8aa4ae3418acb
+put k 54 0x5b9cca4f7763e373
+put k 55 0x682e6ff3d6b2b8a3
+put k 56 0x748f82ee5defb2fc
+put k 57 0x78a5636f43172f60
+put k 58 0x84c87814a1f0ab72
+put k 59 0x8cc702081a6439ec
+put k 60 0x90befffa23631e28
+put k 61 0xa4506cebde82bde9
+put k 62 0xbef9a3f7b2c67915
+put k 63 0xc67178f2e372532b
+put k 64 0xca273eceea26619c
+put k 65 0xd186b8c721c0c207
+put k 66 0xeada7dd6cde0eb1e
+put k 67 0xf57d4f7fee6ed178
+put k 68 0x06f067aa72176fba
+put k 69 0x0a637dc5a2c898a6
+put k 70 0x113f9804bef90dae
+put k 71 0x1b710b35131c471b
+put k 72 0x28db77f523047d84
+put k 73 0x32caab7b40c72493
+put k 74 0x3c9ebe0a15c9bebc
+put k 75 0x431d67c49c100d4c
+put k 76 0x4cc5d4becb3e42b6
+put k 77 0x597f299cfc657e2a
+put k 78 0x5fcb6fab3ad6faec
+put k 79 0x6c44198c4a475817
+end
+
+note H(0) (FIPS 180-4 5.3.3 SHA-256, 5.3.4 SHA-384, 5.3.5 SHA-512). Wolfram: fractional parts of
+note sqrt(Prime[i]) * 2^32 (i 1..8), * 2^64 (i 1..8 for SHA-512, i 9..16 for SHA-384).
+note Any other alg traps 9 (caller contract).
+fn sha2_init c edit ulong * alg ulong to void
+for i ulong 40
+put c i 0
+end
+put c 9 alg
+if eq alg 256
+put c 0 0x6a09e667
+put c 1 0xbb67ae85
+put c 2 0x3c6ef372
+put c 3 0xa54ff53a
+put c 4 0x510e527f
+put c 5 0x9b05688c
+put c 6 0x1f83d9ab
+put c 7 0x5be0cd19
+ret
+end
+if eq alg 384
+put c 0 0xcbbb9d5dc1059ed8
+put c 1 0x629a292a367cd507
+put c 2 0x9159015a3070dd17
+put c 3 0x152fecd8f70e5939
+put c 4 0x67332667ffc00b31
+put c 5 0x8eb44a8768581511
+put c 6 0xdb0c2e0d64f98fa7
+put c 7 0x47b5481dbefa4fa4
+ret
+end
+if eq alg 512
+put c 0 0x6a09e667f3bcc908
+put c 1 0xbb67ae8584caa73b
+put c 2 0x3c6ef372fe94f82b
+put c 3 0xa54ff53a5f1d36f1
+put c 4 0x510e527fade682d1
+put c 5 0x9b05688c2b3e6c1f
+put c 6 0x1f83d9abfb41bd6b
+put c 7 0x5be0cd19137e2179
+ret
+end
+trap 9
+end
+
+note SHA-256 message schedule (FIPS 180-4 6.2.2 step 1) of the block m[o .. o+64).
+fn sha2_s256 w edit uint 64 m view uchar * o ulong to void
+q = ulong 0
+x = uint 0
+y = uint 0
+for i ulong 16 unroll
+q = add o mul i 4
+x = uint get m q
+x = or shl x 8 uint get m add q 1
+x = or shl x 8 uint get m add q 2
+put w i or shl x 8 uint get m add q 3
+end
+for i ulong 48 unroll
+x = get w add i 1
+y = get w add i 14
+x = add add get w i get w add i 9 xor xor rotr x 7 rotr x 18 shr x 3
+put w add i 16 add x xor xor rotr y 17 rotr y 19 shr y 10
+end
+end
+
+note SHA-256 rounds (6.2.2 steps 2-4). Ch(e,f,g) = g xor (e and (f xor g)); Maj(a,b,c) =
+note (a and b) or (c and (a or b)); Sigma1 = ROTR 6,11,25; Sigma0 = ROTR 2,13,22 (4.1.2).
+fn sha2_r256 s edit uint 8 w view uint 64 kt view uint 64 to void
+a = get s 0
+b = get s 1
+c = get s 2
+d = get s 3
+e = get s 4
+f = get s 5
+g = get s 6
+h = get s 7
+t = uint 0
+for i ulong 64 unroll
+h = add h get kt i
+h = add h get w i
+t = xor rotr e 6 rotr e 11
+t = xor t rotr e 25
+h = add h t
+h = add h xor g and e xor f g
+d = add d h
+t = xor rotr a 2 rotr a 13
+t = xor t rotr a 22
+h = add h t
+t = and c or a b
+h = add h or and a b t
+t = h
+h = g
+g = f
+f = e
+e = d
+d = c
+c = b
+b = a
+a = t
+end
+put s 0 add get s 0 a
+put s 1 add get s 1 b
+put s 2 add get s 2 c
+put s 3 add get s 3 d
+put s 4 add get s 4 e
+put s 5 add get s 5 f
+put s 6 add get s 6 g
+put s 7 add get s 7 h
+end
+
+note the whole 64-byte blocks of m (len m a multiple of 64, at most 2^25) into c's chaining value
+fn sha2_b256 c edit ulong * m view uchar * to void
+s = new uint 8 0
+w = new uint 64 0
+kt = new uint 64 0
+sha2_k256 kt
+for i ulong 8 unroll
+put s i uint get c i
+end
+for j ulong shr len m 6
+sha2_s256 w m shl j 6
+sha2_r256 s w kt
+end
+for i ulong 8 unroll
+put c i ulong get s i
+put s i 0
+end
+for i ulong 64
+put w i 0
+end
+end
+
+note SHA-512 message schedule (6.4.2 step 1) of the block m[o .. o+128); sigma0 = ROTR 1,8 SHR 7,
+note sigma1 = ROTR 19,61 SHR 6 (4.1.3).
+fn sha2_s512 w edit ulong 80 m view uchar * o ulong to void
+q = ulong 0
+x = ulong 0
+y = ulong 0
+for i ulong 16 unroll
+q = add o mul i 8
+x = ulong get m q
+x = or shl x 8 ulong get m add q 1
+x = or shl x 8 ulong get m add q 2
+x = or shl x 8 ulong get m add q 3
+x = or shl x 8 ulong get m add q 4
+x = or shl x 8 ulong get m add q 5
+x = or shl x 8 ulong get m add q 6
+put w i or shl x 8 ulong get m add q 7
+end
+for i ulong 64 unroll
+x = get w add i 1
+y = get w add i 14
+x = add add get w i get w add i 9 xor xor rotr x 1 rotr x 8 shr x 7
+put w add i 16 add x xor xor rotr y 19 rotr y 61 shr y 6
+end
+end
+
+note SHA-512 rounds (6.4.2 steps 2-4), a rolled loop (unroll allows at most 64 copies); Sigma1 = ROTR 14,18,41; Sigma0 = ROTR 28,34,39 (4.1.3).
+fn sha2_r512 s edit ulong 8 w view ulong 80 kt view ulong 80 to void
+a = get s 0
+b = get s 1
+c = get s 2
+d = get s 3
+e = get s 4
+f = get s 5
+g = get s 6
+h = get s 7
+t = ulong 0
+for i ulong 80
+h = add h get kt i
+h = add h get w i
+t = xor rotr e 14 rotr e 18
+t = xor t rotr e 41
+h = add h t
+h = add h xor g and e xor f g
+d = add d h
+t = xor rotr a 28 rotr a 34
+t = xor t rotr a 39
+h = add h t
+t = and c or a b
+h = add h or and a b t
+t = h
+h = g
+g = f
+f = e
+e = d
+d = c
+c = b
+b = a
+a = t
+end
+put s 0 add get s 0 a
+put s 1 add get s 1 b
+put s 2 add get s 2 c
+put s 3 add get s 3 d
+put s 4 add get s 4 e
+put s 5 add get s 5 f
+put s 6 add get s 6 g
+put s 7 add get s 7 h
+end
+
+note the whole 128-byte blocks of m (len m a multiple of 128, at most 2^25) into c
+fn sha2_b512 c edit ulong * m view uchar * to void
+s = new ulong 8 0
+w = new ulong 80 0
+kt = new ulong 80 0
+sha2_k512 kt
+for i ulong 8 unroll
+put s i get c i
+end
+for j ulong shr len m 7
+sha2_s512 w m shl j 7
+sha2_r512 s w kt
+end
+for i ulong 8 unroll
+put c i get s i
+put s i 0
+end
+for i ulong 80
+put w i 0
+end
+end
+
+note whole blocks of m (len m a multiple of the block size) in runs of at most 2^25 bytes
+fn sha2_run c edit ulong * m view uchar * to void
+n = len m
+q = ulong 0
+k = ulong 0
+while lt q n bound 999999
+k = sub n q
+if gt k 0x2000000
+k = 0x2000000
+end
+if eq get c 9 256
+sha2_b256 c part m q k
+else
+sha2_b512 c part m q k
+end
+q = add q k
+end
+end
+
+note pending byte i (i < 128) of the packed buffer
+fn sha2_bget c view ulong * i ulong to uchar
+x = shr get c add 16 shr i 3 sub 56 shl and i 7 3
+ret uchar and x 0xff
+end
+
+note set pending byte i of the packed buffer to v
+fn sha2_bput c edit ulong * i ulong v uchar to void
+q = add 16 shr i 3
+sh = sub 56 shl and i 7 3
+x = and get c q not shl ulong 0xff sh
+put c q or x shl ulong v sh
+end
+
+note the bytes m[0..k) into the buffer at bi (bi + k <= block size)
+fn sha2_fill c edit ulong * bi ulong m view uchar * k ulong to void
+for i ulong k
+sha2_bput c add bi i get m i
+end
+end
+
+fn sha2_update c edit ulong * m view uchar * to void
+blk = new uchar 128 0
+n = len m
+cnt = get c 8
+bs = ulong 128
+if eq get c 9 256
+bs = 64
+end
+bi = and cnt sub bs 1
+put c 8 add cnt n
+off = ulong 0
+if gt bi 0
+off = sub bs bi
+if lt n off
+off = n
+end
+sha2_fill c bi m off
+if eq add bi off bs
+for i ulong bs
+put blk i sha2_bget c i
+end
+sha2_run c part blk 0 bs
+for i ulong bs
+put blk i 0
+end
+end
+end
+nb = and sub n off not sub bs 1
+sha2_run c part m off nb
+off = add off nb
+sha2_fill c 0 part m off sub n off sub n off
+end
+
+note H(N) as big-endian bytes: 32 (SHA-256, 8 words of 32 bits), 48 (SHA-384, first 6 words), 64
+fn sha2_put c view ulong * o edit uchar * to ulong
+alg = get c 9
+sh = ulong 0
+if eq alg 256
+for i ulong 32
+sh = sub 24 shl and i 3 3
+put o i uchar and shr get c shr i 2 sh 0xff
+end
+ret 32
+end
+dl = ulong 64
+if eq alg 384
+dl = 48
+end
+for i ulong dl
+sh = sub 56 shl and i 7 3
+put o i uchar and shr get c shr i 3 sh 0xff
+end
+ret dl
+end
+
+note padding (FIPS 180-4 5.1.1 / 5.1.2): 0x80, zeros, the bit length big-endian in the last 8 (SHA-256)
+note or 16 (SHA-384/512) bytes of one or two blocks; returns the digest length
+fn sha2_fin c edit ulong * o edit uchar * to ulong
+p = new uchar 256 0
+bs = ulong 128
+ls = ulong 16
+if eq get c 9 256
+bs = 64
+ls = 8
+end
+cnt = get c 8
+k = and cnt sub bs 1
+for i ulong k
+put p i sha2_bget c i
+end
+put p k 0x80
+e = bs
+if ge add k ls bs
+e = shl bs 1
+end
+x = shl cnt 3
+for i ulong 8 unroll
+put p sub e add i 1 uchar and shr x mul i 8 0xff
+end
+if eq ls 16
+put p sub e 9 uchar shr cnt 61
+end
+sha2_run c part p 0 e
+for i ulong 256
+put p i 0
+end
+ret sha2_put c o
+end
+
+fn sha256_init c edit ulong * to void
+sha2_init c 256
+end
+
+fn sha384_init c edit ulong * to void
+sha2_init c 384
+end
+
+fn sha512_init c edit ulong * to void
+sha2_init c 512
+end
+
+fn sha256_update c edit ulong * m view uchar * to void
+sha2_update c m
+end
+
+fn sha384_update c edit ulong * m view uchar * to void
+sha2_update c m
+end
+
+fn sha512_update c edit ulong * m view uchar * to void
+sha2_update c m
+end
+
+fn sha256_final c edit ulong * o edit uchar * to void
+dl = sha2_fin c o
+end
+
+fn sha384_final c edit ulong * o edit uchar * to void
+dl = sha2_fin c o
+end
+
+fn sha512_final c edit ulong * o edit uchar * to void
+dl = sha2_fin c o
+end
+
+fn sha2_copy d edit ulong * s view ulong * to void
+for i ulong len s
+put d i get s i
+end
+end
+
+fn sha2_digest alg ulong m view uchar * o edit uchar * to ulong
+c = new ulong 40 0
+if ne alg 256
+if ne alg 384
+if ne alg 512
+ret 0
+end
+end
+end
+sha2_init c alg
+sha2_update c m
+dl = sha2_fin c o
+for i ulong 40
+put c i 0
+end
+ret dl
+end

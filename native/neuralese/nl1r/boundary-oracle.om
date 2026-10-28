@@ -1,0 +1,200 @@
+note Compose after io.om, arithmetic.om and judge.om through jreport (not main).
+note This post-reveal transport oracle cannot change frozen scientific metrics.
+note No output is released before all 240 producer rows and EOF validate.
+global BCases ulong 2400
+global BCount ulong 1
+text BRec "B,"
+text BOut "O,NL4R1 0 3 "
+text BTail " 0 1 1 0 1 0 "
+text BErr "E,NL4R1 "
+text BZeros " 0 0 0 0 0 0 0 0 0\n"
+text BDone "D\n"
+fn bjput row ulong col ulong v ulong to void
+put BCases add mul row 10 col v
+end
+fn bjget row ulong col ulong to ulong
+ret get BCases add mul row 10 col
+end
+fn bjkeep row ulong to void
+bjput row 0 get JR 0
+bjput row 1 get JR 49
+bjput row 2 get JR 1
+bjput row 3 get JC 1
+pred = ulong 0
+abst = ulong 0
+if eq get JR 1 2
+abst = 1
+else
+for j ulong 4
+if ge get JS j 0.5f64
+pred = or pred shl 1 j
+end
+if and jactive j lt fabs sub get JS j 0.5f64 0.1f64
+abst = 1
+end
+end
+end
+bjput row 4 pred
+bjput row 5 jtarget
+bjput row 6 abst
+bjput row 7 0
+end
+fn bjctrl pred ulong target ulong task ulong abst ulong kind ulong to void
+row = get BCount 0
+bjput row 0 row
+bjput row 3 task
+bjput row 4 pred
+bjput row 5 target
+bjput row 6 abst
+bjput row 7 kind
+put BCount 0 add row 1
+end
+fn bjexpect row ulong to void
+pred = bjget row 4
+target = bjget row 5
+task = bjget row 3
+abst = bjget row 6
+kind = bjget row 7
+rc = ulong 0
+frames = ulong 0
+if or gt task 2 or gt pred 15 gt target 15
+rc = 80
+end
+if and eq task 1 or gt pred 1 gt target 1
+rc = 80
+end
+if or eq kind 4 eq kind 5
+rc = 80
+end
+if eq rc 0
+if eq abst 1
+rc = 2
+else
+if eq kind 3
+rc = 80
+else
+frames = 1
+if eq kind 1
+rc = 11
+else
+if eq kind 2
+rc = 18
+else
+if ne and pred 3 and target 3
+rc = 49
+else
+if ne task 1
+frames = 2
+if ne and shr pred 2 3 and shr target 2 3
+rc = 49
+end
+end
+end
+end
+end
+end
+end
+end
+bjput row 8 rc
+bjput row 9 frames
+end
+fn bjprint row ulong to void
+bjexpect row
+jout BRec
+for i ulong 10
+if eq i 9
+jnumber bjget row i
+else
+jfield bjget row i
+end
+end
+jout JLF
+rc = bjget row 8
+if eq rc 0
+chunks = ulong 2
+if eq bjget row 3 1
+chunks = 1
+end
+for c ulong chunks
+v = and shr bjget row 4 mul c 2 3
+jout BOut
+jnumber v
+jout BTail
+jnumber v
+jout JLF
+end
+else
+jout BErr
+jnumber rc
+jout BZeros
+end
+jout BDone
+end
+fn bjtests to void
+bjctrl 6 6 2 0 0
+bjctrl 9 9 2 0 0
+bjctrl 0 0 2 0 0
+bjctrl 15 15 2 0 0
+bjctrl 1 1 1 0 0
+bjctrl 0 0 1 0 0
+bjctrl 6 2 2 0 0
+bjctrl 6 4 2 0 0
+bjctrl 1 0 1 0 0
+bjctrl 2 2 1 0 0
+bjctrl 1 1 3 0 0
+bjctrl 16 1 2 0 0
+bjctrl 6 6 2 1 0
+bjctrl 6 6 2 0 4
+bjctrl 6 6 2 0 3
+bjctrl 6 6 2 0 5
+bjctrl 6 6 2 0 1
+bjctrl 6 6 2 0 2
+for i ulong get BCount 0
+bjprint i
+end
+jout JEND
+end
+fn main to int
+note An extra argument selects fixed argument/envelope/abstention control cases.
+if eq argcnt 2
+bjtests
+ret 0
+end
+if ne argcnt 1
+jinvalid
+end
+jheader
+if ne get JC 0 2
+jinvalid
+end
+for i ulong 240
+group = jparse_row
+jwirecheck
+jgrade group
+bjkeep i
+end
+for group ulong 15
+if ne get Seen group 65535
+jinvalid
+end
+end
+jexpect 84
+jexpect 44
+start = jvalue 44
+finish = jvalue 10
+if or eq start 0 lt finish start
+jinvalid
+end
+jexpect 69
+jexpect 78
+jexpect 68
+jexpect 10
+if ne jnext -1
+jinvalid
+end
+for i ulong 240
+bjprint i
+end
+jout JEND
+ret 0
+end

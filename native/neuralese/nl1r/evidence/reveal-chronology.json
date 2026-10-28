@@ -1,0 +1,116 @@
+{
+  "schema": "NL1R-authorized-reveal/1",
+  "released_utc": "2026-10-28T23:00:31.612774+00:00",
+  "permission": "Main explicit resumption IRC after existing-NL4 freeze18b3d08; before this operation all raw/split/seed/aggregate remained sealed",
+  "custody_sha256": "39ce89eebff948ccc78f49f54564fa722efeaa8e618bda8bd0895f09d7ec2772",
+  "custody_reveal_bytes": 591,
+  "salt_split_seed_original_byte_identity": true,
+  "seed": 3729207599,
+  "trainmask": 63840,
+  "train_ids": [
+    5,
+    6,
+    8,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "test_ids": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    7,
+    9,
+    10
+  ],
+  "chronology": [
+    {
+      "role": "both-stage prereg",
+      "git_show": "c8aefbc6cf72ea2ca47fe4308bd867cb1a55e86c\n2026-10-28T17:08:28-05:00\ne4ab4afecd62272f86d67043f74ffc8153ae703e\nprereg(nl1r): freeze capacity and task protocols before learned runs\n"
+    },
+    {
+      "role": "judge/task-checkpoint source freeze",
+      "git_show": "1ffdbf15a4c405d3a80c7ba4c4c03a504dd3b340\n2026-10-28T17:23:28-05:00\n021b0740010b822e76ac93a6115e23f027768c63\nFreeze native task checkpoint interpretation before private execution\n"
+    },
+    {
+      "role": "all seven checkpoint/prediction commitment before native withheld score",
+      "git_show": "8a78e382bdae56dbaa5faac643bc86b471b4a8cd\n2026-10-28T17:24:00-05:00\n1ffdbf15a4c405d3a80c7ba4c4c03a504dd3b340\nCommit all frozen hidden checkpoints and predictions before scoring\n"
+    },
+    {
+      "role": "existing-NL4 adapter freeze before release",
+      "git_show": "18b3d08cdf383033e2c8d674a37325d11f010fc4\n2026-10-28T17:56:33-05:00\n1bae5bda767c9024c1408ae866c7993eb3d7deb0\nfeat(nl1r): freeze NL4 boundary verification adapter\n"
+    }
+  ],
+  "boundary_rebuild_before_custody_opening": "boundary-independent-build.json",
+  "all_pre_score_commitment_matches": [
+    {
+      "stage": "capacity",
+      "unit": 0,
+      "raw_sha256": "81a693b2c129a7226567ebf5673c43ad91b5fd2c33779f3c79d25526af3dfce2",
+      "checkpoint_sha256": "5b09a963ab1258858970050c46ec983a9ce73ad3c740e296768c59822fe5e664",
+      "raw_bytes": 19715,
+      "checkpoint_bytes": 312,
+      "matches_pre_score_commitment": true
+    },
+    {
+      "stage": "capacity",
+      "unit": 1,
+      "raw_sha256": "39139bb65d0b2203813b84dff54ecbc7b383490f01dc7f84a514ad23a6e995d3",
+      "checkpoint_sha256": "c744476f3943459c49fd3a75792d23af564184a74146bcd54f3ea138619aff68",
+      "raw_bytes": 20615,
+      "checkpoint_bytes": 384,
+      "matches_pre_score_commitment": true
+    },
+    {
+      "stage": "capacity",
+      "unit": 2,
+      "raw_sha256": "32f8ab5d5256b51dd8c3c31142c3a94730d78bea94d00473b9e57498192c4402",
+      "checkpoint_sha256": "7f5afba4157433dd8e8ebabbe03deabb09c549d999ba115b1c59eb3c0c0c20c7",
+      "raw_bytes": 20995,
+      "checkpoint_bytes": 728,
+      "matches_pre_score_commitment": true
+    },
+    {
+      "stage": "capacity",
+      "unit": 3,
+      "raw_sha256": "d5aba7d80ca3e315077063aa9a28eddf8d36aa76f4e5d18fc85db9f4d9bddf7f",
+      "checkpoint_sha256": "f5adac3d61820a2fcb75701108529410ae49a204807551b2a5e470c84cc338a7",
+      "raw_bytes": 12613,
+      "checkpoint_bytes": 64,
+      "matches_pre_score_commitment": true
+    },
+    {
+      "stage": "task",
+      "unit": 0,
+      "raw_sha256": "72d3ee6f398ee77e0fc1852133a1b9cd30db2ae1f7207e1be2fa4dd532e801d9",
+      "checkpoint_sha256": "f4e63cd8299fbb7dfa42e367ab34aed1fd22ee7bf6714d6e28b7aa06f59ba744",
+      "raw_bytes": 36024,
+      "checkpoint_bytes": 384,
+      "matches_pre_score_commitment": true
+    },
+    {
+      "stage": "task",
+      "unit": 1,
+      "raw_sha256": "78d22343f2cc84202edab1e69dca824bed57b8b4912579bdf05574ec00132830",
+      "checkpoint_sha256": "3248cdc22d024704f22fe890f07f9006be1a8ebace9bc0154b27d13d10ae0ff1",
+      "raw_bytes": 29097,
+      "checkpoint_bytes": 384,
+      "matches_pre_score_commitment": true
+    },
+    {
+      "stage": "task",
+      "unit": 2,
+      "raw_sha256": "f4beca6934661bf51a70a3d96e06a39830d439f86e3ac406e4405aecb0e88c60",
+      "checkpoint_sha256": "3f448b46c4281da4c11e2c07271ed2381d04585832edeb0a36bf08b992714a5f",
+      "raw_bytes": 34279,
+      "checkpoint_bytes": 384,
+      "matches_pre_score_commitment": true
+    }
+  ],
+  "chronology_limit": "Procedural local custody, recorded commit/push and monotonic execution order; not external trusted timestamp attestation or vendor/model independence",
+  "private_raw_retention": "Every private artifact copied byte-identically to evidence/hidden; no training performed on resumption, no selection/replacement"
+}

@@ -10,6 +10,8 @@ Capacity CSV has exactly 32 carrier columns: the producer materializes the fixed
 
 `fixture.om` produces synthetic protocol controls. Its timestamps 1 and 2 are fixture constants, never performance evidence. `host.cases` runs the existing seeded handwritten Omega OM2GATE conductor, including guard-removal mutants, exact refusal stdout/stderr and exit codes. This is reuse of the existing native runner, not a foreign replacement evaluator. The conductor, pinned seeded compiler, git, SHA-256 tooling and read-only orchestration remain verification oracles.
 
+`checkpoint.om` independently packs the C/P bit carriers into the declared actual little-endian binary checkpoint (mode 0), or validates and decodes the exact binary header and all binary64 parameters before emitting B/P (mode 1). Validation refuses unsupported schema, dimensions, ranges, nonfinite parameters, truncation and trailing bytes atomically. It is a verifier-side native conversion/decoder, not a trainer; the full raw campaign still must pass the complete judge.
+
 Compiler binary SHA-256: `d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84`. Compiler source SHA-256: `3f937160c823d3a90a6b4cc296f00f517f36ede7fd27a06505c998985ec62240`, source authority omega `1fe5976d398646b17acabbf6d9dfae96b017e439`. The local compiler checkout HEAD may be newer; binary/source digests, not its branch name, identify the executable used.
 
 ## Custody and release

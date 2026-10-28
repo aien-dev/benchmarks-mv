@@ -1,0 +1,173 @@
+note Synthetic checker controls only. Times 1/2 are fixture constants, not measurements.
+text FHEAD "C,"
+text FPAR "P,"
+text FROW "R,"
+text FTAIL "T,1,2\nEND\n"
+text FLEAD "00"
+text FBIG "18446744073709551616"
+fn fparam i ulong mode ulong to void
+jout FPAR
+ix = i
+if and eq mode 25 eq i 0
+ix = 1
+end
+jfield ix
+v = bitcast ulong get JP i
+if eq i 0
+if eq mode 22
+v = 9221120237041090560
+end
+if eq mode 23
+v = 9218868437227405312
+end
+if eq mode 24
+v = bitcast ulong 10000000.0f64
+end
+end
+jnumber v
+jout JLF
+end
+fn frow id ulong q ulong mode ulong to void
+put JR 0 id
+put JR 1 q
+put JC 7 1
+if eq get JC 1 3
+put JC 7 0
+end
+jcapacitywire
+n = ulong 1
+if eq get JC 1 1
+n = 32
+end
+put JR 2 n
+for k ulong 32
+put JR add 3 k ulong get JB k
+end
+jcapacitydecode
+for k ulong 4
+put JR add 35 k bitcast ulong get JS k
+v = ulong 0
+if ge get JS k 0.5f64
+v = 1
+end
+put JR add 39 k v
+end
+put JR 43 0
+for k ulong 4
+if lt fabs sub get JS k 0.5f64 0.1f64
+put JR 43 1
+end
+end
+put JR 44 1
+put JR 45 2
+put JR 46 0
+if and eq id 0 eq q 0
+if eq mode 1
+put JR 3 xor get JR 3 1
+end
+if eq mode 2
+put JR 35 bitcast ulong 0.25f64
+end
+if eq mode 3
+put JR 39 1
+end
+if eq mode 4
+put JR 43 1
+end
+if eq mode 5
+put JR 0 1
+end
+if eq mode 9
+put JR 2 2
+end
+if eq mode 10
+put JR 34 1
+end
+if eq mode 11
+put JR 35 9221120237041090560
+end
+if eq mode 12
+put JR 35 9218868437227405312
+end
+end
+jout FROW
+for k ulong 47
+if and and eq id 0 eq q 0 and eq k 0 eq mode 14
+jout FLEAD
+else
+if and and eq id 0 eq q 0 and eq k 0 eq mode 15
+jout FBIG
+else
+jnumber get JR k
+end
+end
+if lt k 46
+jout JSEP
+end
+end
+jout JLF
+end
+fn main to int
+if ne argcnt 2
+ret 90
+end
+ab = new uchar 3 0
+n = argread 1 ab 0 3
+mode = ulong 0
+for k ulong ulong n
+mode = add mul mode 10 ulong sub get ab k 48
+end
+put JC 0 1
+put JC 1 3
+put JC 2 17
+put JC 3 65535
+put JC 4 1
+put JC 5 0
+put JC 6 0
+put JC 7 0
+if ge mode 21
+put JC 1 1
+put JC 4 4
+put JC 5 40
+put JC 7 1
+for i ulong 4
+put JP add mul i 4 i 2.0f64
+put JP add 16 i -1.0f64
+put JP add 20 add mul i 4 i 1.0f64
+end
+end
+jout FHEAD
+for k ulong 8
+v = get JC k
+if and eq mode 7 eq k 0
+v = 3
+end
+if and eq mode 8 eq k 4
+v = 3
+end
+jnumber v
+if lt k 7
+jout JSEP
+end
+end
+jout JLF
+for i ulong get JC 5
+if not and eq mode 26 eq i 39
+fparam i mode
+end
+end
+for id ulong 16
+for q ulong 6
+if not and eq mode 6 and eq id 15 eq q 5
+frow id q mode
+end
+end
+end
+if ne mode 16
+jout FTAIL
+end
+if eq mode 13
+jout JLF
+end
+ret 0
+end

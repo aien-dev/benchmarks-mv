@@ -1,0 +1,3 @@
+if ne byteat 0 i byteat 1 i
+same = false
+end

@@ -1,0 +1,19 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-28T14:38:03Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:c3820501dea9b8c335f086ff81f8fc962724d908025d3fc6103edad50cbc64c8",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 0,
+      "generated_at_commit": "8ee0a494bf73230c9d37647eb3caea792298fa8d",
+      "source_tree": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "name": "fixtures",
+  "purpose": "Public deterministic scorer controls, never sealed experiments",
+  "schema_version": "1.0.0"
+}

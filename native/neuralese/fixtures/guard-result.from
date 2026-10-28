@@ -1,0 +1,3 @@
+if ne get vals 19 want
+ret badout
+end

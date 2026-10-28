@@ -1,0 +1,14 @@
+{
+  "producer_commit": "fed670a",
+  "source_modules": {
+    "capacity.om": "f09e3c6ffa4c8e96581cc6802737633d7ce8dfb822ff623abadc0e35501ea79c",
+    "wire.om": "273599670fec2557deb6cfe5b4efea2581c10896b07553a98f60fd23b37d220a",
+    "controls.om": "c4ff23c25c4b7db06bacd8c62a8ec677b587661413c6a9d01c3948a0966b7ddd",
+    "main.om": "81947bdf3dba737b2bdadb50651485cca35d29856ca9ef9d2960311a0f41e971"
+  },
+  "source_concat_sha256": "9c2870a866bd9bc16fd8338385d0d61a1f7d871189cdc2b2b4cbfd7d9e5d01b2",
+  "compiler_sha256": "d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84",
+  "exit": 0,
+  "stderr": "",
+  "binary_sha256": "2161414c6dd5b59f30eb5dc6c136ababf44f408b6b0d36c95b962ea843a8f8d7"
+}

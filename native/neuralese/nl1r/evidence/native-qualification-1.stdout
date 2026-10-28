@@ -1,0 +1,138 @@
+OM2GATE START cases=/home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/host.cases scratch=/home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1
+IDENTITY omc /home/drakestapleton/fix/neuralese/seed/out/omc sha256=d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84 pinned=d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84 match
+DEADLINE 20
+CASE valid-0 line=3
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/3.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/3.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/3.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/3.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/0.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/3.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/3.err
+VERDICT valid-0 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE valid-21 line=4
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/4.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/4.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/4.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/4.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/21.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/4.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/4.err
+VERDICT valid-21 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE refuse-wire line=5
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/5.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/5.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/5.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/5.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/1.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/5.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/5.err
+VERDICT refuse-wire PASS run exit=90 expected=90 stdout=match stderr=match
+CASE refuse-score line=6
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/6.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/6.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/6.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/6.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/2.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/6.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/6.err
+VERDICT refuse-score PASS run exit=90 expected=90 stdout=match stderr=match
+CASE refuse-prediction line=7
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/7.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/7.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/7.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/7.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/3.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/7.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/7.err
+VERDICT refuse-prediction PASS run exit=90 expected=90 stdout=match stderr=match
+CASE refuse-abstention line=8
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/8.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/8.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/8.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/8.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/4.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/8.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/8.err
+VERDICT refuse-abstention PASS run exit=90 expected=90 stdout=match stderr=match
+CASE refuse-duplicate line=9
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/9.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/9.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/9.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/9.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/5.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/9.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/9.err
+VERDICT refuse-duplicate PASS run exit=90 expected=90 stdout=match stderr=match
+CASE refuse-missing-row line=10
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/10.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/10.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/10.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/10.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/6.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/10.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/10.err
+VERDICT refuse-missing-row PASS run exit=90 expected=90 stdout=match stderr=match
+CASE refuse-schema line=11
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/11.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/11.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/11.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/11.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/7.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/11.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/11.err
+VERDICT refuse-schema PASS run exit=90 expected=90 stdout=match stderr=match
+CASE refuse-dimension line=12
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/12.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/12.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/12.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/12.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/8.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/12.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/12.err
+VERDICT refuse-dimension PASS run exit=90 expected=90 stdout=match stderr=match
+CASE refuse-length line=13
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/13.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/13.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/13.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/13.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/9.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/13.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/13.err
+VERDICT refuse-length PASS run exit=90 expected=90 stdout=match stderr=match
+CASE refuse-padding line=14
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/14.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/14.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/14.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/14.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/10.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/14.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/14.err
+VERDICT refuse-padding PASS run exit=90 expected=90 stdout=match stderr=match
+CASE refuse-score-nan line=15
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/15.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/15.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/15.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/15.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/11.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/15.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/15.err
+VERDICT refuse-score-nan PASS run exit=90 expected=90 stdout=match stderr=match
+CASE refuse-score-inf line=16
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/16.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/16.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/16.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/16.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/12.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/16.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/16.err
+VERDICT refuse-score-inf PASS run exit=90 expected=90 stdout=match stderr=match
+CASE refuse-trailing line=17
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/17.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/17.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/17.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/17.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/13.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/17.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/17.err
+VERDICT refuse-trailing PASS run exit=90 expected=90 stdout=match stderr=match
+CASE refuse-leading-zero line=18
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/18.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/18.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/18.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/18.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/14.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/18.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/18.err
+VERDICT refuse-leading-zero PASS run exit=90 expected=90 stdout=match stderr=match
+CASE refuse-decimal-overflow line=19
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/19.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/19.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/19.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/19.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/15.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/19.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/19.err
+VERDICT refuse-decimal-overflow PASS run exit=90 expected=90 stdout=match stderr=match
+CASE refuse-missing-end line=20
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/20.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/20.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/20.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/20.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/16.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/20.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/20.err
+VERDICT refuse-missing-end PASS run exit=90 expected=90 stdout=match stderr=match
+CASE refuse-parameter-nan line=21
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/21.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/21.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/21.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/21.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/22.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/21.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/21.err
+VERDICT refuse-parameter-nan PASS run exit=90 expected=90 stdout=match stderr=match
+CASE refuse-parameter-inf line=22
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/22.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/22.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/22.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/22.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/23.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/22.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/22.err
+VERDICT refuse-parameter-inf PASS run exit=90 expected=90 stdout=match stderr=match
+CASE refuse-parameter-range line=23
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/23.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/23.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/23.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/23.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/24.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/23.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/23.err
+VERDICT refuse-parameter-range PASS run exit=90 expected=90 stdout=match stderr=match
+CASE refuse-parameter-index line=24
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/24.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/24.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/24.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/24.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/25.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/24.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/24.err
+VERDICT refuse-parameter-index PASS run exit=90 expected=90 stdout=match stderr=match
+CASE refuse-parameter-missing line=25
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/25.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/25.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/25.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/25.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/26.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/25.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/25.err
+VERDICT refuse-parameter-missing PASS run exit=90 expected=90 stdout=match stderr=match
+SUBST /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/score.from /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/score.to
+CASE kill-score line=27
+  MUTATE exact-once substitution at byte 8691
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/27.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/27.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/27.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/27.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/2.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/27.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/27.err
+VERDICT kill-score PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/prediction.from /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/prediction.to
+CASE kill-prediction line=29
+  MUTATE exact-once substitution at byte 8822
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/29.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/29.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/29.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/29.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/3.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/29.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/29.err
+VERDICT kill-prediction PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/abstention.from /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/abstention.to
+CASE kill-abstention line=31
+  MUTATE exact-once substitution at byte 9020
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/31.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/31.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/31.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/31.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/4.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/31.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/31.err
+VERDICT kill-abstention PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/length.from /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/length.to
+CASE kill-length line=33
+  MUTATE exact-once substitution at byte 8033
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/33.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/33.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/33.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/33.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/9.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/33.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/33.err
+VERDICT kill-length PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/padding.from /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/padding.to
+CASE kill-padding line=35
+  MUTATE exact-once substitution at byte 8078
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/35.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/35.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/35.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/35.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/10.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/35.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/35.err
+VERDICT kill-padding PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/dimension.from /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/dimension.to
+CASE kill-dimension line=37
+  MUTATE exact-once substitution at byte 6479
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/37.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/37.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/37.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/37.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/8.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/37.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/37.err
+VERDICT kill-dimension PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+SUBST /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/parameter-index.from /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/parameter-index.to
+CASE kill-parameter-index line=39
+  MUTATE exact-once substitution at byte 6961
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/39.src > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/39.elf 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/39.cerr
+  $ /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/39.elf < /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/fixtures/25.csv > /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/39.out 2> /home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1/39.err
+VERDICT kill-parameter-index PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 0 stderr=match
+OM2GATE PASS cases=30 pass=30 fail=0 invalid=0 not_run=0

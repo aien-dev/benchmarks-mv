@@ -1,0 +1,39 @@
+{
+  "status": "EXERCISED_MATHEMATICAL_ORACLE_NOT_NATIVE_EVIDENCE",
+  "date": "2026-10-28",
+  "source": "Hosted mounted Wolfram tools in parent session",
+  "verification": [
+    {"tool":"WolframLanguageEvaluator","query":"Integrate[x^2, {x, 0, 1}]","observed":"1/3"},
+    {"tool":"WolframAlpha","query":"sqrt(27)/2","observed":"(3 sqrt(3))/2"}
+  ],
+  "checks": [
+    {
+      "name":"issue39 witnesses and bound",
+      "tool":"WolframLanguageEvaluator",
+      "query":"soft[t_] := t/(1 + Abs[t]); p[t_] := (1 + soft[t])/2; s = Tuples[{0, 1}, 4]; h4 = (soft /@ (2 # - 1) & /@ s); p4 = (p /@ # & /@ h4); pred4 = Map[Boole[# >= 1/2] &, p4, {2}]; relu[t_] := Max[0, t]; enc3[x_] := {(2 x[[1]] + x[[2]])/3, x[[3]], x[[4]]}; dec3[h_] := With[{t = 3 h[[1]]}, {relu[t-1]-relu[t-2], t-2 relu[t-1]+2 relu[t-2], h[[2]], h[[3]]}]; {Sum[Binomial[4,k], {k,0,3}], 2 Sum[Binomial[3,k], {k,0,2}], Reduce[p[t] >= 1/2, t, Reals], Reduce[Abs[p[t]-1/2] >= 1/10, t, Reals], Count[MapThread[SameQ, {pred4,s}], True], Union[Flatten[p4]], Min[Abs[Flatten[p4]-1/2]], And @@ MapThread[SameQ, {dec3 /@ (enc3 /@ s),s}], 4*4+4+4*4+4,4*3+3+3*4+4, And@@Flatten[Map[Round[16 #]/16==#&,h4,{2}]],And@@Flatten[Map[Round[32 #]/32==#&,h4,{2}]]}",
+      "observed":"{15, 14, t >= 0, t <= -1/4 || t >= 1/4, 16, {1/3, 2/3}, 1/6, True, 40, 31, True, True}"
+    },
+    {
+      "name":"same nonlinear learned architecture constructive witness",
+      "tool":"WolframLanguageEvaluator",
+      "query":"ss[x_]:=x/(1+Abs[x]); xs={0,1/2,2/3,3/4}; basis[t_]:={Max[0,t],Max[0,t-1/2],Max[0,t-2/3]}; ca=First@Solve[Thread[(basis[#].{a,b,c}-1&/@xs)=={-1,-1,1,1}],{a,b,c}]; cb=First@Solve[Thread[(basis[#].{a,b,c}-1&/@xs)=={-1,1,-1,1}],{a,b,c}]; enc[x_]:={ss[2x[[1]]+x[[2]]],ss[x[[3]]],ss[x[[4]]]}; dec[h_]:=(1+ss[#])/2&/@{basis[h[[1]]].({a,b,c}/.ca)-1,basis[h[[1]]].({a,b,c}/.cb)-1,4h[[2]]-1,4h[[3]]-1}; states=Tuples[{0,1},4]; probs=dec/@(enc/@states); {ca,cb,And@@MapThread[SameQ,{Map[Boole[#>=1/2]&,probs,{2}],states}],Min[Abs[Flatten[probs]-1/2]],4*3+3+3*8+8+8*4+4,D[t/(1+t),t],D[t/(1-t),t]}",
+      "observed":"{{a -> 0, b -> 12, c -> -12}, {a -> 4, b -> -16, c -> 36}, True, 1/4, 83, -(t/(1 + t)^2) + (1 + t)^(-1), (1 - t)^(-1) + t/(1 - t)^2}"
+    },
+    {
+      "name":"arrangement recurrence and attainable region count",
+      "tool":"WolframLanguageEvaluator",
+      "query":"r[n_,d_]:=Sum[Binomial[n,k],{k,0,d}]; vals=Table[{n,d,r[n,d],r[n-1,d]+r[n-1,d-1]},{n,1,4},{d,1,3}]; signs=Tuples[{-1,1},4]; planes={x,y,z,1-x-y-z}; feasible=Select[signs,Reduce[And@@Thread[# planes>0],{x,y,z},Reals]=!=False&]; {And@@Flatten[Table[vals[[n,d,3]]==vals[[n,d,4]],{n,1,4},{d,1,3}]],r[4,3],Length[feasible],Complement[signs,feasible],r[0,3],r[4,0]}",
+      "observed":"{True, 15, 15, {{-1, -1, -1, -1}}, 1, 1}",
+      "interpretation":"Adding a plane splits at most as many existing regions as the prior planes form on that plane. This yields R(n,d)<=R(n-1,d)+R(n-1,d-1), with R(0,d)=R(n,0)=1. Pascal recurrence gives the binomial-sum bound. Strict patterns are convex intersections of open halfspaces. Margin excludes boundary ties. This is not a proof that observed14 is optimal for the encoder/training system."
+    },
+    {
+      "name":"task characteristic graphs proper coloring and clique lower witnesses",
+      "tool":"WolframLanguageEvaluator",
+      "query":"ids=Range[0,15]; pairs=Subsets[ids,{2}]; par[i_]:=Mod[Total[IntegerDigits[i,2,4]],2]; edges={pairs,Select[pairs,par[#[[1]]]!=par[#[[2]]]&],Select[pairs,Mod[#[[1]],4]==Mod[#[[2]],4]&]}; colors={ids,par/@ids,Quotient[#,4]&/@ids}; gs=Graph[ids,UndirectedEdge@@@#]&/@edges; Table[{Length[edges[[j]]],Length[Union[colors[[j]]]],And@@(Unequal@@(colors[[j,#+1]]&/@#)&/@edges[[j]]),Max[Length/@FindClique[gs[[j]],Infinity,All]],Ceiling[Log[2,Length[Union[colors[[j]]]]]]},{j,3}]",
+      "observed":"{{120, 16, True, 16, 4}, {64, 2, True, 2, 1}, {24, 4, True, 4, 2}}",
+      "columns":["edge_count","color_count","proper_coloring","maximum_clique_size","minimum_fixed_length_payload_bits"],
+      "interpretation":"ID bit0 first, receiver side information is id mod4. Fixed code for side-info task transmits quotient(id,4); no receiver truth-ID access. Actual one-byte wire still costs8bits. These exact baselines do not establish learned advantage."
+    }
+  ],
+  "limitations":["Not native binary64 implementation qualification","Cover PDF text extraction incomplete; recurrence proof and explicit exact arrangement independently checked rather than quoting inaccessible page text","No empirical optimum for historical14/16","No model, GPU, deployment or authority experiment"]
+}

@@ -1,0 +1,156 @@
+{
+  "schema": "NL1R-source-build-inventory/1",
+  "compiler_authority": "omega@1fe5976d398646b17acabbf6d9dfae96b017e439",
+  "compiler_source_sha256": "3f937160c823d3a90a6b4cc296f00f517f36ede7fd27a06505c998985ec62240",
+  "compiler_binary": {
+    "path": "/home/drakestapleton/fix/neuralese/seed/out/omc",
+    "bytes": 338704,
+    "sha256": "d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84"
+  },
+  "sources": [
+    {
+      "path": "native/neuralese/nl1r/arithmetic.om",
+      "bytes": 3481,
+      "sha256": "9b6702e471a2c605afa81ef95b3f11f52bef67cc9e796900901f67c1d9dff706"
+    },
+    {
+      "path": "native/neuralese/nl1r/checkpoint.om",
+      "bytes": 2069,
+      "sha256": "5062ac8d9950d0c4c4e0fa8def0766bda0c06369ac0101b8e7d506f3e17f6217"
+    },
+    {
+      "path": "native/neuralese/nl1r/fixture.om",
+      "bytes": 2378,
+      "sha256": "9f08df84cd79f615167e671fa0039c0c132f2523c53ccf9830488aaaaa52297c"
+    },
+    {
+      "path": "native/neuralese/nl1r/io.om",
+      "bytes": 2414,
+      "sha256": "f9f96869c3d39050d38b21014ac6bb1ddad27588fd3bc5cfed4dad474652ee38"
+    },
+    {
+      "path": "native/neuralese/nl1r/judge.om",
+      "bytes": 5049,
+      "sha256": "663f962668a1acdb25240d5e69a01c1358a1bd55ccbbaf6248748c56e26267da"
+    },
+    {
+      "path": "native/neuralese/nl1r/mutate.om",
+      "bytes": 1425,
+      "sha256": "be7f593650cbb3870509034571223bb9e90483f70bfa283c762b5ea8bea8b6b2"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "native/neuralese/nl1r/evidence/capacity-independent",
+      "bytes": 23296,
+      "sha256": "2161414c6dd5b59f30eb5dc6c136ababf44f408b6b0d36c95b962ea843a8f8d7"
+    },
+    {
+      "path": "native/neuralese/nl1r/evidence/checkpoint",
+      "bytes": 7088,
+      "sha256": "5e72c7b67af2ac9198f0a806b216185a07952a15fbbb1b954b6511c90bf378f6"
+    },
+    {
+      "path": "native/neuralese/nl1r/evidence/fixture",
+      "bytes": 11392,
+      "sha256": "5a1b7692137db0ddb61a6b7f1810f2f98547d8bfcc00a61fae455095689a7931"
+    },
+    {
+      "path": "native/neuralese/nl1r/evidence/judge",
+      "bytes": 17260,
+      "sha256": "1f322eae5c7bd0c2fb30665f666d038df4f61132a701e1ce91e3f7cd441e0093"
+    },
+    {
+      "path": "native/neuralese/nl1r/evidence/mutator",
+      "bytes": 5156,
+      "sha256": "29cb0e56b25397576ac4a8e6cd66f43328b8b007392f8a4c1a1fbfa60f237451"
+    },
+    {
+      "path": "native/neuralese/nl1r/evidence/native-gate",
+      "bytes": 65680,
+      "sha256": "6c8691c21074595312fdd0f22ca30b6fbe48fb88f2fb0a58936f2960056acefa"
+    },
+    {
+      "path": "native/neuralese/nl1r/evidence/task-controls-independent",
+      "bytes": 27404,
+      "sha256": "56eb1e58f73432686f99f865f380e1491727fa871384bbeb39a53e49c77fa291"
+    },
+    {
+      "path": "native/neuralese/nl1r/evidence/task-independent",
+      "bytes": 21132,
+      "sha256": "244f0871f57f833d0de51ff3f420476b4cdfeb761df023bd7de4d98d65cd7679"
+    }
+  ],
+  "native_gate_source": {
+    "path": "/home/drakestapleton/fix/neuralese/seed/qualification/om2/gate.om",
+    "bytes": 36494,
+    "sha256": "250361be99ced1246405b2e4a2e2de71373a90d0a0569fb43821ed8b106e045f"
+  },
+  "versions": {
+    "git": {
+      "command": [
+        "git",
+        "--version"
+      ],
+      "exit": 0,
+      "stdout": "git version 2.43.0\n",
+      "stderr": ""
+    },
+    "gh": {
+      "command": [
+        "gh",
+        "--version"
+      ],
+      "exit": 0,
+      "stdout": "gh version 2.45.0 (2026-03-17 Ubuntu 2.45.0-1ubuntu0.3+esm3)\nhttps://github.com/cli/cli/releases/tag/v2.45.0\n",
+      "stderr": ""
+    },
+    "host": {
+      "command": [
+        "uname",
+        "-a"
+      ],
+      "exit": 0,
+      "stdout": "Linux spark-b87b 7.0.0-1019-nvidia #19~24.04.2-Ubuntu SMP PREEMPT_DYNAMIC Sun Sep  6 18:35:11 UTC 2 aarch64 aarch64 aarch64 GNU/Linux\n",
+      "stderr": ""
+    },
+    "python_orchestration": {
+      "version": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+      "scope": "filesystem custody, command orchestration, hashing and parsing native metric records only; no foreign trainer/judge"
+    }
+  },
+  "Wolfram": "Mounted evaluator exact code and raw results retained; engine version not exposed in these receipts",
+  "qualification_commands": [
+    {
+      "cwd": "/home/drakestapleton/fix/neuralese",
+      "argv": [
+        "/home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-gate",
+        "/home/drakestapleton/fix/neuralese/seed/out/omc",
+        "d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84",
+        "/home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/host.cases",
+        "/home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-1"
+      ]
+    },
+    {
+      "cwd": "/home/drakestapleton/fix/neuralese",
+      "argv": [
+        "/home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-gate",
+        "/home/drakestapleton/fix/neuralese/seed/out/omc",
+        "d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84",
+        "/home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/task-checkpoint.cases",
+        "/home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/native-qualification-2"
+      ]
+    }
+  ],
+  "command_contracts": {
+    "judge": "Concatenate io.om arithmetic.om judge.om; omc SOURCE OUTPUT; OUTPUT < complete public raw; valid exit0, invalid exit90",
+    "checkpoint": "Concatenate io.om checkpoint.om; mode0 packs C/P; mode1 verifies actual binary",
+    "producer_capacity": "capacity-independent ARM SEED TRAINMASK INIT; INIT0 learned, INIT4 native gradient controls, INIT5 binary import",
+    "producer_task": "task-independent TASK SEED TRAINMASK"
+  },
+  "failed_native_fixture_attempts": {
+    "evidence/fixture0.stdout": "Initial synthetic direct header declared dimension0 instead of producer wire dimension1; native checker correctly refused. Corrected output is fixtures/0.csv.",
+    "evidence/fixture21.stdout": "Initial synthetic four-coordinate corruption abstention disagreed with actual zeroed state; native checker correctly refused. Corrected output is fixtures/21.csv."
+  },
+  "compiled_ELF_retention": "Local build artifacts are hash-recorded but not committed; checkpoint and malformed fixture binary DATA are committed. Conductor generated mutant sources/stdout/stderr are committed."
+}

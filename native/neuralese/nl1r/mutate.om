@@ -1,0 +1,101 @@
+note Standalone with io.om. Protocol test data mutation, not a scorer or learned arm.
+global MB uchar 131072
+text MC ","
+fn mcopy begin ulong finish ulong to void
+p = begin
+while lt p finish
+n = write 1 MB p sub finish p
+if le n 0
+exit 93
+end
+p = add p ulong n
+end
+end
+fn mseek p ulong stop ulong delim uchar to ulong
+while lt p stop
+if eq get MB p delim
+ret p
+end
+p = add p 1
+end
+ret p
+end
+fn mreplace n ulong col ulong v ulong header bool to int
+start = ulong 0
+while lt start n
+finish = mseek start n uchar 10
+want = eq get MB start 82
+if header
+want = eq get MB start 67
+end
+if want
+p = add start 2
+for k ulong col
+p = mseek p finish uchar 44
+p = add p 1
+end
+endpos = mseek p finish uchar 44
+if or gt p finish gt endpos finish
+ret 90
+end
+mcopy 0 p
+jnumber v
+mcopy endpos n
+ret 0
+end
+start = add finish 1
+end
+ret 90
+end
+fn main to int
+if ne argcnt 2
+ret 90
+end
+ab = new uchar 2 0
+an = argread 1 ab 0 2
+mode = ulong 0
+for k ulong ulong an
+mode = add mul mode 10 ulong sub get ab k 48
+end
+n = ulong 0
+while lt n 131072
+r = read 0 MB n sub ulong 131072 n
+if lt r 0
+ret 90
+end
+if eq r 0
+break
+end
+n = add n ulong r
+end
+if eq n 131072
+ret 90
+end
+col = ulong 49
+v = ulong 1
+if eq mode 2
+col = 48
+v = 7
+end
+if eq mode 3
+col = 35
+end
+if eq mode 4
+col = 36
+v = bitcast ulong 0.25f64
+end
+if eq mode 5
+col = 40
+end
+if eq mode 6
+col = 44
+end
+if eq mode 7
+col = 0
+end
+if eq mode 8
+col = 47
+v = 2
+end
+ret mreplace n col v eq mode 7
+end

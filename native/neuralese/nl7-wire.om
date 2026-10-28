@@ -1,0 +1,439 @@
+om2
+note NL7 independent learned receiver replay, frozen prereg 989fb7a2.
+note Reads parameter snapshots and actual byte carriers; truth ID never enters receiver.
+note Run together with nl7-score: this checker qualifies learned wire causality, not learning.
+const CHUNK ulong 16384
+global Buf uchar CHUNK
+global Io ulong 2
+global Row ulong 64
+global Meta ulong 5
+global Last ulong 9
+global Params f64 558
+global Pmask ulong 18
+global Used ulong 18
+global Seen ulong 4096
+global Wire uchar 24
+global Coord f64 3
+global Counts ulong 4
+text BAD "NL7WIRE INVALID\n"
+text PASS "NL7WIRE PASS frames="
+text FAIL "NL7WIRE FAIL frames="
+text REF " refused="
+text LF "\n"
+fn putout a view uchar * n ulong to void
+p = ulong 0
+while lt p n
+k = write 1 a p sub n p
+if le k 0
+exit 93
+end
+p = add p ulong k
+end
+end
+fn invalid to void
+putout BAD len BAD
+exit 90
+end
+fn number n ulong to void
+b = new uchar 20 0
+p = ulong 20
+while true bound 20
+p = sub p 1
+put b p uchar add rem n 10 48
+n = div n 10
+if eq n 0
+break
+end
+end
+putout part b p sub ulong 20 p sub ulong 20 p
+end
+fn next to long
+if eq get Io 0 get Io 1
+k = read 0 Buf 0 CHUNK
+if lt k 0
+invalid
+end
+if eq k 0
+ret -1
+end
+put Io 0 0
+put Io 1 ulong k
+end
+p = get Io 0
+put Io 0 add p 1
+ret long get Buf p
+end
+fn value to ulong
+v = ulong 0
+n = ulong 0
+first = long -1
+while true bound 21
+c = next
+if or eq c 44 eq c 10
+if eq n 0
+invalid
+end
+if and gt n 1 eq first 48
+invalid
+end
+put Meta 0 ulong c
+ret v
+end
+if or lt c 48 gt c 57
+invalid
+end
+if eq n 0
+first = c
+end
+if or gt v 1844674407370955161 and eq v 1844674407370955161 gt c 53
+invalid
+end
+v = add mul v 10 ulong sub c 48
+n = add n 1
+end
+ret 0
+end
+fn fields to void
+if ne next 44
+invalid
+end
+for j ulong 64
+put Row j value
+if eq get Meta 0 10
+put Meta 1 add j 1
+ret
+end
+end
+invalid
+end
+fn seedindex seed ulong to ulong
+if eq seed 101
+ret 0
+end
+if eq seed 211
+ret 1
+end
+if eq seed 307
+ret 2
+end
+invalid
+ret 0
+end
+fn bank to ulong
+si = seedindex get Row 0
+if or gt get Row 1 2 or lt get Row 2 2 gt get Row 2 3
+invalid
+end
+ret add mul add mul si 3 get Row 1 2 sub get Row 2 2
+end
+fn finite v f64 to bool
+ret eq sub v v 0.0f64
+end
+fn parameter to void
+if or ne get Meta 1 5 ne get Meta 2 0
+invalid
+end
+ix = bank
+p = get Row 3
+if or gt p 30 ne get Used ix 0
+invalid
+end
+bit = shl ulong 1 p
+if ne and get Pmask ix bit 0
+invalid
+end
+v = bitcast f64 get Row 4
+if not finite v
+invalid
+end
+put Params add mul ix 31 p v
+put Pmask ix or get Pmask ix bit
+end
+fn budindex budget ulong to ulong
+if eq budget 8
+ret 0
+end
+if eq budget 24
+ret 1
+end
+if eq budget 96
+ret 2
+end
+if eq budget 192
+ret 3
+end
+invalid
+ret 0
+end
+fn width budget ulong to ulong
+if eq budget 8
+ret 2
+end
+if eq budget 24
+ret 8
+end
+if eq budget 96
+ret 32
+end
+ret 64
+end
+fn prediction to void
+if or ne get Meta 1 9 ne get Meta 2 0
+invalid
+end
+if gt get Row 2 4
+invalid
+end
+if and ne get Row 2 2 ne get Row 2 3
+ret
+end
+ix = bank
+bi = budindex get Row 4
+if or gt get Row 3 15 gt get Row 5 18
+invalid
+end
+if ne get Pmask ix 2147483647
+invalid
+end
+payload = mul width get Row 4 3
+if or ne get Row 8 payload gt get Row 7 1
+invalid
+end
+if eq get Row 7 0
+if gt get Row 6 15
+invalid
+end
+else
+if ne get Row 6 99
+invalid
+end
+end
+slot = add mul add mul ix 4 bi 19 get Row 5
+bit = shl ulong 1 get Row 3
+if ne and get Seen slot bit 0
+invalid
+end
+put Seen slot or get Seen slot bit
+put Used ix 1
+for j ulong 9
+put Last j get Row j
+end
+put Meta 2 1
+put Meta 3 ix
+end
+fn violate to void
+put Counts 0 add get Counts 0 1
+end
+fn wirebit pos ulong to ulong
+byteval = ulong get Wire div pos 8
+shift = rem pos 8
+ret and shr byteval shift 1
+end
+fn getbits axis ulong bits ulong to ulong
+v = ulong 0
+start = mul axis bits
+for b ulong bits
+pos = add start b
+bit = wirebit pos
+v = or v shl bit b
+end
+ret v
+end
+fn coordinate axis ulong bits ulong to f64
+u = getbits axis bits
+if le bits 8
+levels = sub shl ulong 1 bits 1
+ret sub mul div f64 u f64 levels 8.0f64 4.0f64
+end
+if eq bits 32
+ret f64 bitcast f32 uint u
+end
+ret bitcast f64 u
+end
+fn perturb mode ulong to void
+if eq mode 0
+ret
+end
+m = sub mode 1
+axis = div rem m 6 2
+v = div 1.0f64 12.0f64
+if ge m 6
+v = div 1.0f64 6.0f64
+end
+if ge m 12
+v = div 1.0f64 4.0f64
+end
+if eq rem m 2 1
+v = neg v
+end
+put Coord axis add get Coord axis v
+end
+fn unpack to bool
+budget = get Last 4
+if eq budget 8
+if ne and get Wire 0 uchar 192 uchar 0
+ret false
+end
+end
+for k ulong 3
+v = coordinate k width budget
+if not finite v
+ret false
+end
+put Coord k v
+end
+perturb get Last 5
+for k ulong 3
+if not finite get Coord k
+ret false
+end
+end
+ret true
+end
+fn receive to ulong
+base = mul get Meta 3 31
+pred = ulong 0
+for j ulong 4
+v = get Params add base add 27 j
+for k ulong 3
+weight = get Params add base add 15 add mul k 4 j
+v = add v mul get Coord k weight
+end
+score = mul 0.5f64 add 1.0f64 div v add 1.0f64 fabs v
+if not and ge score 0.0f64 le score 1.0f64
+ret 99
+end
+if lt fabs sub score 0.5f64 0.1f64
+ret 99
+end
+if ge score 0.5f64
+pred = or pred shl ulong 1 j
+end
+end
+ret pred
+end
+fn checkwire to void
+n = div get Last 4 8
+if ne get Meta 1 add n 10
+invalid
+end
+for j ulong 6
+if ne get Row j get Last j
+invalid
+end
+end
+if gt get Row 6 2
+invalid
+end
+for j ulong n
+v = get Row add j 7
+if gt v 255
+invalid
+end
+put Wire j uchar v
+end
+put Counts 1 add get Counts 1 1
+if ne get Row 6 0
+if or ne get Last 6 99 ne get Last 7 1
+violate
+end
+put Counts 2 add get Counts 2 1
+ret
+end
+if not unpack
+violate
+ret
+end
+for k ulong 3
+if ne bitcast ulong get Coord k get Row add add n 7 k
+violate
+end
+end
+pred = receive
+if ne pred get Last 6
+violate
+end
+status = ulong 0
+if eq pred 99
+status = 1
+put Counts 2 add get Counts 2 1
+end
+if ne status get Last 7
+violate
+end
+end
+fn diagnostic to void
+if eq get Meta 1 5
+if ne get Meta 2 0
+invalid
+end
+ix = bank
+if ne get Pmask ix 2147483647
+invalid
+end
+ret
+end
+if ne get Meta 2 1
+invalid
+end
+checkwire
+put Meta 2 0
+end
+fn load to void
+while true
+c = next
+if eq c -1
+break
+end
+if not or eq c 78 or eq c 80 eq c 68
+invalid
+end
+fields
+if eq c 78
+prediction
+end
+if eq c 80
+parameter
+end
+if eq c 68
+diagnostic
+end
+end
+end
+fn complete to void
+if ne get Meta 2 0
+invalid
+end
+for ix ulong 18
+if ne get Pmask ix 2147483647
+invalid
+end
+end
+for base ulong 72
+for mode ulong 19
+if ne get Seen add mul base 19 mode 65535
+invalid
+end
+end
+end
+end
+fn main to int
+if ne argcnt 1
+invalid
+end
+load
+complete
+if eq get Counts 0 0
+putout PASS len PASS
+else
+putout FAIL len FAIL
+end
+number get Counts 1
+putout REF len REF
+number get Counts 2
+putout LF 1
+if ne get Counts 0 0
+ret 1
+end
+ret 0
+end

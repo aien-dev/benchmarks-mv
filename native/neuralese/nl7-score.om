@@ -1,0 +1,526 @@
+om2
+note NL7 independent scorer, frozen prereg benchmarks 989fb7a214d8e0d6c7ed04f5f48c45d68a43d5a3.
+note Synthetic host evidence only. CSV predictions are scored, not used as truth or codewords.
+note D, and P, printable bounded diagnostics are explicitly non-scoring records.
+const CHUNK ulong 16384
+global Buf uchar CHUNK
+global Io ulong 2
+global Row ulong 9
+global Seen ulong 65536
+global Count ulong 131072
+global Good ulong 131072
+global Refuse ulong 131072
+global Robust ulong 360
+global Rgood ulong 360
+global Rrefuse ulong 360
+global Failed ulong 1
+text BAD "NL7 INVALID\n"
+text PASS "NL7 CHECKS PASS\n"
+text FAIL "NL7 CHECKS FAIL\n"
+text HEAD "NL7SCORE1,seed,split,arm,budget,mode,scope,total,correct,refused,undetected\n"
+text TAG "S,"
+text RTAG "R,"
+text LTAG "L,"
+text LHEAD "NL7LEARN1,seed,split,fullfit,heldout,improves,no_more_undetected\n"
+text YES "NL7 LEARNED SUPPORTED\n"
+text NO "NL7 LEARNED NOT_SUPPORTED\n"
+text COMMA ","
+text LF "\n"
+fn putout a view uchar * n ulong to void
+p = ulong 0
+while lt p n
+k = write 1 a p sub n p
+if le k 0
+exit 93
+end
+p = add p ulong k
+end
+end
+fn invalid to void
+putout BAD len BAD
+exit 90
+end
+fn number n ulong to void
+b = new uchar 20 0
+p = ulong 20
+while true bound 20
+p = sub p 1
+put b p uchar add rem n 10 48
+n = div n 10
+if eq n 0
+break
+end
+end
+putout part b p sub ulong 20 p sub ulong 20 p
+end
+fn flag v bool to ulong
+if v
+ret 1
+end
+ret 0
+end
+fn sep to void
+putout COMMA 1
+end
+fn next to long
+if eq get Io 0 get Io 1
+k = read 0 Buf 0 CHUNK
+if lt k 0
+invalid
+end
+if eq k 0
+ret -1
+end
+put Io 0 0
+put Io 1 ulong k
+end
+p = get Io 0
+put Io 0 add p 1
+ret long get Buf p
+end
+fn value delim long to ulong
+v = ulong 0
+n = ulong 0
+first = long -1
+while true bound 8
+c = next
+if eq c delim
+if eq n 0
+invalid
+end
+if and gt n 1 eq first 48
+invalid
+end
+ret v
+end
+if or lt c 48 gt c 57
+invalid
+end
+if eq n 0
+first = c
+end
+if gt n 5
+invalid
+end
+v = add mul v 10 ulong sub c 48
+n = add n 1
+end
+ret 0
+end
+fn seedindex seed ulong to ulong
+if eq seed 101
+ret 0
+end
+if eq seed 211
+ret 1
+end
+if eq seed 307
+ret 2
+end
+invalid
+ret 0
+end
+fn seedvalue si ulong to ulong
+if eq si 0
+ret 101
+end
+if eq si 1
+ret 211
+end
+ret 307
+end
+fn budindex budget ulong to ulong
+if eq budget 8
+ret 0
+end
+if eq budget 24
+ret 1
+end
+if eq budget 96
+ret 2
+end
+if eq budget 192
+ret 3
+end
+invalid
+ret 0
+end
+fn budvalue bi ulong to ulong
+if eq bi 0
+ret 8
+end
+if eq bi 1
+ret 24
+end
+if eq bi 2
+ret 96
+end
+ret 192
+end
+fn group si ulong split ulong arm ulong bi ulong to ulong
+ret add mul add mul add mul si 3 split 5 arm 4 bi
+end
+fn heldout split ulong id ulong to bool
+if eq split 0
+ret false
+end
+if or eq id 0 or eq id 1 or eq id 2 or eq id 4 eq id 8
+ret false
+end
+if eq split 1
+if or eq id 3 or eq id 5 eq id 9
+ret false
+end
+else
+if or eq id 6 or eq id 10 eq id 12
+ret false
+end
+end
+ret true
+end
+fn validmode arm ulong mode ulong to bool
+if or eq arm 0 or eq arm 2 eq arm 3
+ret le mode 18
+end
+if eq mode 0
+ret true
+end
+n = ulong 8
+if eq arm 4
+n = 4
+end
+if and ge mode 100 lt mode add 100 n
+ret true
+end
+if lt mode 200
+ret false
+end
+i = div sub mode 200 8
+j = rem sub mode 200 8
+ret and lt i j lt j n
+end
+note Independent RM codeword from four coefficient bits and eight evaluation triples.
+fn codeword id ulong to ulong
+word = ulong 0
+for t ulong 8
+bit = and id 1
+for k ulong 3
+coef = and shr id add k 1 1
+coord = and shr t k 1
+bit = xor bit and coef coord
+end
+word = or word shl bit t
+end
+ret word
+end
+fn corrupt word ulong mode ulong to ulong
+if eq mode 0
+ret word
+end
+if lt mode 200
+ret xor word shl ulong 1 sub mode 100
+end
+i = div sub mode 200 8
+j = rem sub mode 200 8
+ret xor xor word shl ulong 1 i shl ulong 1 j
+end
+fn hamming a ulong b ulong to ulong
+v = xor a b
+d = ulong 0
+for k ulong 8
+d = add d and shr v k 1
+end
+ret d
+end
+fn rmdecode word ulong to ulong
+found = ulong 99
+for cand ulong 16
+if le hamming word codeword cand 1
+if ne found 99
+ret 99
+end
+found = cand
+end
+end
+ret found
+end
+fn violation to void
+put Failed 0 add get Failed 0 1
+end
+fn guarantees to void
+arm = get Row 2
+id = get Row 3
+mode = get Row 5
+pred = get Row 6
+status = get Row 7
+if eq arm 0
+must = eq mode 0
+if and ge get Row 4 96 le mode 6
+must = true
+end
+if and must or ne status 0 ne pred id
+violation
+end
+end
+if eq arm 1
+expected = rmdecode corrupt codeword id mode
+if ne pred expected
+violation
+end
+if ne status flag eq expected 99
+violation
+end
+end
+if eq arm 4
+expected = corrupt id mode
+if or ne status 0 ne pred expected
+violation
+end
+end
+end
+fn increment idx ulong good bool refused bool to void
+put Count idx add get Count idx 1
+if good
+put Good idx add get Good idx 1
+end
+if refused
+put Refuse idx add get Refuse idx 1
+end
+end
+fn rincrement idx ulong good bool refused bool to void
+put Robust idx add get Robust idx 1
+if good
+put Rgood idx add get Rgood idx 1
+end
+if refused
+put Rrefuse idx add get Rrefuse idx 1
+end
+end
+fn grade base ulong to void
+id = get Row 3
+mode = get Row 5
+idx = add mul base 256 mode
+bit = shl ulong 1 id
+if ne and get Seen idx bit 0
+invalid
+end
+put Seen idx or get Seen idx bit
+correct = and eq get Row 7 0 eq get Row 6 id
+refused = eq get Row 7 1
+increment mul idx 2 correct refused
+if ne mode 0
+rincrement mul base 2 correct refused
+end
+if heldout get Row 1 id
+increment add mul idx 2 1 correct refused
+if ne mode 0
+rincrement add mul base 2 1 correct refused
+end
+end
+guarantees
+end
+fn row to void
+for j ulong 9
+d = long 44
+if eq j 8
+d = 10
+end
+put Row j value d
+end
+si = seedindex get Row 0
+bi = budindex get Row 4
+if or gt get Row 1 2 or gt get Row 2 4 gt get Row 3 15
+invalid
+end
+if not validmode get Row 2 get Row 5
+invalid
+end
+if gt get Row 7 1
+invalid
+end
+if eq get Row 7 0
+if gt get Row 6 15
+invalid
+end
+else
+if ne get Row 6 99
+invalid
+end
+end
+payload = get Row 4
+if eq payload 8
+payload = 6
+end
+if eq get Row 2 1
+payload = 8
+end
+if eq get Row 2 4
+payload = 4
+end
+if or ne get Row 8 payload gt get Row 8 get Row 4
+invalid
+end
+grade group si get Row 1 get Row 2 bi
+end
+fn diagnostic to void
+if ne next 44
+invalid
+end
+note Diagnostics are at most 8192 printable ASCII bytes followed by LF, never EOF.
+while true bound 8193
+c = next
+if eq c 10
+ret
+end
+if or lt c 32 gt c 126
+invalid
+end
+end
+invalid
+end
+fn load to void
+while true
+c = next
+if eq c -1
+break
+end
+if eq c 78
+if ne next 44
+invalid
+end
+row
+else
+if or eq c 68 eq c 80
+diagnostic
+else
+invalid
+end
+end
+end
+end
+fn complete to void
+for base ulong 180
+arm = rem div base 4 5
+for mode ulong 256
+if validmode arm mode
+if ne get Seen add mul base 256 mode 65535
+invalid
+end
+end
+end
+end
+end
+fn counters idx ulong to void
+number get Count idx
+sep
+number get Good idx
+sep
+number get Refuse idx
+sep
+number sub sub get Count idx get Good idx get Refuse idx
+putout LF 1
+end
+fn rcounters idx ulong to void
+number get Robust idx
+sep
+number get Rgood idx
+sep
+number get Rrefuse idx
+sep
+number sub sub get Robust idx get Rgood idx get Rrefuse idx
+putout LF 1
+end
+fn identity base ulong to void
+number seedvalue div base 60
+sep
+number rem div base 20 3
+sep
+number rem div base 4 5
+sep
+number budvalue rem base 4
+sep
+end
+fn report to void
+putout HEAD len HEAD
+for base ulong 180
+arm = rem div base 4 5
+for mode ulong 256
+if validmode arm mode
+for scope ulong 2
+putout TAG len TAG
+identity base
+number mode
+sep
+number scope
+sep
+counters add mul add mul base 256 mode 2 scope
+end
+end
+end
+for scope ulong 2
+putout RTAG len RTAG
+identity base
+number 99
+sep
+number scope
+sep
+rcounters add mul base 2 scope
+end
+end
+end
+fn wrongcount idx ulong to ulong
+ret sub sub get Count idx get Good idx get Refuse idx
+end
+fn learnedone si ulong sp ulong to bool
+idx = add mul mul group si sp 2 3 256 2 1
+baseline = add mul mul group si sp 3 3 256 2 1
+fullfit = eq get Good mul mul group si 0 2 3 256 2 16
+held = eq get Good idx 8
+improve = gt get Good idx get Good baseline
+safe = le wrongcount idx wrongcount baseline
+putout LTAG len LTAG
+number seedvalue si
+sep
+number sp
+sep
+number flag fullfit
+sep
+number flag held
+sep
+number flag improve
+sep
+number flag safe
+putout LF 1
+ret and fullfit and held and improve safe
+end
+fn learned to void
+putout LHEAD len LHEAD
+support = true
+for si ulong 3
+for split ulong 2
+if not learnedone si add split 1
+support = false
+end
+end
+end
+if support
+putout YES len YES
+else
+putout NO len NO
+end
+end
+fn main to int
+if ne argcnt 1
+invalid
+end
+load
+complete
+report
+learned
+if ne get Failed 0 0
+putout FAIL len FAIL
+ret 1
+end
+putout PASS len PASS
+ret 0
+end

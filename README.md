@@ -126,6 +126,131 @@ Wolfram-derived references, including a wrong-terminal-state negative control;
 [`nl5_wolfram_raw.json`](native/neuralese/nl5_wolfram_raw.json) retains the
 actual arithmetic tool calls and results.
 
+## Neuralese structure follow-up (NL-7)
+
+New freeze: [`neuralese_nl7_prereg.json`](manifests/neuralese_nl7_prereg.json)
+at `989fb7a214d8e0d6c7ed04f5f48c45d68a43d5a3`, posted on BOARD
+2026-10-28T15:21:18Z, before any variant ran. This extends NL-6 without
+rewriting its preregistration or using NL-1's split/seeds.
+
+The fresh public held-out sets are `{6,7,10,11,12,13,14,15}` and
+`{3,5,7,9,11,13,14,15}`. Seed order in every cell below is 101,211,307.
+Fit means a separate all-sixteen-training run; held-out means a separately
+trained eight-combination run. Entries are accepted-correct counts, not
+accepted-only accuracy.
+
+| Variant | Wire bits | Full fit /16 | Split 1 /8 | Split 2 /8 |
+|---|---|---|---|---|
+| Exact 3-coordinate | 8,24,96,192 | 16,16,16 | 8,8,8 | 8,8,8 |
+| RM(1,3) | 8,24,96,192 | 16,16,16 | 8,8,8 | 8,8,8 |
+| Packed semantic | 8,24,96,192 | 16,16,16 | 8,8,8 | 8,8,8 |
+| Learned additive + separation | 8 | 0,0,0 | 1,1,3 | 1,0,3 |
+| Learned additive + separation | 24 | 1,1,1 | 2,4,3 | 1,0,3 |
+| Learned additive + separation | 96,192 | 15,15,15 | 5,6,6 | 3,4,3 |
+| Existing learned softsign | 8 | 8,7,8 | 3,2,3 | 1,1,1 |
+| Existing learned softsign | 24 | 14,14,14 | 0,1,1 | 2,2,1 |
+| Existing learned softsign | 96,192 | 14,14,14 | 0,0,1 | 2,2,1 |
+
+Budgets are transmitted bits, **not coordinates**. Numeric payload is
+6,24,96,192 bits at 2,8,32,64 bits per coordinate; the 8-bit transport has
+two zero padding bits. RM's payload is eight bits and packed semantics four
+bits, padded to every matched wire budget. Thus a four-bit payload still costs
+an actual byte at the smallest tested transport. Codebook, schema and learned
+receiver weights are separate shared-state costs. Learned low-bit quantizers
+refuse values outside [-4,4], rather than clipping; all refusals remain in the
+denominator. The exact construction uses its frozen [0,1] quantizer.
+
+### Guarantees and robustness
+
+Wolfram confirms `16` distinct exact points, minimum Euclidean separation
+`1/3` and strict nearest-decoder perturbation radius `<1/6`. The native
+numeric transport/decoder recovers all sixteen cleanly at all budgets and
+all six axis `+/-1/12` probes at 96/192 bits. The `1/6` boundary is not covered
+by the strict guarantee; boundary and `1/4` probes are recorded descriptively.
+At 192 bits on the all-fit run, across all eighteen nonclean numeric modes,
+exact has `(correct,refused,undetected wrong)=(252,8,28)` out of 288.
+
+Wolfram independently enumerates RM parameters `(16 codewords,8 bits,dmin4)`,
+128/128 single-bit recoveries and 448/448 double-bit refusals. The native
+enumeration matches these at every budget/seed/split. Double-error detection
+is radius-one refusal, not a claim to correct two bits. Packed semantics
+accepts all 64 single-bit and 96 double-bit corruptions as wrong. Repeating
+these deterministic codebooks over seeds does not create independent trials.
+
+The additive construction obeys the composition identity algebraically.
+The maximum observed absolute coordinate residual over all nine models is
+`1.7763568394002504646778106689453125e-15`, independently decoded by Wolfram,
+below the frozen `1e-12`. The separation hinge uses training pairs only.
+The learned receiver can still fail even with separated sender points.
+For 192-bit all-fit runs, additive numeric nonclean counts are
+`(270,0,18)` for each seed; existing learned counts are
+`(252,5,31)`, `(243,16,29)`, `(245,9,34)`, each out of 288.
+Per-held-out robustness, other precisions and individual modes are retained
+in [`nl7-score.csv.gz`](native/neuralese/nl7-score.csv.gz), not silently pooled.
+
+**Verdict: NOT_SUPPORTED** for the frozen additive learned success hypothesis:
+full fit is not 16/16 and held-out recovery is not 8/8. It does improve over the
+existing learned arm on these fresh high-precision splits, without fixing
+recoverability or beating explicit codes. Exact and RM synthetic recovery
+thresholds are **EXERCISED**. This is not useful-compression evidence, real-model
+evidence, hardware qualification, authority, or deployment.
+Johnson-Lindenstrauss projections for real activations are future work only,
+**NOT_RUN** here.
+
+### Native scoring and negative controls
+
+[`nl7-score.om`](native/neuralese/nl7-score.om) is an independent .om scorer
+for all five arms, deriving membership, codewords, Hamming corruptions,
+mandatory exact guarantees, budgets and completeness from the frozen contract.
+It rejects missing/duplicate/noncanonical records and inconsistent
+prediction/status/payload fields. `S` rows contain seed, split, arm, budget,
+mode, scope (0 all-sixteen, 1 held-out), total, correct, refused, undetected wrong;
+`R` rows pool nonclean modes; `L` reports each frozen learned criterion.
+`NL7 CHECKS PASS` means stream/guarantee checks passed, **not learned success**;
+the separate result is `NL7 LEARNED NOT_SUPPORTED`.
+
+`fixtures/nl7-fixture.om` generates ten original checker controls; nine
+guard-removal/incorrect-oracle source mutants are in
+[`nl7-score.cases`](native/neuralese/fixtures/nl7-score.cases).
+All 19 cases passed, including all nine mutants killed. The producer's
+native guards separately passed 16 cases including fourteen source mutants.
+Actual logs, not inferred outcomes, are retained. The compiler is the same
+pinned `d6290c76...` seeded Omega compiler used for NL-1; no Python product path.
+
+Build by redirecting source through the pinned compiler:
+
+```sh
+"$OMC" < native/neuralese/nl7-score.om > "$WORK/nl7-score"
+"$OMC" < native/neuralese/fixtures/nl7-fixture.om > "$WORK/nl7-fixture"
+chmod +x "$WORK/nl7-score" "$WORK/nl7-fixture"
+"$WORK/nl7-score" < "$WORK/all.csv" > "$WORK/score.csv"
+```
+
+For native conductor replay, use a fresh context with read-only `native` and
+the pinned Omega `seed` available under those relative names. Generate
+`inputs/nl7-case-M.csv` with `nl7-fixture M`; capture original scorer stdout as
+`expected/nl7-case-M.score` for M=0..9. Run the pinned OM2 conductor on
+`native/neuralese/fixtures/nl7-score.cases` with a new scratch directory.
+Each KILL requires the exact specified mutant exit and stdout differing from
+the corresponding original oracle. Receiver/transport source and full raw
+stream/Wolfram receipts are published in the companion aien-train draft.
+No compiler/language/host-word, ownership or harness gate changes are made;
+omega-harness guide updates are not applicable.
+
+[`nl7-wire.om`](native/neuralese/nl7-wire.om) additionally replays actual
+numeric carrier bytes with the final parameter snapshots, independently
+recomputing coordinates, perturbations, receiver scores, predictions and
+abstentions. It reports `NL7WIRE PASS frames=21888 refused=3764`.
+All four qualification cases passed, including three mutants for receiver
+weight indexing, carrier decoding and decision threshold. The total across
+the producer guard and two checker conductors is 39 cases, with 26 source
+mutants killed. Refused encodes require `pred99/status1`; their stale carrier
+bytes cannot independently establish sender-overflow causality. This limitation
+does not apply to admitted-carrier decoding, which is replayed.
+To replay, compile `nl7-wire.om`, feed the same `all.csv`, then provide
+`inputs/nl7-real.csv` and original stdout `expected/nl7-wire.out` to the
+native conductor cases in `fixtures/nl7-wire.cases`.
+
 ## Status (2026-10-19)
 
 - **One evidence-backed result:** the [Prime Drag Race campaign of 5 October 2026](prime-drag-race/CAMPAIGN-2026-10-05.md) (details below).

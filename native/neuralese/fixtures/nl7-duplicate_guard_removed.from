@@ -1,0 +1,3 @@
+if ne and get Seen idx bit 0
+invalid
+end

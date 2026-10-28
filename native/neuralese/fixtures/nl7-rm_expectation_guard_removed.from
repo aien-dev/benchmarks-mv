@@ -1,0 +1,6 @@
+if ne pred expected
+violation
+end
+if ne status flag eq expected 99
+violation
+end

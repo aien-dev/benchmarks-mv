@@ -183,6 +183,12 @@ All measurements here come from one NVIDIA DGX Spark (`spark`), Grace Blackwell 
 
 ---
 
+## Human-Directed Agentic Engineering
+
+Development follows Human-Directed Agentic Engineering (HDAE): humans define goals, architecture, constraints, acceptance criteria, and stopping points; agents implement, execute checks, diagnose failures, and revise within those boundaries. Human review retains responsibility for claims, acceptance, and release decisions.
+
+For the documented method and a systems-software case study, see Gregory M. Kurtzer, [*Ginux: Building an Independent Kernel That Runs Linux Userspace through Human-Directed Agentic Engineering* (2026)](https://doi.org/10.5281/zenodo.23682548). This describes current development, not the protocol or validity of historical measurements below.
+
 ## Historical record (withdrawn figures)
 
 > Everything in this section was recorded before the evidence standard in [aien-sovereign-core-mv](https://github.com/aien-dev/aien-sovereign-core-mv#measured-results) (this note was first written on 23 September 2026; labels updated 12 October 2026). None of it has been regenerated, and none of it is a current result. A figure is current only when its bundle carries commit identity, a hardware and environment record, the exact command, raw samples, SHA-256 digests, a measurement definition and steps to reproduce it. The files in `data/` are kept as recorded, including service names from before the openclaw-rs to aegis-runtime rename. On 2026-10-15 the Python baseline rows and the Rust-versus-Python records were removed from `data/` under this rule; they remain in git history. The model serving rows were served by Modular MAX, which AIEN removed on 2026-10-15.

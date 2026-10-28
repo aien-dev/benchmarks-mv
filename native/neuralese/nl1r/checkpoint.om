@@ -29,7 +29,10 @@ p = add p ulong n
 end
 end
 fn bvalid to void
-if or ne get BH 0 1 ne get BH 7 0
+if and ne get BH 0 1 ne get BH 0 2
+jinvalid
+end
+if ne get BH 7 0
 jinvalid
 end
 arm = get BH 1
@@ -48,6 +51,13 @@ n = 0
 end
 if gt arm 3
 jinvalid
+end
+if eq get BH 0 2
+if gt arm 2
+jinvalid
+end
+d = 4
+n = 40
 end
 if or ne get BH 2 d ne get BH 3 n
 jinvalid

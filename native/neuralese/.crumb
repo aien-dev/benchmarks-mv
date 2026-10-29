@@ -3,21 +3,21 @@
     "generated": {
       "children": [
         {
-          "digest": "4e6820a5ada94b0ab3e2c3d3991ca0fd13581b5011c65d20ff94b71bda85ab7e",
-          "last_commit": "e4ab4af",
+          "digest": "3f4b782b568be9958b02bc5054520129333d2171138cacbfc69c9bc1a36e4969",
+          "last_commit": "d2e99b2",
           "name": "fixtures",
           "purpose": "Public deterministic scorer controls, never sealed experiments"
         }
       ],
-      "children_root": "sha256:5539dd99280dbf385d481038870979ce97efd2e51533b0f95f8795691cf03a7d",
-      "compiled_at": "2026-10-28T15:44:23Z",
+      "children_root": "sha256:a991dff43f09c26c9facb484ec1386afc1526562ee60a245f5eb1a3cae776a21",
+      "compiled_at": "2026-10-29T20:32:31Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:6b1fdb27e40393c248f8364b52f1902dbf1a6ab369e41392f1263732ce4ad788",
+      "digest": "sha256:1eb73ff32ae2da002525c0a3824e9a4e981e3aff88f5d0d8c53acc9948af1c1e",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "files": 73,
-      "generated_at_commit": "989fb7a214d8e0d6c7ed04f5f48c45d68a43d5a3",
-      "source_tree": "sha256:85028f409b74b027763e4132eaba2f8f0699b7b7ee2623febe62e55eee1cc373"
+      "files": 109,
+      "generated_at_commit": "b31ea7a622a864d9129b1eebd62938680f9406bb",
+      "source_tree": "sha256:fae77dd247d625d57c4ff3800aae7387da1f9c806364259d0ed5c32870540531"
     }
   },
   "name": "neuralese",

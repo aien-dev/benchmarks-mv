@@ -6,7 +6,7 @@ IMPLEMENTED and EXERCISED: immutable two-stage registration, source-independent 
 
 No hardware/GPU qualification, production capability/reservation/execution, live effects, merge or deployment occurred. Source/evaluator independence is claimed, not model/vendor independence. The full parent mission's source/guide review and integration remain with Main, not this evaluator lane.
 
-Draft benchmark PR 59 is stacked on original NL6 draft 56, from exact benchmark base e4ab4afecd62272f86d67043f74ffc8153ae703e. Links: aien-train issues 39/33, PR 36, benchmarks issues 55 and PR 56, architecture issue 349. Product drafts are [capacity train PR 40](https://github.com/aien-dev/aien-train/pull/40) and [task train PR 41](https://github.com/aien-dev/aien-train/pull/41). Original manifests, freezes and negative evidence are unchanged. Historical paused report `REPORT.md` and earlier ledgers remain immutable; this report supersedes their pending-release/boundary status only.
+Benchmark PR 59 started from benchmark base e4ab4afecd62272f86d67043f74ffc8153ae703e. NL6 has landed as #56. Links: aien-train issues 39/33, PR 36, benchmarks issues 55 and PR 56, architecture issue 349. Product drafts are [capacity train PR 40](https://github.com/aien-dev/aien-train/pull/40) and [task train PR 41](https://github.com/aien-dev/aien-train/pull/41). Original manifests, freezes and negative evidence are unchanged. Historical paused report `REPORT.md` and earlier ledgers remain immutable; this report supersedes their pending-release/boundary status only.
 
 ## Preregistration, custody and release chronology
 

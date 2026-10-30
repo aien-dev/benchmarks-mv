@@ -1,0 +1,186 @@
+[
+  {
+    "mode": 0,
+    "fixture_exit": 0,
+    "judge_exit": 0,
+    "stdout_bytes": 893,
+    "stderr": "",
+    "raw_sha256": "f82ddce839cc4b98b184bc21e07b6591d7b67129a9e3ef5991569df1265a056b"
+  },
+  {
+    "mode": 1,
+    "fixture_exit": 0,
+    "judge_exit": 90,
+    "stdout_bytes": 0,
+    "stderr": "NL1RJ INVALID\n",
+    "raw_sha256": "3186bd23557946d9caf92dfccfdc2d52158b183697231a2cb433c292299781a9"
+  },
+  {
+    "mode": 2,
+    "fixture_exit": 0,
+    "judge_exit": 90,
+    "stdout_bytes": 0,
+    "stderr": "NL1RJ INVALID\n",
+    "raw_sha256": "bf63518a71a307b78663c61e8953993d59a75959e0c8dce294763aba9737668b"
+  },
+  {
+    "mode": 3,
+    "fixture_exit": 0,
+    "judge_exit": 90,
+    "stdout_bytes": 0,
+    "stderr": "NL1RJ INVALID\n",
+    "raw_sha256": "86d3a7c3277f419fb451a071be993cd32c78ffade9ab6b995052a99d24bb14ac"
+  },
+  {
+    "mode": 4,
+    "fixture_exit": 0,
+    "judge_exit": 90,
+    "stdout_bytes": 0,
+    "stderr": "NL1RJ INVALID\n",
+    "raw_sha256": "0a643be6848f51418c0083dba1008419757cfd67ee4467aba8f706b8711eb674"
+  },
+  {
+    "mode": 5,
+    "fixture_exit": 0,
+    "judge_exit": 90,
+    "stdout_bytes": 0,
+    "stderr": "NL1RJ INVALID\n",
+    "raw_sha256": "1993f758e7689aa5599f402a0e683d0737497d916cb5c8b1b898e98a8f5af559"
+  },
+  {
+    "mode": 6,
+    "fixture_exit": 0,
+    "judge_exit": 90,
+    "stdout_bytes": 0,
+    "stderr": "NL1RJ INVALID\n",
+    "raw_sha256": "5cff87ef9f9943daf26d4dd5bf9442a08628d51454e7d3d9311c939a9c126440"
+  },
+  {
+    "mode": 7,
+    "fixture_exit": 0,
+    "judge_exit": 90,
+    "stdout_bytes": 0,
+    "stderr": "NL1RJ INVALID\n",
+    "raw_sha256": "17c027c3adbf365fe216e414293cded9c25d0ece2568ca7e83dee754e53c7b61"
+  },
+  {
+    "mode": 8,
+    "fixture_exit": 0,
+    "judge_exit": 90,
+    "stdout_bytes": 0,
+    "stderr": "NL1RJ INVALID\n",
+    "raw_sha256": "7c3b6d81b1def30e689ba0e4a4d63d3302fb37af4647822afb6216cf435aa654"
+  },
+  {
+    "mode": 9,
+    "fixture_exit": 0,
+    "judge_exit": 90,
+    "stdout_bytes": 0,
+    "stderr": "NL1RJ INVALID\n",
+    "raw_sha256": "96a01bc3784f3d246bedad89d61c4afe51bb5e3e167f20d158d123569a6494f9"
+  },
+  {
+    "mode": 10,
+    "fixture_exit": 0,
+    "judge_exit": 90,
+    "stdout_bytes": 0,
+    "stderr": "NL1RJ INVALID\n",
+    "raw_sha256": "e84160b0deb1c565090ba0874e499d6274afabba255fdf722ae79d78d978c11e"
+  },
+  {
+    "mode": 11,
+    "fixture_exit": 0,
+    "judge_exit": 90,
+    "stdout_bytes": 0,
+    "stderr": "NL1RJ INVALID\n",
+    "raw_sha256": "b7b64285b06788a696d3c517c53a3190b4fa107ff886ae00e3e6bbd9a9ae685d"
+  },
+  {
+    "mode": 12,
+    "fixture_exit": 0,
+    "judge_exit": 90,
+    "stdout_bytes": 0,
+    "stderr": "NL1RJ INVALID\n",
+    "raw_sha256": "e049410fbb484cb73517aaee090087e8b0a810f23a371a1729a6f55ab5163f1e"
+  },
+  {
+    "mode": 13,
+    "fixture_exit": 0,
+    "judge_exit": 90,
+    "stdout_bytes": 0,
+    "stderr": "NL1RJ INVALID\n",
+    "raw_sha256": "744ddbf5947c6590d5c243c94c09dd9932c0039b98f96ffb2f50e0b512999c45"
+  },
+  {
+    "mode": 14,
+    "fixture_exit": 0,
+    "judge_exit": 90,
+    "stdout_bytes": 0,
+    "stderr": "NL1RJ INVALID\n",
+    "raw_sha256": "d32b89ca73f9a6f9947ff9a1914148fd1a2a349e83b54ba9bd4bd6b22b147f59"
+  },
+  {
+    "mode": 15,
+    "fixture_exit": 0,
+    "judge_exit": 90,
+    "stdout_bytes": 0,
+    "stderr": "NL1RJ INVALID\n",
+    "raw_sha256": "cd9efad9975f91163c9a22ec94a163d432d171373dd248eb2add8f785d833e55"
+  },
+  {
+    "mode": 16,
+    "fixture_exit": 0,
+    "judge_exit": 90,
+    "stdout_bytes": 0,
+    "stderr": "NL1RJ INVALID\n",
+    "raw_sha256": "d925abb65e1ebef48b0eab15595226e036554fa2a0bff03c2e3c9adf5e292700"
+  },
+  {
+    "mode": 21,
+    "fixture_exit": 0,
+    "judge_exit": 0,
+    "stdout_bytes": 893,
+    "stderr": "",
+    "raw_sha256": "acc00da09cd10b369cc6bb36cce0e0a5c5df035d787010a5eb5f50d24cc22ea8"
+  },
+  {
+    "mode": 22,
+    "fixture_exit": 0,
+    "judge_exit": 90,
+    "stdout_bytes": 0,
+    "stderr": "NL1RJ INVALID\n",
+    "raw_sha256": "1d3435d9628f776631ac74d0f0a55d974b51bb843c1c2f73e2b4a290995bff5b"
+  },
+  {
+    "mode": 23,
+    "fixture_exit": 0,
+    "judge_exit": 90,
+    "stdout_bytes": 0,
+    "stderr": "NL1RJ INVALID\n",
+    "raw_sha256": "207d074d532959f1c905fb535a0bd0f6a9740194b1386dfff0b85bb58913da5a"
+  },
+  {
+    "mode": 24,
+    "fixture_exit": 0,
+    "judge_exit": 90,
+    "stdout_bytes": 0,
+    "stderr": "NL1RJ INVALID\n",
+    "raw_sha256": "dd6b73d79b9542ae58f85aa33e485a39603b7eefc1425df7b0c26363f8b1b2a7"
+  },
+  {
+    "mode": 25,
+    "fixture_exit": 0,
+    "judge_exit": 90,
+    "stdout_bytes": 0,
+    "stderr": "NL1RJ INVALID\n",
+    "raw_sha256": "1d1eb3b3712e94d123b8f653d8011a9ea9565ab8e3661f043bcb966358d5c2fb"
+  },
+  {
+    "mode": 26,
+    "fixture_exit": 0,
+    "judge_exit": 90,
+    "stdout_bytes": 0,
+    "stderr": "NL1RJ INVALID\n",
+    "raw_sha256": "c4e7cc1491529af0c00224cbb6494f0eb706ff254389013f0e19a0fb5ccc2b22"
+  }
+]

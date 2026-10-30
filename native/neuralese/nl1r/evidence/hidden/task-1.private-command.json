@@ -1,0 +1,23 @@
+{
+  "argv": [
+    "/home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/task-independent",
+    "1",
+    "3729207599",
+    "63840"
+  ],
+  "record": {
+    "stage": "task",
+    "unit": 1,
+    "producer_exit": 0,
+    "checkpoint_pack_exit": 0,
+    "raw_sha256": "78d22343f2cc84202edab1e69dca824bed57b8b4912579bdf05574ec00132830",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "checkpoint_sha256": "3248cdc22d024704f22fe890f07f9006be1a8ebace9bc0154b27d13d10ae0ff1",
+    "parameter_carriers_sha256": "40bc0b7642d4f11c78000922e4226024174051f22e2935bf3a28603c1e0958c9",
+    "all_predictions_sha256": "cebd046ee8bb5e081f444c3590ba9c281c705b420d715768a89a286760be7e3e",
+    "raw_bytes": 29097,
+    "checkpoint_bytes": 384,
+    "process_monotonic_start_ns": 96162087399231,
+    "process_monotonic_end_ns": 96162103281870
+  }
+}

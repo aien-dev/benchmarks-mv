@@ -1,0 +1,56 @@
+[
+  {
+    "name": "wrong-chunk-expectation",
+    "source_sha256": "215125dfa223e9254b479e55b2281aaa048a555b6568479efc4d48ef449224fd",
+    "compile_exit": 0,
+    "compile_stderr": "",
+    "binary_sha256": "eda05d7c59e41ca334046555f4f688e03d29102a692995938d8d8291adf53db9",
+    "failed_cases": [
+      0,
+      1
+    ],
+    "detected": true
+  },
+  {
+    "name": "no-receiver-match",
+    "source_sha256": "dcd7a56ce9aabead4c496e90c2587b99f61dc41295d97084709529c51608ca6a",
+    "compile_exit": 0,
+    "compile_stderr": "",
+    "binary_sha256": "7041a091237a698081b75469c274fe343cea0a901e83e9fdb5347a469f2b5b6b",
+    "failed_cases": [
+      6,
+      7,
+      8
+    ],
+    "detected": true
+  },
+  {
+    "name": "execute-before-all-verified",
+    "source_sha256": "4f5b448b534c87d9a74bb27d096c884fc722eb089f1c2631f864ed1f7578684e",
+    "compile_exit": 0,
+    "compile_stderr": "",
+    "binary_sha256": "8939243b113cc0a073fe8c79434cd12156979976d193984b19d32713f20c322a",
+    "failed_cases": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "detected": true
+  },
+  {
+    "name": "no-envelope-validation",
+    "source_sha256": "587a81f65a70388efa76d3e077bc01bf8ea3af1bd760c124546f0242f389702b",
+    "compile_exit": 0,
+    "compile_stderr": "",
+    "binary_sha256": "0198a48a0e66598b89f2da4f663c3cf5ac9180bd3e9fb5a71ba3286cdb22e568",
+    "failed_cases": [
+      16,
+      17
+    ],
+    "detected": true
+  }
+]

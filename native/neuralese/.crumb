@@ -7,17 +7,23 @@
           "last_commit": "e4ab4af",
           "name": "fixtures",
           "purpose": "Public deterministic scorer controls, never sealed experiments"
+        },
+        {
+          "digest": "01205ae3d4cd1efb7b582327930cd9d97c27b8c3dc83172225a4a2f4461b3760",
+          "last_commit": "463123e",
+          "name": "nl1r",
+          "purpose": "Append-only NL1R preregistration and source-independent native actual-wire judging; historical N"
         }
       ],
-      "children_root": "sha256:5539dd99280dbf385d481038870979ce97efd2e51533b0f95f8795691cf03a7d",
-      "compiled_at": "2026-10-29T02:16:36Z",
+      "children_root": "sha256:d74e0782b9710ea55667f3835f9a99611996d6830e050485a39ca71e189a4d73",
+      "compiled_at": "2026-10-30T03:16:45Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:6b1fdb27e40393c248f8364b52f1902dbf1a6ab369e41392f1263732ce4ad788",
-      "evidence_files": 0,
-      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "files": 73,
-      "generated_at_commit": "e4ab4afecd62272f86d67043f74ffc8153ae703e",
-      "source_tree": "sha256:85028f409b74b027763e4132eaba2f8f0699b7b7ee2623febe62e55eee1cc373"
+      "digest": "sha256:14b62406b7ea77f164881d6c550ac3a123b5ccb64f76160251400c148262f5bc",
+      "evidence_files": 1362,
+      "evidence_root": "sha256:a250df0bf0dbf481d048a21e459cd8bdb4509c242fd7978fe95a4bedfefbdfd6",
+      "files": 1516,
+      "generated_at_commit": "463123e6aeb77b0ec269f479941310921e6521ff",
+      "source_tree": "sha256:cf289c908f7a202f242735624b7d66af6525442f424cadf66850bf0c8ed0fa1b"
     }
   },
   "name": "neuralese",

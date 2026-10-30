@@ -1,0 +1,12 @@
+{
+  "schema": "NL1R-finite-regret/1",
+  "definition": "(total-exact)/total for finite exact0/1 task decision error, ignoring abstention in exact count; abstentions/wrong-accepted remain separate native metrics. Refused omitted rows have exact0. No abstention utility or Q-regret/population claim. For total0 resultNOT_APPLICABLE, never zero. Task2 included as specified by task.outcomes.",
+  "oracle": "WolframLanguageEvaluator finite-regret-query.wl -> finite-regret-query.raw.json; exact rational lookup, no host-derived scientific arithmetic",
+  "table_file": "all-seed-report.tsv",
+  "native_metric_row_count": 2691,
+  "all_tasks": [
+    0,
+    1,
+    2
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "attempt": 3,
+  "compiler_sha256": "d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84",
+  "source_sha256": "9ba38e2a3b0b87d95c74c2d9372a545799f5f87926e045b681da6684fcf3822e",
+  "exit": 12,
+  "stderr": "omc: line 394: error 12\n"
+}

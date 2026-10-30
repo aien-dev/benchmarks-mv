@@ -6,7 +6,7 @@
   "supersedes": "orig3-selector-prereg-2026-10-25 (manifests/prereg/orig3_selector.json, FROZEN, sealed verdict INCONCLUSIVE; that file, its evidence and its verdict stay unchanged; this file governs every new ORIG-3 run)",
   "created_at": "2026-10-25T12:07:59Z",
   "status": "FROZEN",
-  "results_status": "NOT_RUN",
+  "results_status": "FAIL",
   "issues": [
     "aien-dev/benchmarks-mv#45",
     "aien-dev/aien-train#24",

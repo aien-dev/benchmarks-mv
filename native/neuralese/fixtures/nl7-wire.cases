@@ -1,0 +1,9 @@
+# Native NL7 learned wire replay and independent receiver mutants.
+deadline 20
+nl7-wire-real run native/neuralese/nl7-wire.om file:inputs/nl7-real.csv file:expected/nl7-wire.out - 0
+subst native/neuralese/fixtures/nl7-wire-receiver_weights.from native/neuralese/fixtures/nl7-wire-receiver_weights.to
+nl7-wire-kill-receiver_weights kill native/neuralese/nl7-wire.om file:inputs/nl7-real.csv file:expected/nl7-wire.out - 1
+subst native/neuralese/fixtures/nl7-wire-carrier_decode.from native/neuralese/fixtures/nl7-wire-carrier_decode.to
+nl7-wire-kill-carrier_decode kill native/neuralese/nl7-wire.om file:inputs/nl7-real.csv file:expected/nl7-wire.out - 1
+subst native/neuralese/fixtures/nl7-wire-receiver_threshold.from native/neuralese/fixtures/nl7-wire-receiver_threshold.to
+nl7-wire-kill-receiver_threshold kill native/neuralese/nl7-wire.om file:inputs/nl7-real.csv file:expected/nl7-wire.out - 1

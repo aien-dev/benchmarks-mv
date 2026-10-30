@@ -1,0 +1,29 @@
+{
+  "schema": "nl7-wire-controls/1",
+  "scope": "HOST_SYNTHETIC_LEARNED_RECEIVER_REPLAY_ONLY",
+  "source": "native/neuralese/nl7-wire.om",
+  "input": "inputs/nl7-real.csv",
+  "original_stdout": "expected/nl7-wire.out",
+  "original_expected_exit": 0,
+  "refusal_limit": "Producer encode refusal rc1/2 is counted as refused and must match N pred99/status1; this checker cannot establish sender overflow causality from a refused stale carrier. Successful rc0 paths are replayed from bytes without source ID.",
+  "source_mutants": [
+    {
+      "name": "receiver_weights",
+      "replace": "weight = get Params add base add 15 add mul k 4 j",
+      "with": "weight = get Params add base add 16 add mul k 4 j",
+      "mutant_expected_exit": 1
+    },
+    {
+      "name": "carrier_decode",
+      "replace": "ret sub mul div f64 u f64 levels 8.0f64 4.0f64",
+      "with": "ret neg sub mul div f64 u f64 levels 8.0f64 4.0f64",
+      "mutant_expected_exit": 1
+    },
+    {
+      "name": "receiver_threshold",
+      "replace": "if ge score 0.5f64",
+      "with": "if ge score 1.0f64",
+      "mutant_expected_exit": 1
+    }
+  ]
+}

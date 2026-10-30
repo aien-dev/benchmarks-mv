@@ -1,0 +1,54 @@
+note Public synthetic probe: field1=bit0; one score is exactly1 and the rest0.
+note Filed IEEE1 carrier also occurs in NL1 learned.stdout at its source-frozen run.
+text RG "17,1,0,1,0,1,0,0,0,4607182418800017408,0,0,0,1,0,0,0,0,0,0,0\n"
+text RP "17,1,0,1,0,1,0,0,0,4607182418800017408,0,0,0,0,0,0,0,0,0,0,0\n"
+text RA "17,1,0,1,0,1,0,0,0,4607182418800017408,0,0,0,1,0,0,0,1,0,0,0\n"
+text RW "17,1,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n"
+text NH "NL6ROW good="
+text NR " refused="
+fn fill data view uchar * to void
+for i ulong len data
+put Buf i get data i
+end
+put Io 1 0
+put Io 2 len data
+end
+fn main to int
+a = new uchar 1 0
+if ne argcnt 2
+invalid
+end
+n = argread 1 a 0 1
+if ne n 1
+invalid
+end
+mode = get a 0
+if or lt mode 48 gt mode 53
+invalid
+end
+fill RG
+if eq mode 49
+fill RP
+end
+if eq mode 50
+fill RA
+end
+if eq mode 53
+fill RW
+end
+row
+if eq mode 51
+put Io 1 0
+row
+end
+if eq mode 52
+finish
+end
+idx = mul mul ulong 2 5 3
+putout NH len NH
+num get Good idx
+putout NR len NR
+num get Refuse idx
+putout LF 1
+ret 0
+end

@@ -15,6 +15,117 @@ AIEN does not compare itself with other people's systems. Speed is measured agai
 - [omega-mv](https://github.com/aien-dev/omega-mv): the language and GPU engine that the Prime Drag Race native GB10 entry runs on.
 - [aien-receipts](https://github.com/aien-dev/aien-receipts): where the Spark publishes the signed test bundle for each tested commit of this repository.
 
+## Neuralese independent evaluation (NL-6)
+
+Issue [#55](https://github.com/aien-dev/benchmarks-mv/issues/55), extending
+[#38](https://github.com/aien-dev/benchmarks-mv/issues/38), freezes its design at
+`8ee0a494bf73230c9d37647eb3caea792298fa8d` in
+[`manifests/neuralese_prereg.json`](manifests/neuralese_prereg.json). The
+[`raw Wolfram calls/results`](manifests/neuralese_wolfram_raw.json) establish the
+statistical planning calculations, not experimental results. The design includes
+an eight-combination training/eight-combination test split, matched text,
+typed-semantic and deterministic Omega baselines, full lifecycle costs and
+adversarial controls. A frozen design is not a sealed, executed campaign.
+
+[`native/neuralese/score.om`](native/neuralese/score.om) is a seeded handwritten
+Omega evidence checker. It supplements the existing signed Spark judge; it does
+not create an authority or execute proposed effects. Public synthetic fixtures
+qualify only the checker, never model performance or physical throughput.
+
+Compile the checker and the existing Omega conductor with the compiler from
+`omega-mv@e79566c191ea8ef11888e69ce50d8fadf375d4fd`, SHA-256
+`d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84`.
+This binary originated at `1fe5976d398646b17acabbf6d9dfae96b017e439`; it is
+not either of the older documented `2c824805` / `49923639` compiler pins.
+The conductor source is `seed/qualification/om2/gate.om` at that same revision.
+It verifies the compiler digest itself, compiles every source and mutant, runs
+each child with a deadline, compares exact stdout/stderr/status and writes raw
+artifacts. Never run a binary left by a failed compile.
+
+Run the conductor in a disposable replay directory containing `native` linked
+to this checkout's `native`, and `seed` linked to the pinned Omega checkout's
+`seed` (the conductor reads its committed SHA-256 constants there):
+
+```text
+<compiled-gate> <pinned-omc> d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84 native/neuralese/host.cases <new-scratch-directory>
+```
+
+Direct checker interface: `score MODE TRUSTED_REFERENCE ACTUAL_RAW_OUTPUT`.
+`MODE=1` compares ordered lines of exactly four ASCII bits and LF, reporting
+total/correct/wrong rows. Its reference comes from the independent task inputs,
+not a candidate's `expected_bits`; self-reported counts or extra fields fail.
+`MODE=2` compares a nonempty raw journal byte-for-byte with a separately frozen
+reference. `MODE=3` parses the NL4 boundary record, independently binds all
+operation/operand/type-shape/effect fields and recomputes increment, double or
+identity. Refusals must contain no residual operation, effects or result.
+The trusted reference starts `NL4REF1`; its final numeric field is reserved zero,
+not a supplied expected result. Actual records start `NL4R1`. Both have exactly
+ten decimal fields and LF; no leading zeroes, trailing fields or oversized values.
+Exit `0` means matching fixture evidence, `1` means wrong/missing-length output,
+`90` means invalid input/setup, and `93` means output I/O failure.
+
+Raw artifacts must come from independently replayed commands with pinned
+source/compiler/binary/input hashes and actual exits, not copied producer
+summary fields. Journal equality alone does not establish authorization; the
+reference and the existing capability authority must establish that separately.
+Neither row counts nor a `PASS` line establish independent test custody,
+distinct task IDs, safety certification or a quality-floor campaign. The
+checker deliberately does not accept producer timing, token, privacy, consent
+or hardware claims. Missing instrument evidence stays NOT_MEASURED/NOT_RUN.
+
+The fixtures include wrong-but-valid results, wrong operations/shapes/effects,
+all-refuse candidates, forged summaries, malformed/short/trailing records and
+guard-removal mutants. Changed equality/result/metadata guards must accept the
+bad fixture in the mutant while the original refuses it. Signals, timeouts and
+compile failures never count as mutation kills. The oracle arithmetic/parity
+queries and raw tool results are in
+[`native/neuralese/arithmetic_wolfram_raw.json`](native/neuralese/arithmetic_wolfram_raw.json).
+All learned, model-native and GB10 campaigns remain NOT_RUN/BLOCKED unless
+separately admitted and executed. No model, GPU or live-serving access is part
+of this checker.
+
+For NL1 CSV evidence, concatenate `native/neuralese/learnscore.om` and
+`native/neuralese/learn-cli.om` in that order before compilation, then run
+`learnscore RAW_CSV_FILE`. This bounded-streaming checker interprets the raw
+IEEE-754 carriers itself, derives fixture meanings from input IDs, recomputes
+threshold decisions and abstentions, rejects forged prediction/status fields
+and rejects duplicate or missing selected cases. It reports every seed,
+training/held-out partition and frozen quantization arm separately. It neither
+trusts the producer's aggregation nor counts abstention as recovery. Return
+zero means the evidence was scored, not that recovery was perfect.
+
+[`qualification.json`](native/neuralese/qualification.json) records the native
+conductor's 41/41 synthetic checks, including six guard-removal mutants.
+[`nl1-independent.json`](native/neuralese/nl1-independent.json) records an
+independent rebuild and CPU replay of learned sender/receiver source
+`aien-train@c5992ca0b015a233bca6f9af7af892a71c558403`.
+Its held-out full-precision learned recovery is 5/8, 5/8 and 6/8 for seeds
+17, 29 and 43; the fixed-basis and discrete controls each recover all eight.
+These filed native-checker counts are not independent objective samples for
+the preregistered statistical campaign. No parameters were tuned from them.
+The exact independently generated raw CSV is retained as
+[`nl1-replay.stdout`](native/neuralese/nl1-replay.stdout).
+The original `0e01c58` stream is preserved in
+[`nl1-pre-repair.stdout`](native/neuralese/nl1-pre-repair.stdout): its discrete
+control incorrectly decoded the original input ID rather than its transmitted
+byte. The repair changes only that causal control, not learned parameters.
+An independently compiled direct-ID mutant exits 77 when the control changes
+only the transmitted byte, while the repaired source completes successfully.
+[`nl4-independent.json`](native/neuralese/nl4-independent.json) records an
+independent compile of `omega-mv@09b1394fe68287eaa10b0d90cf07a9dd00e6cb60`
+with its locked projection and envelope dependencies. The successful pure
+operation and foreign-tenant refusal were replayed with their actual channels
+and exits; the checker recomputes the result from separately bound request
+fields. This is a closed host boundary, not signed capability authorization.
+[`nl5-independent.json`](native/neuralese/nl5-independent.json) records
+independent proposal and unchanged-kernel replay of the 30 Allen scenarios.
+It explicitly distinguishes proposal refusal, kernel admission and real task
+execution; C remains a typed fallback, not a learned transport.
+The six ordinary/corrected states were also checked against independent
+Wolfram-derived references, including a wrong-terminal-state negative control;
+[`nl5_wolfram_raw.json`](native/neuralese/nl5_wolfram_raw.json) retains the
+actual arithmetic tool calls and results.
+
 ## Status (2026-10-19)
 
 - **One evidence-backed result:** the [Prime Drag Race campaign of 5 October 2026](prime-drag-race/CAMPAIGN-2026-10-05.md) (details below).

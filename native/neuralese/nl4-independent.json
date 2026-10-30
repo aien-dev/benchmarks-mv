@@ -1,0 +1,96 @@
+{
+  "schema": "nl6-independent-nl4-replay-1",
+  "status": "PASS",
+  "scope": "HOST_SYNTHETIC_BOUNDARY_ONLY",
+  "preregistration_commit": "8ee0a494bf73230c9d37647eb3caea792298fa8d",
+  "source_commit": "09b1394fe68287eaa10b0d90cf07a9dd00e6cb60",
+  "source_parts_in_order": [
+    {
+      "repository": "omega-mv",
+      "commit": "09b1394fe68287eaa10b0d90cf07a9dd00e6cb60",
+      "path": "neuralese/host-proposal.om",
+      "sha256": "c103f5417d3ae9bf63a13b502da721be673a6bf699c89f98a56e9069b431c665"
+    },
+    {
+      "repository": "aien-train",
+      "commit": "0e01c58a41f1a2fb976efa75c1cc554503aa2ee4",
+      "path": "native/neuralese/hadamard.om",
+      "sha256": "da4a1b91fcd72b4f5fa3a70461932626acdbc62a9a8d0b9876433f4a44f6ed20"
+    },
+    {
+      "repository": "omega-mv",
+      "commit": "09b1394fe68287eaa10b0d90cf07a9dd00e6cb60",
+      "path": "neuralese/proposal.om",
+      "sha256": "2a83bfc17f6897d2d1ed017d57a1cfe9b8e1ed15286d13c27a23b9907628319b"
+    },
+    {
+      "repository": "aien-protocols-mv",
+      "commit": "6fb728a14781eb4e5262ffbdc9c2e6be64974f36",
+      "path": "specs/latent-payload/validator.om",
+      "sha256": "e85d174839f7d0c3406f783ec0fd69d52ce5576bdcca4892c16b21b09f14b003"
+    },
+    {
+      "repository": "omega-mv",
+      "commit": "09b1394fe68287eaa10b0d90cf07a9dd00e6cb60",
+      "path": "om/tls/sha2.om",
+      "sha256": "5cf0f98116def6917d3a373f2bd4c3932d46e3ff84d9567bbae9e720366fdb33"
+    }
+  ],
+  "source_sha256": "cba8d6466f0adf33c6eae56d75291b5b439d30ba7d4547be4272c979075a2a7a",
+  "compiler_path": "/home/drakestapleton/fix/neuralese/seed/out/omc",
+  "compiler_sha256": "d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84",
+  "compile_exit": 0,
+  "compile_stderr": "",
+  "binary_sha256": "6fb7a87f4f069c0097b1f7ffdf146c41571a07b9da6c4900d272f86b7193aea0",
+  "records": [
+    {
+      "name": "success",
+      "fixture_path": "neuralese/fixtures/nl4-1001.wire",
+      "fixture_sha256": "d72907fc0eec124ccbb5de011930a7109ca1c5515378c21587658ab105eab8f4",
+      "context_sha256": "c6332471d8888778f362fd93cc3cc857fac358d915d191f8e9f7de69ce9bf2c4",
+      "command": [
+        "/tmp/nl6-replay-x_1xr4k0/nl4-proposal",
+        "/tmp/nl6-replay-x_1xr4k0/nl4-context.bin",
+        "1",
+        "2"
+      ],
+      "exit": 0,
+      "expected_exit": 0,
+      "stdout": "NL4R1 0 1 2 1 1 1 0 1 0 3\n",
+      "stderr": "",
+      "scored_channel": "stdout",
+      "reference_path": "native/neuralese/fixtures/nl4-bound-success.ref",
+      "reference_sha256": "58db17cd4b5c9a59dc22deec2bfdf56b1ec42a5b4d5a079ee675f53ea2cf92cb",
+      "checker_exit": 0,
+      "checker_stdout": "NL6 total=1 correct=1 wrong=0\nNL6 PASS\n",
+      "checker_stderr": "",
+      "independent_raw_channels_match_producer": true
+    },
+    {
+      "name": "foreign-tenant-refusal",
+      "fixture_path": "neuralese/fixtures/nl4-foreign.wire",
+      "fixture_sha256": "0b7dbf455ab597a182566b7e3b89f539d2b8d9e417b825d4cb3127066e7ea427",
+      "context_sha256": "c6332471d8888778f362fd93cc3cc857fac358d915d191f8e9f7de69ce9bf2c4",
+      "command": [
+        "/tmp/nl6-replay-x_1xr4k0/nl4-proposal",
+        "/tmp/nl6-replay-x_1xr4k0/nl4-context.bin",
+        "1",
+        "2"
+      ],
+      "exit": 20,
+      "expected_exit": 20,
+      "stdout": "",
+      "stderr": "NL4R1 20 0 0 0 0 0 0 0 0 0\n",
+      "scored_channel": "stderr",
+      "reference_path": "native/neuralese/fixtures/nl4-bound-refusal.ref",
+      "reference_sha256": "24ada740f7af52bda95f0c6b0b2d517bc53bf9f405053c7251c00c86f7109e0a",
+      "checker_exit": 0,
+      "checker_stdout": "NL6 total=1 correct=1 wrong=0\nNL6 PASS\n",
+      "checker_stderr": "",
+      "independent_raw_channels_match_producer": true
+    }
+  ],
+  "interpretation": "Independent compile and raw CPU replay. Request opcode1 operand2 and trusted fixture shape/effect binding are checked; successful scalar3 recomputed by score.om, not supplied as expected result. Foreign tenant refusal has empty stdout, exit20 and zero-residue record on stderr. No mutation executed against boundary implementation. The existing checker negative controls cover wrong operation/result/shape/effect and refusal residue. No signed MJR/capability admission, durable task execution, learned transport or physical GB10 result established.",
+  "campaign": "NOT_RUN",
+  "physical_gb10": "BLOCKED"
+}

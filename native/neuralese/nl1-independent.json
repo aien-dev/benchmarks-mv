@@ -1,0 +1,95 @@
+{
+  "schema": "nl6-independent-nl1-v1",
+  "status": "EXERCISED",
+  "scope": "PUBLIC_SYNTHETIC_HOST_RECOVERY_ONLY",
+  "frozen_design": "8ee0a494bf73230c9d37647eb3caea792298fa8d",
+  "candidate_source_commit": "c5992ca0b015a233bca6f9af7af892a71c558403",
+  "source_parts_in_order": [
+    {
+      "path": "native/neuralese/hadamard.om",
+      "sha256": "da4a1b91fcd72b4f5fa3a70461932626acdbc62a9a8d0b9876433f4a44f6ed20"
+    },
+    {
+      "path": "native/neuralese/io.om",
+      "sha256": "864c411ee35f569f4484a0eff210c5f79ba3a807a840aa31578d55b26471ac09"
+    },
+    {
+      "path": "native/neuralese/affine.om",
+      "sha256": "8bfe99e211a799ff095316e8d1a50e9c3a57e13e4f289e5e955247ee555f5fed"
+    },
+    {
+      "path": "native/neuralese/learn.om",
+      "sha256": "b5c9c03465384789d5ed9f9f2adc057a38aac9ec18035193c3eddd3b1205a402"
+    }
+  ],
+  "source_sha256": "575f0dbac3dcb50efd241ca2a976eec2f0039da3696146992c24112bfbc50486",
+  "compiler_sha256": "d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84",
+  "candidate_compile_exit": 0,
+  "candidate_compile_stderr": "",
+  "candidate_binary_sha256": "ea8aeebe161bd3319a319de2d7cb836c3014a5d1ae887348ee3e5db768ef50bd",
+  "candidate_run_exit": 0,
+  "candidate_stderr": "",
+  "candidate_raw_sha256": "6f15d1fe1e4c00944290441f1e3dc5c5275ce6d931072b275cfca10363d54d72",
+  "candidate_raw_path": "native/neuralese/nl1-replay.stdout",
+  "checker_source_parts": [
+    "native/neuralese/learnscore.om",
+    "native/neuralese/learn-cli.om"
+  ],
+  "checker_source_sha256": "29bf3bc2eb813a14ea259970d63e531cc3c6d6788d81dda201509f57f93c3b9c",
+  "checker_binary_sha256": "28d1a89c3ec272cd717c36285ffeea0e6737377a515f1687a0e6491730544601",
+  "checker_exit": 0,
+  "checker_stdout": "NL6RAW1,seed,partition,arm,quant,total,correct,refused,wrong\nS,17,0,0,0,16,14,0,2\nS,17,0,0,1,16,14,0,2\nS,17,0,0,2,16,14,0,2\nS,17,0,1,0,16,2,11,3\nS,17,0,1,1,16,3,7,6\nS,17,0,1,2,16,2,10,4\nS,17,0,2,0,16,14,2,0\nS,17,0,2,1,16,14,0,2\nS,17,0,2,2,16,14,2,0\nS,17,0,3,0,16,16,0,0\nS,17,0,4,0,16,1,1,14\nS,17,0,4,1,16,1,1,14\nS,17,0,4,2,16,1,1,14\nS,17,1,0,0,8,8,0,0\nS,17,1,0,1,8,8,0,0\nS,17,1,0,2,8,8,0,0\nS,17,1,1,0,8,1,5,2\nS,17,1,1,1,8,1,5,2\nS,17,1,1,2,8,0,6,2\nS,17,1,2,0,8,6,2,0\nS,17,1,2,1,8,6,2,0\nS,17,1,2,2,8,6,2,0\nS,17,1,3,0,8,8,0,0\nS,17,1,4,0,8,1,0,7\nS,17,1,4,1,8,1,0,7\nS,17,1,4,2,8,1,0,7\nS,17,2,0,0,8,5,2,1\nS,17,2,0,1,8,5,1,2\nS,17,2,0,2,8,5,2,1\nS,17,2,1,0,8,2,6,0\nS,17,2,1,1,8,0,7,1\nS,17,2,1,2,8,2,6,0\nS,17,2,2,0,8,8,0,0\nS,17,2,2,1,8,8,0,0\nS,17,2,2,2,8,8,0,0\nS,17,2,3,0,8,8,0,0\nS,17,2,4,0,8,0,1,7\nS,17,2,4,1,8,0,1,7\nS,17,2,4,2,8,0,1,7\nS,29,0,0,0,16,14,0,2\nS,29,0,0,1,16,14,0,2\nS,29,0,0,2,16,14,0,2\nS,29,0,1,0,16,6,6,4\nS,29,0,1,1,16,5,8,3\nS,29,0,1,2,16,6,5,5\nS,29,0,2,0,16,14,2,0\nS,29,0,2,1,16,14,0,2\nS,29,0,2,2,16,14,2,0\nS,29,0,3,0,16,16,0,0\nS,29,0,4,0,16,1,3,12\nS,29,0,4,1,16,1,2,13\nS,29,0,4,2,16,1,3,12\nS,29,1,0,0,8,8,0,0\nS,29,1,0,1,8,8,0,0\nS,29,1,0,2,8,8,0,0\nS,29,1,1,0,8,1,7,0\nS,29,1,1,1,8,0,7,1\nS,29,1,1,2,8,1,7,0\nS,29,1,2,0,8,6,2,0\nS,29,1,2,1,8,6,2,0\nS,29,1,2,2,8,6,2,0\nS,29,1,3,0,8,8,0,0\nS,29,1,4,0,8,3,0,5\nS,29,1,4,1,8,3,0,5\nS,29,1,4,2,8,3,0,5\nS,29,2,0,0,8,5,2,1\nS,29,2,0,1,8,5,1,2\nS,29,2,0,2,8,5,2,1\nS,29,2,1,0,8,4,4,0\nS,29,2,1,1,8,4,4,0\nS,29,2,1,2,8,4,4,0\nS,29,2,2,0,8,8,0,0\nS,29,2,2,1,8,8,0,0\nS,29,2,2,2,8,8,0,0\nS,29,2,3,0,8,8,0,0\nS,29,2,4,0,8,1,2,5\nS,29,2,4,1,8,1,2,5\nS,29,2,4,2,8,1,2,5\nS,43,0,0,0,16,14,0,2\nS,43,0,0,1,16,14,0,2\nS,43,0,0,2,16,14,0,2\nS,43,0,1,0,16,12,0,4\nS,43,0,1,1,16,11,1,4\nS,43,0,1,2,16,11,1,4\nS,43,0,2,0,16,14,2,0\nS,43,0,2,1,16,14,0,2\nS,43,0,2,2,16,14,2,0\nS,43,0,3,0,16,16,0,0\nS,43,0,4,0,16,1,0,15\nS,43,0,4,1,16,1,0,15\nS,43,0,4,2,16,1,0,15\nS,43,1,0,0,8,8,0,0\nS,43,1,0,1,8,8,0,0\nS,43,1,0,2,8,8,0,0\nS,43,1,1,0,8,6,0,2\nS,43,1,1,1,8,4,2,2\nS,43,1,1,2,8,6,0,2\nS,43,1,2,0,8,6,2,0\nS,43,1,2,1,8,6,2,0\nS,43,1,2,2,8,6,2,0\nS,43,1,3,0,8,8,0,0\nS,43,1,4,0,8,0,0,8\nS,43,1,4,1,8,0,0,8\nS,43,1,4,2,8,0,0,8\nS,43,2,0,0,8,6,1,1\nS,43,2,0,1,8,6,1,1\nS,43,2,0,2,8,6,1,1\nS,43,2,1,0,8,5,1,2\nS,43,2,1,1,8,5,1,2\nS,43,2,1,2,8,5,1,2\nS,43,2,2,0,8,8,0,0\nS,43,2,2,1,8,8,0,0\nS,43,2,2,2,8,8,0,0\nS,43,2,3,0,8,8,0,0\nS,43,2,4,0,8,0,1,7\nS,43,2,4,1,8,0,1,7\nS,43,2,4,2,8,0,1,7\nNL6RAW END\n",
+  "checker_stderr": "",
+  "producer_raw_checker_exit": 0,
+  "producer_raw_counters_identical": true,
+  "partition": {
+    "0": "all16-fit training-only",
+    "1": "parity-arm even-ID-combination training",
+    "2": "parity-arm odd-ID-combination heldout"
+  },
+  "quant": {
+    "0": "full precision",
+    "1": "1/16",
+    "2": "1/32"
+  },
+  "arm": {
+    "0": "learned sender/receiver",
+    "1": "frozen random sender/learned receiver",
+    "2": "fixed3 basis/learned receiver",
+    "3": "four-bit discrete",
+    "4": "shuffled labels"
+  },
+  "correctness": "Expected bits are independently derived from input_id; predictions and abstentions recomputed from raw f64 score carriers; inconsistent claimed predictions/abstentions/status or duplicate/missing selected cases are INVALID.",
+  "conclusion": "Learned arm does not recover all unseen combinations. Fixed-basis/discrete controls recover all eight in each seed. This is a supported negative toy result, not a confirmatory n300 superiority experiment.",
+  "not_measured": [
+    "authorized work",
+    "protocol end-to-end cost",
+    "memory/data movement",
+    "privacy leakage",
+    "hardware throughput",
+    "training amortization"
+  ],
+  "campaign_status": "NOT_RUN",
+  "gb10_status": "BLOCKED",
+  "pre_repair_history": {
+    "source_commit": "0e01c58a41f1a2fb976efa75c1cc554503aa2ee4",
+    "raw_sha256": "7e03072cbd3817e12a0f0e302e7dd25d375522d6e3ffd033c2eb54a2c8114f5c",
+    "raw_path": "native/neuralese/nl1-pre-repair.stdout",
+    "checker_stdout": "NL6RAW1,seed,partition,arm,quant,total,correct,refused,wrong\nS,17,0,0,0,16,14,0,2\nS,17,0,0,1,16,14,0,2\nS,17,0,0,2,16,14,0,2\nS,17,0,1,0,16,2,11,3\nS,17,0,1,1,16,3,7,6\nS,17,0,1,2,16,2,10,4\nS,17,0,2,0,16,14,2,0\nS,17,0,2,1,16,14,0,2\nS,17,0,2,2,16,14,2,0\nS,17,0,3,0,16,16,0,0\nS,17,0,4,0,16,1,1,14\nS,17,0,4,1,16,1,1,14\nS,17,0,4,2,16,1,1,14\nS,17,1,0,0,8,8,0,0\nS,17,1,0,1,8,8,0,0\nS,17,1,0,2,8,8,0,0\nS,17,1,1,0,8,1,5,2\nS,17,1,1,1,8,1,5,2\nS,17,1,1,2,8,0,6,2\nS,17,1,2,0,8,6,2,0\nS,17,1,2,1,8,6,2,0\nS,17,1,2,2,8,6,2,0\nS,17,1,3,0,8,8,0,0\nS,17,1,4,0,8,1,0,7\nS,17,1,4,1,8,1,0,7\nS,17,1,4,2,8,1,0,7\nS,17,2,0,0,8,5,2,1\nS,17,2,0,1,8,5,1,2\nS,17,2,0,2,8,5,2,1\nS,17,2,1,0,8,2,6,0\nS,17,2,1,1,8,0,7,1\nS,17,2,1,2,8,2,6,0\nS,17,2,2,0,8,8,0,0\nS,17,2,2,1,8,8,0,0\nS,17,2,2,2,8,8,0,0\nS,17,2,3,0,8,8,0,0\nS,17,2,4,0,8,0,1,7\nS,17,2,4,1,8,0,1,7\nS,17,2,4,2,8,0,1,7\nS,29,0,0,0,16,14,0,2\nS,29,0,0,1,16,14,0,2\nS,29,0,0,2,16,14,0,2\nS,29,0,1,0,16,6,6,4\nS,29,0,1,1,16,5,8,3\nS,29,0,1,2,16,6,5,5\nS,29,0,2,0,16,14,2,0\nS,29,0,2,1,16,14,0,2\nS,29,0,2,2,16,14,2,0\nS,29,0,3,0,16,16,0,0\nS,29,0,4,0,16,1,3,12\nS,29,0,4,1,16,1,2,13\nS,29,0,4,2,16,1,3,12\nS,29,1,0,0,8,8,0,0\nS,29,1,0,1,8,8,0,0\nS,29,1,0,2,8,8,0,0\nS,29,1,1,0,8,1,7,0\nS,29,1,1,1,8,0,7,1\nS,29,1,1,2,8,1,7,0\nS,29,1,2,0,8,6,2,0\nS,29,1,2,1,8,6,2,0\nS,29,1,2,2,8,6,2,0\nS,29,1,3,0,8,8,0,0\nS,29,1,4,0,8,3,0,5\nS,29,1,4,1,8,3,0,5\nS,29,1,4,2,8,3,0,5\nS,29,2,0,0,8,5,2,1\nS,29,2,0,1,8,5,1,2\nS,29,2,0,2,8,5,2,1\nS,29,2,1,0,8,4,4,0\nS,29,2,1,1,8,4,4,0\nS,29,2,1,2,8,4,4,0\nS,29,2,2,0,8,8,0,0\nS,29,2,2,1,8,8,0,0\nS,29,2,2,2,8,8,0,0\nS,29,2,3,0,8,8,0,0\nS,29,2,4,0,8,1,2,5\nS,29,2,4,1,8,1,2,5\nS,29,2,4,2,8,1,2,5\nS,43,0,0,0,16,14,0,2\nS,43,0,0,1,16,14,0,2\nS,43,0,0,2,16,14,0,2\nS,43,0,1,0,16,12,0,4\nS,43,0,1,1,16,11,1,4\nS,43,0,1,2,16,11,1,4\nS,43,0,2,0,16,14,2,0\nS,43,0,2,1,16,14,0,2\nS,43,0,2,2,16,14,2,0\nS,43,0,3,0,16,16,0,0\nS,43,0,4,0,16,1,0,15\nS,43,0,4,1,16,1,0,15\nS,43,0,4,2,16,1,0,15\nS,43,1,0,0,8,8,0,0\nS,43,1,0,1,8,8,0,0\nS,43,1,0,2,8,8,0,0\nS,43,1,1,0,8,6,0,2\nS,43,1,1,1,8,4,2,2\nS,43,1,1,2,8,6,0,2\nS,43,1,2,0,8,6,2,0\nS,43,1,2,1,8,6,2,0\nS,43,1,2,2,8,6,2,0\nS,43,1,3,0,8,8,0,0\nS,43,1,4,0,8,0,0,8\nS,43,1,4,1,8,0,0,8\nS,43,1,4,2,8,0,0,8\nS,43,2,0,0,8,6,1,1\nS,43,2,0,1,8,6,1,1\nS,43,2,0,2,8,6,1,1\nS,43,2,1,0,8,5,1,2\nS,43,2,1,1,8,5,1,2\nS,43,2,1,2,8,5,1,2\nS,43,2,2,0,8,8,0,0\nS,43,2,2,1,8,8,0,0\nS,43,2,2,2,8,8,0,0\nS,43,2,3,0,8,8,0,0\nS,43,2,4,0,8,0,1,7\nS,43,2,4,1,8,0,1,7\nS,43,2,4,2,8,0,1,7\nNL6RAW END\n",
+    "status": "SUPERSEDED_DISCRETE_CONTROL",
+    "defect": "Original discrete receiver used input_id rather than consuming its byte; primary observed outputs could not prove causal communication. Producer repaired dataflow without tuning learned parameters."
+  },
+  "causal_discrete_negative": {
+    "from": "v = and shr ulong get DC 0 j 1\n",
+    "to": "v = and shr ulong 15 j 1\n",
+    "mutant_source_sha256": "5b2624ea480c64aceb2e0e86515c788ee3f3dbfcdbf81a14d8adcf5c6bfffb18",
+    "compile_exit": 0,
+    "compile_stderr": "",
+    "binary_sha256": "043590a011324dbba58d368ed4fa6ae4af72714def5a09ede35702ef434ebca8",
+    "exit": 77,
+    "expected_exit": 77,
+    "stdout": "",
+    "stderr": "",
+    "meaning": "With input fixed at15, the unchanged control mutates only DC byte to0 and requires decoded zeros. Direct-ID mutant is caught; repaired original returns0."
+  }
+}

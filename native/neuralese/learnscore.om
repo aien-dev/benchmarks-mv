@@ -1,0 +1,328 @@
+om2
+note Independent NL1 raw-carrier scorer for frozen NL6 design 8ee0a494.
+note Does not trust reported predictions, abstentions, correctness or expected bits.
+note Public synthetic fixture only; not an independent secret-task campaign.
+const CHUNK ulong 16384
+global Buf uchar CHUNK
+global Io ulong 4
+global Row ulong 21
+global Seen ulong 135
+global Count ulong 135
+global Good ulong 135
+global Refuse ulong 135
+text BAD "NL6RAW INVALID\n"
+text COMMA ","
+text LF "\n"
+text HEAD "NL6RAW1,seed,partition,arm,quant,total,correct,refused,wrong\n"
+text TAG "S,"
+text FIN "NL6RAW END\n"
+text ENDREC "NL1LEARN END\n"
+
+fn putout a view uchar * n ulong to void
+o = ulong 0
+while lt o n
+z = write 1 a o sub n o
+if le z 0
+exit 93
+end
+o = add o ulong z
+end
+end
+fn invalid to void
+putout BAD len BAD
+exit 90
+end
+fn num n ulong to void
+b = new uchar 20 0
+p = ulong 20
+while true bound 20
+p = sub p 1
+put b p uchar add rem n 10 48
+n = div n 10
+if eq n 0
+break
+end
+end
+putout part b p sub ulong 20 p sub ulong 20 p
+end
+fn sep to void
+putout COMMA 1
+end
+fn next to long
+if eq get Io 1 get Io 2
+z = read int get Io 0 Buf 0 CHUNK
+if lt z 0
+invalid
+end
+if eq z 0
+ret -1
+end
+put Io 1 0
+put Io 2 ulong z
+end
+p = get Io 1
+put Io 1 add p 1
+ret long get Buf p
+end
+fn value delim long to ulong
+v = ulong 0
+n = ulong 0
+first = long -1
+while true bound 21
+c = next
+if eq c delim
+if eq n 0
+invalid
+end
+if and gt n 1 eq first 48
+invalid
+end
+ret v
+end
+if or lt c 48 gt c 57
+invalid
+end
+if eq n 0
+first = c
+end
+if or gt v 1844674407370955161 and eq v 1844674407370955161 gt c 53
+invalid
+end
+v = add mul v 10 ulong sub c 48
+n = add n 1
+if gt n 20
+invalid
+end
+end
+ret 0
+end
+fn parity id ulong to ulong
+ret and xor xor xor id shr id 1 shr id 2 shr id 3 1
+end
+fn mask phase ulong to ulong
+m = ulong 0
+for id ulong 16
+if or eq phase 0 eq parity id sub phase 1
+m = or m shl 1 id
+end
+end
+ret m
+end
+fn group si ulong phase ulong arm ulong mode ulong to ulong
+ret add mul add mul add mul si 3 phase 5 arm 3 mode
+end
+fn grade id ulong arm ulong idx ulong to void
+bit = shl 1 id
+if ne and get Seen idx bit 0
+invalid
+end
+put Seen idx or get Seen idx bit
+put Count idx add get Count idx 1
+status = ulong 0
+if ne arm 3
+for k ulong 3
+h = bitcast f64 get Row add k 6
+if not le fabs h 1.0f64
+status = 2
+end
+end
+end
+if ne get Row 20 status
+invalid
+end
+abst = ulong 0
+same = true
+if ne status 0
+abst = 1
+same = false
+end
+for j ulong 4
+score = bitcast f64 get Row add j 9
+pred = ulong 0
+if eq status 0
+if not and ge score 0.0f64 le score 1.0f64
+invalid
+end
+if ge score 0.5f64
+pred = 1
+end
+if lt fabs sub score 0.5f64 0.1f64
+abst = 1
+end
+else
+pred = 9
+end
+if ne pred get Row add j 13
+invalid
+end
+if ne pred and shr id j 1
+same = false
+end
+end
+if ne get Row 17 abst
+invalid
+end
+if ne abst 0
+same = false
+put Refuse idx add get Refuse idx 1
+end
+if same
+put Good idx add get Good idx 1
+end
+end
+fn row to void
+for j ulong 21
+d = long 44
+if eq j 20
+d = 10
+end
+put Row j value d
+end
+seed = get Row 0
+si = ulong 0
+if eq seed 29
+si = 1
+else
+if eq seed 43
+si = 2
+else
+if ne seed 17
+invalid
+end
+end
+end
+split = get Row 1
+arm = get Row 2
+id = get Row 3
+mode = get Row 4
+ctx = get Row 5
+if or gt split 1 or gt arm 4 or gt id 15 or gt mode 17 gt ctx 1
+invalid
+end
+note Only frozen precision arms and trained receiver context are scored here.
+if or ne ctx 1 gt mode 2
+ret
+end
+if and eq arm 3 ne mode 0
+invalid
+end
+phase = ulong 0
+if eq split 1
+phase = add parity id 1
+end
+idx = group si phase arm mode
+grade id arm idx
+end
+fn finish to void
+for si ulong 3
+for phase ulong 3
+for arm ulong 5
+for mode ulong 3
+if and eq arm 3 ne mode 0
+continue
+end
+idx = add mul add mul add mul si 3 phase 5 arm 3 mode
+if ne get Seen idx mask phase
+invalid
+end
+end
+end
+end
+end
+putout HEAD len HEAD
+for si ulong 3
+seed = ulong 17
+if eq si 1
+seed = 29
+else
+if eq si 2
+seed = 43
+end
+end
+for phase ulong 3
+for arm ulong 5
+for mode ulong 3
+if and eq arm 3 ne mode 0
+continue
+end
+idx = add mul add mul add mul si 3 phase 5 arm 3 mode
+putout TAG len TAG
+num seed
+sep
+num phase
+sep
+num arm
+sep
+num mode
+sep
+num get Count idx
+sep
+num get Good idx
+sep
+num get Refuse idx
+sep
+num sub sub get Count idx get Good idx get Refuse idx
+putout LF 1
+end
+end
+end
+end
+putout FIN len FIN
+end
+fn learnrun to int
+if ne argcnt 2
+invalid
+end
+path = new uchar 4096 0
+n = argread 1 path 0 len path
+if le n 0
+invalid
+end
+fd = fopen path 0 ulong n 524288 0
+if lt fd 0
+invalid
+end
+put Io 0 ulong fd
+while true
+c = next
+if eq c 82
+if ne next 44
+invalid
+end
+row
+else
+if or eq c 80 eq c 84
+note Parameter/timing records are not recovery evidence. Skip bounded metadata only.
+while true bound 256
+c = next
+if eq c 10
+break
+end
+if lt c 0
+invalid
+end
+end
+else
+if eq c 78
+for j ulong sub len ENDREC 1
+if ne next long get ENDREC add j 1
+invalid
+end
+end
+if ne next -1
+invalid
+end
+break
+else
+invalid
+end
+end
+end
+end
+z = fclose int fd
+if ne z 0
+invalid
+end
+finish
+ret 0
+end

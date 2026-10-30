@@ -1,0 +1,451 @@
+{
+  "schema": "nl6-checker-qualification-v1",
+  "status": "PASS",
+  "scope": "HOST_SYNTHETIC_CHECKER_ONLY",
+  "frozen_design_commit": "8ee0a494bf73230c9d37647eb3caea792298fa8d",
+  "benchmark_base_commit": "0f369dbc852b2e9364ed55c6e19a7e285cd424c1",
+  "omega_source_commit": "e79566c191ea8ef11888e69ce50d8fadf375d4fd",
+  "compiler_origin_commit": "1fe5976d398646b17acabbf6d9dfae96b017e439",
+  "compile": [
+    {
+      "source": "native/neuralese/score.om",
+      "source_sha256": "4c703e8b3c6815260fc8e03246edf867762f2772b2d8300535f853616f605b72",
+      "compiler_sha256": "d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84",
+      "exit": 0,
+      "stderr": "",
+      "binary_sha256": "2710ee1d94f7fc94bcd09fb3e800f3d99552928819c7fdc99c40d8ff672c2d33"
+    },
+    {
+      "source": "omega:seed/qualification/om2/gate.om",
+      "source_sha256": "250361be99ced1246405b2e4a2e2de71373a90d0a0569fb43821ed8b106e045f",
+      "compiler_sha256": "d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84",
+      "exit": 0,
+      "stderr": "",
+      "binary_sha256": "6c8691c21074595312fdd0f22ca30b6fbe48fb88f2fb0a58936f2960056acefa"
+    }
+  ],
+  "conductor_argv": [
+    "/tmp/nl6-replay-x_1xr4k0/gate",
+    "/home/drakestapleton/fix/neuralese/seed/out/omc",
+    "d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84",
+    "native/neuralese/host.cases",
+    "host-carriers"
+  ],
+  "replay_directory": "/tmp/nl6-replay-x_1xr4k0",
+  "exit": 0,
+  "stdout": "OM2GATE START cases=native/neuralese/host.cases scratch=host-carriers\nIDENTITY omc /home/drakestapleton/fix/neuralese/seed/out/omc sha256=d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84 pinned=d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84 match\nDEADLINE 20\nCASE bits-good line=3\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/3.src > host-carriers/3.elf 2> host-carriers/3.cerr\n  $ host-carriers/3.elf 1 native/neuralese/fixtures/bits.ref native/neuralese/fixtures/bits.good < /dev/null > host-carriers/3.out 2> host-carriers/3.err\nVERDICT bits-good PASS run exit=0 expected=0 stdout=match stderr=match\nCASE bits-wrong line=4\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/4.src > host-carriers/4.elf 2> host-carriers/4.cerr\n  $ host-carriers/4.elf 1 native/neuralese/fixtures/bits.ref native/neuralese/fixtures/bits.wrong < /dev/null > host-carriers/4.out 2> host-carriers/4.err\nVERDICT bits-wrong PASS run exit=1 expected=1 stdout=match stderr=match\nCASE bits-allrefuse line=5\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/5.src > host-carriers/5.elf 2> host-carriers/5.cerr\n  $ host-carriers/5.elf 1 native/neuralese/fixtures/bits.ref native/neuralese/fixtures/bits.refuse < /dev/null > host-carriers/5.out 2> host-carriers/5.err\nVERDICT bits-allrefuse PASS run exit=1 expected=1 stdout=match stderr=match\nCASE bits-short line=6\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/6.src > host-carriers/6.elf 2> host-carriers/6.cerr\n  $ host-carriers/6.elf 1 native/neuralese/fixtures/bits.ref native/neuralese/fixtures/bits.short < /dev/null > host-carriers/6.out 2> host-carriers/6.err\nVERDICT bits-short PASS run exit=1 expected=1 stdout=match stderr=match\nCASE bits-forged-selfreport line=7\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/7.src > host-carriers/7.elf 2> host-carriers/7.cerr\n  $ host-carriers/7.elf 1 native/neuralese/fixtures/bits.ref native/neuralese/fixtures/bits.forged < /dev/null > host-carriers/7.out 2> host-carriers/7.err\nVERDICT bits-forged-selfreport PASS run exit=1 expected=1 stdout=match stderr=match\nCASE bits-malformed line=8\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/8.src > host-carriers/8.elf 2> host-carriers/8.cerr\n  $ host-carriers/8.elf 1 native/neuralese/fixtures/bits.ref native/neuralese/fixtures/bits.malformed < /dev/null > host-carriers/8.out 2> host-carriers/8.err\nVERDICT bits-malformed PASS run exit=90 expected=90 stdout=match stderr=match\nCASE bits-empty line=9\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/9.src > host-carriers/9.elf 2> host-carriers/9.cerr\n  $ host-carriers/9.elf 1 native/neuralese/fixtures/empty native/neuralese/fixtures/empty < /dev/null > host-carriers/9.out 2> host-carriers/9.err\nVERDICT bits-empty PASS run exit=90 expected=90 stdout=match stderr=match\nCASE journal-good line=10\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/10.src > host-carriers/10.elf 2> host-carriers/10.cerr\n  $ host-carriers/10.elf 2 native/neuralese/fixtures/journal.ref native/neuralese/fixtures/journal.good < /dev/null > host-carriers/10.out 2> host-carriers/10.err\nVERDICT journal-good PASS run exit=0 expected=0 stdout=match stderr=match\nCASE journal-unsafe line=11\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/11.src > host-carriers/11.elf 2> host-carriers/11.cerr\n  $ host-carriers/11.elf 2 native/neuralese/fixtures/journal.ref native/neuralese/fixtures/journal.unsafe < /dev/null > host-carriers/11.out 2> host-carriers/11.err\nVERDICT journal-unsafe PASS run exit=1 expected=1 stdout=match stderr=match\nCASE journal-allrefuse line=12\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/12.src > host-carriers/12.elf 2> host-carriers/12.cerr\n  $ host-carriers/12.elf 2 native/neuralese/fixtures/journal.ref native/neuralese/fixtures/journal.refuse < /dev/null > host-carriers/12.out 2> host-carriers/12.err\nVERDICT journal-allrefuse PASS run exit=1 expected=1 stdout=match stderr=match\nCASE journal-empty line=13\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/13.src > host-carriers/13.elf 2> host-carriers/13.cerr\n  $ host-carriers/13.elf 2 native/neuralese/fixtures/empty native/neuralese/fixtures/empty < /dev/null > host-carriers/13.out 2> host-carriers/13.err\nVERDICT journal-empty PASS run exit=90 expected=90 stdout=match stderr=match\nCASE inc-good line=14\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/14.src > host-carriers/14.elf 2> host-carriers/14.cerr\n  $ host-carriers/14.elf 3 native/neuralese/fixtures/inc.ref native/neuralese/fixtures/inc.good < /dev/null > host-carriers/14.out 2> host-carriers/14.err\nVERDICT inc-good PASS run exit=0 expected=0 stdout=match stderr=match\nCASE double-good line=15\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/15.src > host-carriers/15.elf 2> host-carriers/15.cerr\n  $ host-carriers/15.elf 3 native/neuralese/fixtures/double.ref native/neuralese/fixtures/double.good < /dev/null > host-carriers/15.out 2> host-carriers/15.err\nVERDICT double-good PASS run exit=0 expected=0 stdout=match stderr=match\nCASE identity-good line=16\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/16.src > host-carriers/16.elf 2> host-carriers/16.cerr\n  $ host-carriers/16.elf 3 native/neuralese/fixtures/identity.ref native/neuralese/fixtures/identity.good < /dev/null > host-carriers/16.out 2> host-carriers/16.err\nVERDICT identity-good PASS run exit=0 expected=0 stdout=match stderr=match\nCASE inc-wrong-result line=17\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/17.src > host-carriers/17.elf 2> host-carriers/17.cerr\n  $ host-carriers/17.elf 3 native/neuralese/fixtures/inc.ref native/neuralese/fixtures/inc.wrong < /dev/null > host-carriers/17.out 2> host-carriers/17.err\nVERDICT inc-wrong-result PASS run exit=1 expected=1 stdout=match stderr=match\nCASE inc-wrong-op line=18\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/18.src > host-carriers/18.elf 2> host-carriers/18.cerr\n  $ host-carriers/18.elf 3 native/neuralese/fixtures/inc.ref native/neuralese/fixtures/inc.opwrong < /dev/null > host-carriers/18.out 2> host-carriers/18.err\nVERDICT inc-wrong-op PASS run exit=1 expected=1 stdout=match stderr=match\nCASE inc-wrong-shape line=19\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/19.src > host-carriers/19.elf 2> host-carriers/19.cerr\n  $ host-carriers/19.elf 3 native/neuralese/fixtures/inc.ref native/neuralese/fixtures/inc.shape < /dev/null > host-carriers/19.out 2> host-carriers/19.err\nVERDICT inc-wrong-shape PASS run exit=1 expected=1 stdout=match stderr=match\nCASE inc-wrong-effect line=20\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/20.src > host-carriers/20.elf 2> host-carriers/20.cerr\n  $ host-carriers/20.elf 3 native/neuralese/fixtures/inc.ref native/neuralese/fixtures/inc.effect < /dev/null > host-carriers/20.out 2> host-carriers/20.err\nVERDICT inc-wrong-effect PASS run exit=1 expected=1 stdout=match stderr=match\nCASE inc-trailing line=21\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/21.src > host-carriers/21.elf 2> host-carriers/21.cerr\n  $ host-carriers/21.elf 3 native/neuralese/fixtures/inc.ref native/neuralese/fixtures/inc.trailing < /dev/null > host-carriers/21.out 2> host-carriers/21.err\nVERDICT inc-trailing PASS run exit=90 expected=90 stdout=match stderr=match\nCASE inc-malformed line=22\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/22.src > host-carriers/22.elf 2> host-carriers/22.cerr\n  $ host-carriers/22.elf 3 native/neuralese/fixtures/inc.ref native/neuralese/fixtures/inc.malformed < /dev/null > host-carriers/22.out 2> host-carriers/22.err\nVERDICT inc-malformed PASS run exit=90 expected=90 stdout=match stderr=match\nCASE inc-leadingzero line=23\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/23.src > host-carriers/23.elf 2> host-carriers/23.cerr\n  $ host-carriers/23.elf 3 native/neuralese/fixtures/inc.ref native/neuralese/fixtures/inc.leadingzero < /dev/null > host-carriers/23.out 2> host-carriers/23.err\nVERDICT inc-leadingzero PASS run exit=90 expected=90 stdout=match stderr=match\nCASE inc-overbound line=24\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/24.src > host-carriers/24.elf 2> host-carriers/24.cerr\n  $ host-carriers/24.elf 3 native/neuralese/fixtures/inc.ref native/neuralese/fixtures/inc.big < /dev/null > host-carriers/24.out 2> host-carriers/24.err\nVERDICT inc-overbound PASS run exit=90 expected=90 stdout=match stderr=match\nCASE inc-truncated line=25\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/25.src > host-carriers/25.elf 2> host-carriers/25.cerr\n  $ host-carriers/25.elf 3 native/neuralese/fixtures/inc.ref native/neuralese/fixtures/inc.truncated < /dev/null > host-carriers/25.out 2> host-carriers/25.err\nVERDICT inc-truncated PASS run exit=90 expected=90 stdout=match stderr=match\nCASE boundary-empty line=26\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/26.src > host-carriers/26.elf 2> host-carriers/26.cerr\n  $ host-carriers/26.elf 3 native/neuralese/fixtures/inc.ref native/neuralese/fixtures/empty < /dev/null > host-carriers/26.out 2> host-carriers/26.err\nVERDICT boundary-empty PASS run exit=90 expected=90 stdout=match stderr=match\nCASE refuse-good line=27\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/27.src > host-carriers/27.elf 2> host-carriers/27.cerr\n  $ host-carriers/27.elf 3 native/neuralese/fixtures/refuse.ref native/neuralese/fixtures/refuse.good < /dev/null > host-carriers/27.out 2> host-carriers/27.err\nVERDICT refuse-good PASS run exit=0 expected=0 stdout=match stderr=match\nCASE refuse-leaked-result line=28\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/28.src > host-carriers/28.elf 2> host-carriers/28.cerr\n  $ host-carriers/28.elf 3 native/neuralese/fixtures/refuse.ref native/neuralese/fixtures/refuse.leak < /dev/null > host-carriers/28.out 2> host-carriers/28.err\nVERDICT refuse-leaked-result PASS run exit=1 expected=1 stdout=match stderr=match\nCASE refuse-unsafe-exec line=29\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/29.src > host-carriers/29.elf 2> host-carriers/29.cerr\n  $ host-carriers/29.elf 3 native/neuralese/fixtures/refuse.ref native/neuralese/fixtures/refuse.unsafe < /dev/null > host-carriers/29.out 2> host-carriers/29.err\nVERDICT refuse-unsafe-exec PASS run exit=1 expected=1 stdout=match stderr=match\nCASE refuse-negative line=30\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/30.src > host-carriers/30.elf 2> host-carriers/30.cerr\n  $ host-carriers/30.elf 3 native/neuralese/fixtures/refuse.ref native/neuralese/fixtures/refuse.negative < /dev/null > host-carriers/30.out 2> host-carriers/30.err\nVERDICT refuse-negative PASS run exit=1 expected=1 stdout=match stderr=match\nSUBST native/neuralese/fixtures/guard-bits.from native/neuralese/fixtures/guard-bits.to\nCASE kill-bits-equality line=32\n  MUTATE exact-once substitution at byte 2415\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/32.src > host-carriers/32.elf 2> host-carriers/32.cerr\n  $ host-carriers/32.elf 1 native/neuralese/fixtures/bits.ref native/neuralese/fixtures/bits.wrong < /dev/null > host-carriers/32.out 2> host-carriers/32.err\nVERDICT kill-bits-equality PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 20 stderr=match\nCASE journal-equal-length-wrong line=33\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/33.src > host-carriers/33.elf 2> host-carriers/33.cerr\n  $ host-carriers/33.elf 2 native/neuralese/fixtures/journal.ref native/neuralese/fixtures/journal.wrong < /dev/null > host-carriers/33.out 2> host-carriers/33.err\nVERDICT journal-equal-length-wrong PASS run exit=1 expected=1 stdout=match stderr=match\nSUBST native/neuralese/fixtures/guard-journal.from native/neuralese/fixtures/guard-journal.to\nCASE kill-journal-equality line=35\n  MUTATE exact-once substitution at byte 2734\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/35.src > host-carriers/35.elf 2> host-carriers/35.cerr\n  $ host-carriers/35.elf 2 native/neuralese/fixtures/journal.ref native/neuralese/fixtures/journal.wrong < /dev/null > host-carriers/35.out 2> host-carriers/35.err\nVERDICT kill-journal-equality PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 20 stderr=match\nSUBST native/neuralese/fixtures/guard-result.from native/neuralese/fixtures/guard-result.to\nCASE kill-boundary-result line=37\n  MUTATE exact-once substitution at byte 5001\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/37.src > host-carriers/37.elf 2> host-carriers/37.cerr\n  $ host-carriers/37.elf 3 native/neuralese/fixtures/inc.ref native/neuralese/fixtures/inc.wrong < /dev/null > host-carriers/37.out 2> host-carriers/37.err\nVERDICT kill-boundary-result PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 4 stderr=match\nSUBST native/neuralese/fixtures/guard-metadata.from native/neuralese/fixtures/guard-metadata.to\nCASE kill-shape-binding line=39\n  MUTATE exact-once substitution at byte 4378\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/39.src > host-carriers/39.elf 2> host-carriers/39.cerr\n  $ host-carriers/39.elf 3 native/neuralese/fixtures/inc.ref native/neuralese/fixtures/inc.shape < /dev/null > host-carriers/39.out 2> host-carriers/39.err\nVERDICT kill-shape-binding PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 4 stderr=match\nCASE learn-carrier-good line=40\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/40.src > host-carriers/40.elf 2> host-carriers/40.cerr\n  $ host-carriers/40.elf 0 < /dev/null > host-carriers/40.out 2> host-carriers/40.err\nVERDICT learn-carrier-good PASS run exit=0 expected=0 stdout=match stderr=match\nCASE learn-pred-forgery line=41\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/41.src > host-carriers/41.elf 2> host-carriers/41.cerr\n  $ host-carriers/41.elf 1 < /dev/null > host-carriers/41.out 2> host-carriers/41.err\nVERDICT learn-pred-forgery PASS run exit=90 expected=90 stdout=match stderr=match\nCASE learn-abstain-forgery line=42\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/42.src > host-carriers/42.elf 2> host-carriers/42.cerr\n  $ host-carriers/42.elf 2 < /dev/null > host-carriers/42.out 2> host-carriers/42.err\nVERDICT learn-abstain-forgery PASS run exit=90 expected=90 stdout=match stderr=match\nCASE learn-duplicate line=43\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/43.src > host-carriers/43.elf 2> host-carriers/43.cerr\n  $ host-carriers/43.elf 3 < /dev/null > host-carriers/43.out 2> host-carriers/43.err\nVERDICT learn-duplicate PASS run exit=90 expected=90 stdout=match stderr=match\nCASE learn-missing-groups line=44\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/44.src > host-carriers/44.elf 2> host-carriers/44.cerr\n  $ host-carriers/44.elf 4 < /dev/null > host-carriers/44.out 2> host-carriers/44.err\nVERDICT learn-missing-groups PASS run exit=90 expected=90 stdout=match stderr=match\nCASE learn-real-wrong line=45\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/45.src > host-carriers/45.elf 2> host-carriers/45.cerr\n  $ host-carriers/45.elf 5 < /dev/null > host-carriers/45.out 2> host-carriers/45.err\nVERDICT learn-real-wrong PASS run exit=0 expected=0 stdout=match stderr=match\nSUBST native/neuralese/fixtures/guard-pred.from native/neuralese/fixtures/guard-pred.to\nCASE kill-pred-integrity line=47\n  MUTATE exact-once substitution at byte 2605\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/47.src > host-carriers/47.elf 2> host-carriers/47.cerr\n  $ host-carriers/47.elf 1 < /dev/null > host-carriers/47.out 2> host-carriers/47.err\nVERDICT kill-pred-integrity PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 4 stderr=match\nSUBST native/neuralese/fixtures/guard-meaning.from native/neuralese/fixtures/guard-meaning.to\nCASE kill-meaning-equality line=49\n  MUTATE exact-once substitution at byte 2645\n  $ /home/drakestapleton/fix/neuralese/seed/out/omc < host-carriers/49.src > host-carriers/49.elf 2> host-carriers/49.cerr\n  $ host-carriers/49.elf 5 < /dev/null > host-carriers/49.out 2> host-carriers/49.err\nVERDICT kill-meaning-equality PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 12 stderr=match\nOM2GATE PASS cases=41 pass=41 fail=0 invalid=0 not_run=0\n",
+  "stderr": "",
+  "cases_sha256": "4916cd96ce2edb6f273d12f418f0f272a92737167937f2f15cb06501cfd61d8d",
+  "cases": [
+    {
+      "name": "bits-good",
+      "manifest_line": 3,
+      "stdout": "NL6 total=8 correct=8 wrong=0\nNL6 PASS\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "3b51db7f7f9072146a7f63e8d3ee00c6e4b8977b146b16cf4caa299d85476b07",
+      "verdict": "VERDICT bits-good PASS run exit=0 expected=0 stdout=match stderr=match"
+    },
+    {
+      "name": "bits-wrong",
+      "manifest_line": 4,
+      "stdout": "NL6 total=8 correct=7 wrong=1\nNL6 FAIL\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "3f749616a31162d7916bdbdd37f73fca61d42e399ce8f4a6298ec69a94f9d32c",
+      "verdict": "VERDICT bits-wrong PASS run exit=1 expected=1 stdout=match stderr=match"
+    },
+    {
+      "name": "bits-allrefuse",
+      "manifest_line": 5,
+      "stdout": "NL6 total=8 correct=0 wrong=8\nNL6 FAIL\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "7950fa993cb6b13832702b68ff787e5aa19d1c44df5124ae360d76241053f550",
+      "verdict": "VERDICT bits-allrefuse PASS run exit=1 expected=1 stdout=match stderr=match"
+    },
+    {
+      "name": "bits-short",
+      "manifest_line": 6,
+      "stdout": "NL6 FAIL\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "771cd66d2e8206606cd3b472cc1d12832a96b3bebb23020f251189b225cd4f14",
+      "verdict": "VERDICT bits-short PASS run exit=1 expected=1 stdout=match stderr=match"
+    },
+    {
+      "name": "bits-forged-selfreport",
+      "manifest_line": 7,
+      "stdout": "NL6 FAIL\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "771cd66d2e8206606cd3b472cc1d12832a96b3bebb23020f251189b225cd4f14",
+      "verdict": "VERDICT bits-forged-selfreport PASS run exit=1 expected=1 stdout=match stderr=match"
+    },
+    {
+      "name": "bits-malformed",
+      "manifest_line": 8,
+      "stdout": "NL6 INVALID\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "32d29a004d90a0322f891a86719370eb6fbccd2767379420283ca6abd913fb89",
+      "verdict": "VERDICT bits-malformed PASS run exit=90 expected=90 stdout=match stderr=match"
+    },
+    {
+      "name": "bits-empty",
+      "manifest_line": 9,
+      "stdout": "NL6 INVALID\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "32d29a004d90a0322f891a86719370eb6fbccd2767379420283ca6abd913fb89",
+      "verdict": "VERDICT bits-empty PASS run exit=90 expected=90 stdout=match stderr=match"
+    },
+    {
+      "name": "journal-good",
+      "manifest_line": 10,
+      "stdout": "NL6 total=1 correct=1 wrong=0\nNL6 PASS\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "9d24cc3bd50239ce8abe81fd8e754bb84e882d4522f6ab4db5ce523c458451b8",
+      "verdict": "VERDICT journal-good PASS run exit=0 expected=0 stdout=match stderr=match"
+    },
+    {
+      "name": "journal-unsafe",
+      "manifest_line": 11,
+      "stdout": "NL6 FAIL\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "771cd66d2e8206606cd3b472cc1d12832a96b3bebb23020f251189b225cd4f14",
+      "verdict": "VERDICT journal-unsafe PASS run exit=1 expected=1 stdout=match stderr=match"
+    },
+    {
+      "name": "journal-allrefuse",
+      "manifest_line": 12,
+      "stdout": "NL6 FAIL\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "771cd66d2e8206606cd3b472cc1d12832a96b3bebb23020f251189b225cd4f14",
+      "verdict": "VERDICT journal-allrefuse PASS run exit=1 expected=1 stdout=match stderr=match"
+    },
+    {
+      "name": "journal-empty",
+      "manifest_line": 13,
+      "stdout": "NL6 INVALID\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "32d29a004d90a0322f891a86719370eb6fbccd2767379420283ca6abd913fb89",
+      "verdict": "VERDICT journal-empty PASS run exit=90 expected=90 stdout=match stderr=match"
+    },
+    {
+      "name": "inc-good",
+      "manifest_line": 14,
+      "stdout": "NL6 total=1 correct=1 wrong=0\nNL6 PASS\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "9d24cc3bd50239ce8abe81fd8e754bb84e882d4522f6ab4db5ce523c458451b8",
+      "verdict": "VERDICT inc-good PASS run exit=0 expected=0 stdout=match stderr=match"
+    },
+    {
+      "name": "double-good",
+      "manifest_line": 15,
+      "stdout": "NL6 total=1 correct=1 wrong=0\nNL6 PASS\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "9d24cc3bd50239ce8abe81fd8e754bb84e882d4522f6ab4db5ce523c458451b8",
+      "verdict": "VERDICT double-good PASS run exit=0 expected=0 stdout=match stderr=match"
+    },
+    {
+      "name": "identity-good",
+      "manifest_line": 16,
+      "stdout": "NL6 total=1 correct=1 wrong=0\nNL6 PASS\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "9d24cc3bd50239ce8abe81fd8e754bb84e882d4522f6ab4db5ce523c458451b8",
+      "verdict": "VERDICT identity-good PASS run exit=0 expected=0 stdout=match stderr=match"
+    },
+    {
+      "name": "inc-wrong-result",
+      "manifest_line": 17,
+      "stdout": "NL6 FAIL\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "771cd66d2e8206606cd3b472cc1d12832a96b3bebb23020f251189b225cd4f14",
+      "verdict": "VERDICT inc-wrong-result PASS run exit=1 expected=1 stdout=match stderr=match"
+    },
+    {
+      "name": "inc-wrong-op",
+      "manifest_line": 18,
+      "stdout": "NL6 FAIL\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "771cd66d2e8206606cd3b472cc1d12832a96b3bebb23020f251189b225cd4f14",
+      "verdict": "VERDICT inc-wrong-op PASS run exit=1 expected=1 stdout=match stderr=match"
+    },
+    {
+      "name": "inc-wrong-shape",
+      "manifest_line": 19,
+      "stdout": "NL6 FAIL\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "771cd66d2e8206606cd3b472cc1d12832a96b3bebb23020f251189b225cd4f14",
+      "verdict": "VERDICT inc-wrong-shape PASS run exit=1 expected=1 stdout=match stderr=match"
+    },
+    {
+      "name": "inc-wrong-effect",
+      "manifest_line": 20,
+      "stdout": "NL6 FAIL\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "771cd66d2e8206606cd3b472cc1d12832a96b3bebb23020f251189b225cd4f14",
+      "verdict": "VERDICT inc-wrong-effect PASS run exit=1 expected=1 stdout=match stderr=match"
+    },
+    {
+      "name": "inc-trailing",
+      "manifest_line": 21,
+      "stdout": "NL6 INVALID\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "32d29a004d90a0322f891a86719370eb6fbccd2767379420283ca6abd913fb89",
+      "verdict": "VERDICT inc-trailing PASS run exit=90 expected=90 stdout=match stderr=match"
+    },
+    {
+      "name": "inc-malformed",
+      "manifest_line": 22,
+      "stdout": "NL6 INVALID\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "32d29a004d90a0322f891a86719370eb6fbccd2767379420283ca6abd913fb89",
+      "verdict": "VERDICT inc-malformed PASS run exit=90 expected=90 stdout=match stderr=match"
+    },
+    {
+      "name": "inc-leadingzero",
+      "manifest_line": 23,
+      "stdout": "NL6 INVALID\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "32d29a004d90a0322f891a86719370eb6fbccd2767379420283ca6abd913fb89",
+      "verdict": "VERDICT inc-leadingzero PASS run exit=90 expected=90 stdout=match stderr=match"
+    },
+    {
+      "name": "inc-overbound",
+      "manifest_line": 24,
+      "stdout": "NL6 INVALID\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "32d29a004d90a0322f891a86719370eb6fbccd2767379420283ca6abd913fb89",
+      "verdict": "VERDICT inc-overbound PASS run exit=90 expected=90 stdout=match stderr=match"
+    },
+    {
+      "name": "inc-truncated",
+      "manifest_line": 25,
+      "stdout": "NL6 INVALID\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "32d29a004d90a0322f891a86719370eb6fbccd2767379420283ca6abd913fb89",
+      "verdict": "VERDICT inc-truncated PASS run exit=90 expected=90 stdout=match stderr=match"
+    },
+    {
+      "name": "boundary-empty",
+      "manifest_line": 26,
+      "stdout": "NL6 INVALID\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "32d29a004d90a0322f891a86719370eb6fbccd2767379420283ca6abd913fb89",
+      "verdict": "VERDICT boundary-empty PASS run exit=90 expected=90 stdout=match stderr=match"
+    },
+    {
+      "name": "refuse-good",
+      "manifest_line": 27,
+      "stdout": "NL6 total=1 correct=1 wrong=0\nNL6 PASS\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "9d24cc3bd50239ce8abe81fd8e754bb84e882d4522f6ab4db5ce523c458451b8",
+      "verdict": "VERDICT refuse-good PASS run exit=0 expected=0 stdout=match stderr=match"
+    },
+    {
+      "name": "refuse-leaked-result",
+      "manifest_line": 28,
+      "stdout": "NL6 FAIL\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "771cd66d2e8206606cd3b472cc1d12832a96b3bebb23020f251189b225cd4f14",
+      "verdict": "VERDICT refuse-leaked-result PASS run exit=1 expected=1 stdout=match stderr=match"
+    },
+    {
+      "name": "refuse-unsafe-exec",
+      "manifest_line": 29,
+      "stdout": "NL6 FAIL\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "771cd66d2e8206606cd3b472cc1d12832a96b3bebb23020f251189b225cd4f14",
+      "verdict": "VERDICT refuse-unsafe-exec PASS run exit=1 expected=1 stdout=match stderr=match"
+    },
+    {
+      "name": "refuse-negative",
+      "manifest_line": 30,
+      "stdout": "NL6 FAIL\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "771cd66d2e8206606cd3b472cc1d12832a96b3bebb23020f251189b225cd4f14",
+      "verdict": "VERDICT refuse-negative PASS run exit=1 expected=1 stdout=match stderr=match"
+    },
+    {
+      "name": "kill-bits-equality",
+      "manifest_line": 32,
+      "stdout": "NL6 total=8 correct=8 wrong=0\nNL6 PASS\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "3b51db7f7f9072146a7f63e8d3ee00c6e4b8977b146b16cf4caa299d85476b07",
+      "verdict": "VERDICT kill-bits-equality PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 20 stderr=match"
+    },
+    {
+      "name": "journal-equal-length-wrong",
+      "manifest_line": 33,
+      "stdout": "NL6 total=1 correct=0 wrong=1\nNL6 FAIL\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "f0e9b31395df1bd34c3f4e963f620c89bfb321f1b0563e6e853eb3a96d1a8782",
+      "verdict": "VERDICT journal-equal-length-wrong PASS run exit=1 expected=1 stdout=match stderr=match"
+    },
+    {
+      "name": "kill-journal-equality",
+      "manifest_line": 35,
+      "stdout": "NL6 total=1 correct=1 wrong=0\nNL6 PASS\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "9d24cc3bd50239ce8abe81fd8e754bb84e882d4522f6ab4db5ce523c458451b8",
+      "verdict": "VERDICT kill-journal-equality PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 20 stderr=match"
+    },
+    {
+      "name": "kill-boundary-result",
+      "manifest_line": 37,
+      "stdout": "NL6 total=1 correct=1 wrong=0\nNL6 PASS\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "9d24cc3bd50239ce8abe81fd8e754bb84e882d4522f6ab4db5ce523c458451b8",
+      "verdict": "VERDICT kill-boundary-result PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 4 stderr=match"
+    },
+    {
+      "name": "kill-shape-binding",
+      "manifest_line": 39,
+      "stdout": "NL6 total=1 correct=1 wrong=0\nNL6 PASS\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "9d24cc3bd50239ce8abe81fd8e754bb84e882d4522f6ab4db5ce523c458451b8",
+      "verdict": "VERDICT kill-shape-binding PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 4 stderr=match"
+    },
+    {
+      "name": "learn-carrier-good",
+      "manifest_line": 40,
+      "stdout": "NL6ROW good=1 refused=0\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "0fcfc03259f006edcf046ff02c228266cde0299681ec84624048897aedd61ae9",
+      "verdict": "VERDICT learn-carrier-good PASS run exit=0 expected=0 stdout=match stderr=match"
+    },
+    {
+      "name": "learn-pred-forgery",
+      "manifest_line": 41,
+      "stdout": "NL6RAW INVALID\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "f2fe544a4e68c0f78ae1efe8ea3584e6c298dd30d2f41a44b46c8d7d87c97165",
+      "verdict": "VERDICT learn-pred-forgery PASS run exit=90 expected=90 stdout=match stderr=match"
+    },
+    {
+      "name": "learn-abstain-forgery",
+      "manifest_line": 42,
+      "stdout": "NL6RAW INVALID\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "f2fe544a4e68c0f78ae1efe8ea3584e6c298dd30d2f41a44b46c8d7d87c97165",
+      "verdict": "VERDICT learn-abstain-forgery PASS run exit=90 expected=90 stdout=match stderr=match"
+    },
+    {
+      "name": "learn-duplicate",
+      "manifest_line": 43,
+      "stdout": "NL6RAW INVALID\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "f2fe544a4e68c0f78ae1efe8ea3584e6c298dd30d2f41a44b46c8d7d87c97165",
+      "verdict": "VERDICT learn-duplicate PASS run exit=90 expected=90 stdout=match stderr=match"
+    },
+    {
+      "name": "learn-missing-groups",
+      "manifest_line": 44,
+      "stdout": "NL6RAW INVALID\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "f2fe544a4e68c0f78ae1efe8ea3584e6c298dd30d2f41a44b46c8d7d87c97165",
+      "verdict": "VERDICT learn-missing-groups PASS run exit=90 expected=90 stdout=match stderr=match"
+    },
+    {
+      "name": "learn-real-wrong",
+      "manifest_line": 45,
+      "stdout": "NL6ROW good=0 refused=0\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "44c24618c42b76dffa629690a88713c52d6b0a898194aa5e9e77abd6fd7a50d0",
+      "verdict": "VERDICT learn-real-wrong PASS run exit=0 expected=0 stdout=match stderr=match"
+    },
+    {
+      "name": "kill-pred-integrity",
+      "manifest_line": 47,
+      "stdout": "NL6ROW good=1 refused=0\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "0fcfc03259f006edcf046ff02c228266cde0299681ec84624048897aedd61ae9",
+      "verdict": "VERDICT kill-pred-integrity PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 4 stderr=match"
+    },
+    {
+      "name": "kill-meaning-equality",
+      "manifest_line": 49,
+      "stdout": "NL6ROW good=1 refused=0\n",
+      "stderr": "",
+      "compile_stderr": "",
+      "stdout_sha256": "0fcfc03259f006edcf046ff02c228266cde0299681ec84624048897aedd61ae9",
+      "verdict": "VERDICT kill-meaning-equality PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 12 stderr=match"
+    }
+  ],
+  "prior_attempts": [
+    {
+      "scope": "checker compile",
+      "exit": 9,
+      "diagnostic": "omc: line 170: error 9",
+      "resolution": "Replaced unsupported bool-to-ulong cast with explicit branch."
+    },
+    {
+      "scope": "first conductor qualification",
+      "exit": 1,
+      "pass": 31,
+      "fail": 1,
+      "invalid": 0,
+      "resolution": "Journal mutant input had different length and correctly failed the separate length guard. Added equal-length wrong-result fixture and baseline; no checker guard weakened."
+    },
+    {
+      "scope": "direct learned checker compile",
+      "diagnostics": [
+        "error7 at read descriptor cast",
+        "error12 at inline group expression",
+        "error7 at fclose descriptor cast"
+      ],
+      "resolution": "Used documented int descriptor casts and an explicit grade/group function split within seeded compiler register limits."
+    }
+  ],
+  "limitations": [
+    "No training, model quality, latency, throughput, physical memory or GB10 qualification.",
+    "No candidate self-reported metrics consumed.",
+    "References require independent custody; checker cannot establish who authored them.",
+    "Full confirmatory campaign NOT_RUN; GB10/model-native evidence BLOCKED."
+  ],
+  "learned_checker_compile": {
+    "source_parts": [
+      "native/neuralese/learnscore.om",
+      "native/neuralese/learn-cli.om"
+    ],
+    "source_sha256": "29bf3bc2eb813a14ea259970d63e531cc3c6d6788d81dda201509f57f93c3b9c",
+    "binary_sha256": "28d1a89c3ec272cd717c36285ffeea0e6737377a515f1687a0e6491730544601",
+    "exit": 0,
+    "stderr": ""
+  }
+}

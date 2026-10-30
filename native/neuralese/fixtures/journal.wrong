@@ -1,0 +1,4 @@
+goal synthetic_public
+propose pure_identity
+verify admitted
+complete wrong_result

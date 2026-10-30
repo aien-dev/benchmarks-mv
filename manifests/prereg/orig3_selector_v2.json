@@ -1131,18 +1131,18 @@
   "claims": [
     {
       "id": "v2_overhead_inclusive_cost_vs_retrieval_and_heuristic",
-      "status": "NOT_RUN",
-      "note": "Set by the v2 verdict commit only."
+      "status": "FAIL",
+      "note": "Non-inferiority fails on both gated classes: candidate/min(retrieval, heuristic) is 1.7728 on core 0 (evidence/ORIG3-SELECTOR-v2/judge.out L4 and L18) and 1.2844 on core 1 (L22 and L36), both above 1.01. L39 is ORIG3_V2_VERDICT=NO-GO."
     },
     {
       "id": "v2_controls_fail_primary",
-      "status": "NOT_RUN",
-      "note": "Set by the v2 verdict commit only."
+      "status": "PASS",
+      "note": "PRIMARY=0 for untrained_control, shuffled_label_control and constant_control on core 0 (evidence/ORIG3-SELECTOR-v2/judge.out L15, L16, L17) and core 1 (L33, L34, L35). No control meets PRIMARY on either gated class, so the run is not INVALID."
     },
     {
       "id": "v2_amortization",
-      "status": "NOT_RUN",
-      "note": "Set by the v2 verdict commit only."
+      "status": "FAIL",
+      "note": "Overhead-inclusive saving per decision against the heuristic is negative on both classes, and break_even_decisions is none: core 0 saving_ps_per_decision=-80983701.6 (evidence/ORIG3-SELECTOR-v2/judge.out L19), core 1 saving_ps_per_decision=-67086624.4 (L37). L37 also records a choice-only per-call saving of 15225.208 ps and break_even_calls_per_decision=5310; that does not repay the decision-level cost. Core 0 per_call_saving_ps is -238.091 and break_even_calls_per_decision is none (L19)."
     },
     {
       "id": "gb10",

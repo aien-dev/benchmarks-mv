@@ -1,0 +1,98 @@
+OM2GATE START cases=native/neuralese/fixtures/nl7-score.cases scratch=/tmp/nl7-checker-run
+IDENTITY omc /home/drakestapleton/fix/neuralese/seed/out/omc sha256=d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84 pinned=d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84 match
+DEADLINE 20
+CASE nl7-case-0 line=5
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /tmp/nl7-checker-run/5.src > /tmp/nl7-checker-run/5.elf 2> /tmp/nl7-checker-run/5.cerr
+  $ /tmp/nl7-checker-run/5.elf < inputs/nl7-case-0.csv > /tmp/nl7-checker-run/5.out 2> /tmp/nl7-checker-run/5.err
+VERDICT nl7-case-0 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE nl7-case-1 line=6
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /tmp/nl7-checker-run/6.src > /tmp/nl7-checker-run/6.elf 2> /tmp/nl7-checker-run/6.cerr
+  $ /tmp/nl7-checker-run/6.elf < inputs/nl7-case-1.csv > /tmp/nl7-checker-run/6.out 2> /tmp/nl7-checker-run/6.err
+VERDICT nl7-case-1 PASS run exit=90 expected=90 stdout=match stderr=match
+CASE nl7-case-2 line=7
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /tmp/nl7-checker-run/7.src > /tmp/nl7-checker-run/7.elf 2> /tmp/nl7-checker-run/7.cerr
+  $ /tmp/nl7-checker-run/7.elf < inputs/nl7-case-2.csv > /tmp/nl7-checker-run/7.out 2> /tmp/nl7-checker-run/7.err
+VERDICT nl7-case-2 PASS run exit=90 expected=90 stdout=match stderr=match
+CASE nl7-case-3 line=8
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /tmp/nl7-checker-run/8.src > /tmp/nl7-checker-run/8.elf 2> /tmp/nl7-checker-run/8.cerr
+  $ /tmp/nl7-checker-run/8.elf < inputs/nl7-case-3.csv > /tmp/nl7-checker-run/8.out 2> /tmp/nl7-checker-run/8.err
+VERDICT nl7-case-3 PASS run exit=90 expected=90 stdout=match stderr=match
+CASE nl7-case-4 line=9
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /tmp/nl7-checker-run/9.src > /tmp/nl7-checker-run/9.elf 2> /tmp/nl7-checker-run/9.cerr
+  $ /tmp/nl7-checker-run/9.elf < inputs/nl7-case-4.csv > /tmp/nl7-checker-run/9.out 2> /tmp/nl7-checker-run/9.err
+VERDICT nl7-case-4 PASS run exit=90 expected=90 stdout=match stderr=match
+CASE nl7-case-5 line=10
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /tmp/nl7-checker-run/10.src > /tmp/nl7-checker-run/10.elf 2> /tmp/nl7-checker-run/10.cerr
+  $ /tmp/nl7-checker-run/10.elf < inputs/nl7-case-5.csv > /tmp/nl7-checker-run/10.out 2> /tmp/nl7-checker-run/10.err
+VERDICT nl7-case-5 PASS run exit=0 expected=0 stdout=match stderr=match
+CASE nl7-case-6 line=11
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /tmp/nl7-checker-run/11.src > /tmp/nl7-checker-run/11.elf 2> /tmp/nl7-checker-run/11.cerr
+  $ /tmp/nl7-checker-run/11.elf < inputs/nl7-case-6.csv > /tmp/nl7-checker-run/11.out 2> /tmp/nl7-checker-run/11.err
+VERDICT nl7-case-6 PASS run exit=1 expected=1 stdout=match stderr=match
+CASE nl7-case-7 line=12
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /tmp/nl7-checker-run/12.src > /tmp/nl7-checker-run/12.elf 2> /tmp/nl7-checker-run/12.cerr
+  $ /tmp/nl7-checker-run/12.elf < inputs/nl7-case-7.csv > /tmp/nl7-checker-run/12.out 2> /tmp/nl7-checker-run/12.err
+VERDICT nl7-case-7 PASS run exit=1 expected=1 stdout=match stderr=match
+CASE nl7-case-8 line=13
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /tmp/nl7-checker-run/13.src > /tmp/nl7-checker-run/13.elf 2> /tmp/nl7-checker-run/13.cerr
+  $ /tmp/nl7-checker-run/13.elf < inputs/nl7-case-8.csv > /tmp/nl7-checker-run/13.out 2> /tmp/nl7-checker-run/13.err
+VERDICT nl7-case-8 PASS run exit=90 expected=90 stdout=match stderr=match
+CASE nl7-case-9 line=14
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /tmp/nl7-checker-run/14.src > /tmp/nl7-checker-run/14.elf 2> /tmp/nl7-checker-run/14.cerr
+  $ /tmp/nl7-checker-run/14.elf < inputs/nl7-case-9.csv > /tmp/nl7-checker-run/14.out 2> /tmp/nl7-checker-run/14.err
+VERDICT nl7-case-9 PASS run exit=90 expected=90 stdout=match stderr=match
+SUBST native/neuralese/fixtures/nl7-canonical_parse_removed.from native/neuralese/fixtures/nl7-canonical_parse_removed.to
+CASE nl7-kill-canonical_parse_removed line=16
+  MUTATE exact-once substitution at byte 1758
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /tmp/nl7-checker-run/16.src > /tmp/nl7-checker-run/16.elf 2> /tmp/nl7-checker-run/16.cerr
+  $ /tmp/nl7-checker-run/16.elf < inputs/nl7-case-1.csv > /tmp/nl7-checker-run/16.out 2> /tmp/nl7-checker-run/16.err
+VERDICT nl7-kill-canonical_parse_removed PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 3 stderr=match
+SUBST native/neuralese/fixtures/nl7-completeness_removed.from native/neuralese/fixtures/nl7-completeness_removed.to
+CASE nl7-kill-completeness_removed line=18
+  MUTATE exact-once substitution at byte 6403
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /tmp/nl7-checker-run/18.src > /tmp/nl7-checker-run/18.elf 2> /tmp/nl7-checker-run/18.cerr
+  $ /tmp/nl7-checker-run/18.elf < inputs/nl7-case-2.csv > /tmp/nl7-checker-run/18.out 2> /tmp/nl7-checker-run/18.err
+VERDICT nl7-kill-completeness_removed PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 3 stderr=match
+SUBST native/neuralese/fixtures/nl7-duplicate_guard_removed.from native/neuralese/fixtures/nl7-duplicate_guard_removed.to
+CASE nl7-kill-duplicate_guard_removed line=20
+  MUTATE exact-once substitution at byte 4930
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /tmp/nl7-checker-run/20.src > /tmp/nl7-checker-run/20.elf 2> /tmp/nl7-checker-run/20.cerr
+  $ /tmp/nl7-checker-run/20.elf < inputs/nl7-case-3.csv > /tmp/nl7-checker-run/20.out 2> /tmp/nl7-checker-run/20.err
+VERDICT nl7-kill-duplicate_guard_removed PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 3 stderr=match
+SUBST native/neuralese/fixtures/nl7-payload_guard_removed.from native/neuralese/fixtures/nl7-payload_guard_removed.to
+CASE nl7-kill-payload_guard_removed line=22
+  MUTATE exact-once substitution at byte 5799
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /tmp/nl7-checker-run/22.src > /tmp/nl7-checker-run/22.elf 2> /tmp/nl7-checker-run/22.cerr
+  $ /tmp/nl7-checker-run/22.elf < inputs/nl7-case-4.csv > /tmp/nl7-checker-run/22.out 2> /tmp/nl7-checker-run/22.err
+VERDICT nl7-kill-payload_guard_removed PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 3 stderr=match
+SUBST native/neuralese/fixtures/nl7-split1_membership_wrong.from native/neuralese/fixtures/nl7-split1_membership_wrong.to
+CASE nl7-kill-split1_membership_wrong line=24
+  MUTATE exact-once substitution at byte 2685
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /tmp/nl7-checker-run/24.src > /tmp/nl7-checker-run/24.elf 2> /tmp/nl7-checker-run/24.cerr
+  $ /tmp/nl7-checker-run/24.elf < inputs/nl7-case-5.csv > /tmp/nl7-checker-run/24.out 2> /tmp/nl7-checker-run/24.err
+VERDICT nl7-kill-split1_membership_wrong PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 36828 stderr=match
+SUBST native/neuralese/fixtures/nl7-rm_radius_zero.from native/neuralese/fixtures/nl7-rm_radius_zero.to
+CASE nl7-kill-rm_radius_zero line=26
+  MUTATE exact-once substitution at byte 3809
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /tmp/nl7-checker-run/26.src > /tmp/nl7-checker-run/26.elf 2> /tmp/nl7-checker-run/26.cerr
+  $ /tmp/nl7-checker-run/26.elf < inputs/nl7-case-0.csv > /tmp/nl7-checker-run/26.out 2> /tmp/nl7-checker-run/26.err
+VERDICT nl7-kill-rm_radius_zero PASS run exit=1 expected=1 killed: stdout differs from the oracle at byte 216010 stderr=match
+SUBST native/neuralese/fixtures/nl7-rm_expectation_guard_removed.from native/neuralese/fixtures/nl7-rm_expectation_guard_removed.to
+CASE nl7-kill-rm_expectation_guard_removed line=28
+  MUTATE exact-once substitution at byte 4259
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /tmp/nl7-checker-run/28.src > /tmp/nl7-checker-run/28.elf 2> /tmp/nl7-checker-run/28.cerr
+  $ /tmp/nl7-checker-run/28.elf < inputs/nl7-case-6.csv > /tmp/nl7-checker-run/28.out 2> /tmp/nl7-checker-run/28.err
+VERDICT nl7-kill-rm_expectation_guard_removed PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 216010 stderr=match
+SUBST native/neuralese/fixtures/nl7-exact_mandatory_noise_removed.from native/neuralese/fixtures/nl7-exact_mandatory_noise_removed.to
+CASE nl7-kill-exact_mandatory_noise_removed line=30
+  MUTATE exact-once substitution at byte 4097
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /tmp/nl7-checker-run/30.src > /tmp/nl7-checker-run/30.elf 2> /tmp/nl7-checker-run/30.cerr
+  $ /tmp/nl7-checker-run/30.elf < inputs/nl7-case-7.csv > /tmp/nl7-checker-run/30.out 2> /tmp/nl7-checker-run/30.err
+VERDICT nl7-kill-exact_mandatory_noise_removed PASS run exit=0 expected=0 killed: stdout differs from the oracle at byte 216010 stderr=match
+SUBST native/neuralese/fixtures/nl7-packed_source_id_oracle.from native/neuralese/fixtures/nl7-packed_source_id_oracle.to
+CASE nl7-kill-packed_source_id_oracle line=32
+  MUTATE exact-once substitution at byte 4356
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /tmp/nl7-checker-run/32.src > /tmp/nl7-checker-run/32.elf 2> /tmp/nl7-checker-run/32.cerr
+  $ /tmp/nl7-checker-run/32.elf < inputs/nl7-case-0.csv > /tmp/nl7-checker-run/32.out 2> /tmp/nl7-checker-run/32.err
+VERDICT nl7-kill-packed_source_id_oracle PASS run exit=1 expected=1 killed: stdout differs from the oracle at byte 216010 stderr=match
+OM2GATE PASS cases=19 pass=19 fail=0 invalid=0 not_run=0

@@ -1,0 +1,32 @@
+# NL7 native scorer qualification. Parent supplies observed input/output corpus.
+# Run from scratch with native/ symlink plus inputs/ and expected/ directories.
+# KILL compares mutant stdout against ORIGINAL scorer stdout for the same fixture.
+deadline 20
+nl7-case-0 run native/neuralese/nl7-score.om file:inputs/nl7-case-0.csv file:expected/nl7-case-0.score - 0
+nl7-case-1 run native/neuralese/nl7-score.om file:inputs/nl7-case-1.csv file:expected/nl7-case-1.score - 90
+nl7-case-2 run native/neuralese/nl7-score.om file:inputs/nl7-case-2.csv file:expected/nl7-case-2.score - 90
+nl7-case-3 run native/neuralese/nl7-score.om file:inputs/nl7-case-3.csv file:expected/nl7-case-3.score - 90
+nl7-case-4 run native/neuralese/nl7-score.om file:inputs/nl7-case-4.csv file:expected/nl7-case-4.score - 90
+nl7-case-5 run native/neuralese/nl7-score.om file:inputs/nl7-case-5.csv file:expected/nl7-case-5.score - 0
+nl7-case-6 run native/neuralese/nl7-score.om file:inputs/nl7-case-6.csv file:expected/nl7-case-6.score - 1
+nl7-case-7 run native/neuralese/nl7-score.om file:inputs/nl7-case-7.csv file:expected/nl7-case-7.score - 1
+nl7-case-8 run native/neuralese/nl7-score.om file:inputs/nl7-case-8.csv file:expected/nl7-case-8.score - 90
+nl7-case-9 run native/neuralese/nl7-score.om file:inputs/nl7-case-9.csv file:expected/nl7-case-9.score - 90
+subst native/neuralese/fixtures/nl7-canonical_parse_removed.from native/neuralese/fixtures/nl7-canonical_parse_removed.to
+nl7-kill-canonical_parse_removed kill native/neuralese/nl7-score.om file:inputs/nl7-case-1.csv file:expected/nl7-case-1.score - 0
+subst native/neuralese/fixtures/nl7-completeness_removed.from native/neuralese/fixtures/nl7-completeness_removed.to
+nl7-kill-completeness_removed kill native/neuralese/nl7-score.om file:inputs/nl7-case-2.csv file:expected/nl7-case-2.score - 0
+subst native/neuralese/fixtures/nl7-duplicate_guard_removed.from native/neuralese/fixtures/nl7-duplicate_guard_removed.to
+nl7-kill-duplicate_guard_removed kill native/neuralese/nl7-score.om file:inputs/nl7-case-3.csv file:expected/nl7-case-3.score - 0
+subst native/neuralese/fixtures/nl7-payload_guard_removed.from native/neuralese/fixtures/nl7-payload_guard_removed.to
+nl7-kill-payload_guard_removed kill native/neuralese/nl7-score.om file:inputs/nl7-case-4.csv file:expected/nl7-case-4.score - 0
+subst native/neuralese/fixtures/nl7-split1_membership_wrong.from native/neuralese/fixtures/nl7-split1_membership_wrong.to
+nl7-kill-split1_membership_wrong kill native/neuralese/nl7-score.om file:inputs/nl7-case-5.csv file:expected/nl7-case-5.score - 0
+subst native/neuralese/fixtures/nl7-rm_radius_zero.from native/neuralese/fixtures/nl7-rm_radius_zero.to
+nl7-kill-rm_radius_zero kill native/neuralese/nl7-score.om file:inputs/nl7-case-0.csv file:expected/nl7-case-0.score - 1
+subst native/neuralese/fixtures/nl7-rm_expectation_guard_removed.from native/neuralese/fixtures/nl7-rm_expectation_guard_removed.to
+nl7-kill-rm_expectation_guard_removed kill native/neuralese/nl7-score.om file:inputs/nl7-case-6.csv file:expected/nl7-case-6.score - 0
+subst native/neuralese/fixtures/nl7-exact_mandatory_noise_removed.from native/neuralese/fixtures/nl7-exact_mandatory_noise_removed.to
+nl7-kill-exact_mandatory_noise_removed kill native/neuralese/nl7-score.om file:inputs/nl7-case-7.csv file:expected/nl7-case-7.score - 0
+subst native/neuralese/fixtures/nl7-packed_source_id_oracle.from native/neuralese/fixtures/nl7-packed_source_id_oracle.to
+nl7-kill-packed_source_id_oracle kill native/neuralese/nl7-score.om file:inputs/nl7-case-0.csv file:expected/nl7-case-0.score - 1

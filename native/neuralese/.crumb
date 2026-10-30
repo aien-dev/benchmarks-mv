@@ -3,27 +3,27 @@
     "generated": {
       "children": [
         {
-          "digest": "4e6820a5ada94b0ab3e2c3d3991ca0fd13581b5011c65d20ff94b71bda85ab7e",
-          "last_commit": "e4ab4af",
+          "digest": "3f4b782b568be9958b02bc5054520129333d2171138cacbfc69c9bc1a36e4969",
+          "last_commit": "d2e99b2",
           "name": "fixtures",
           "purpose": "Public deterministic scorer controls, never sealed experiments"
         },
         {
-          "digest": "01205ae3d4cd1efb7b582327930cd9d97c27b8c3dc83172225a4a2f4461b3760",
-          "last_commit": "463123e",
+          "digest": "ca3619a0eb3aa23e9aa178cbc7e147a8f8a6717d00d175bd7ed0cb0750d73f58",
+          "last_commit": "82d8ab5",
           "name": "nl1r",
           "purpose": "Append-only NL1R preregistration and source-independent native actual-wire judging; historical N"
         }
       ],
-      "children_root": "sha256:d74e0782b9710ea55667f3835f9a99611996d6830e050485a39ca71e189a4d73",
-      "compiled_at": "2026-10-30T03:16:45Z",
+      "children_root": "sha256:6be4dcb0ef1fdbf4d2b4ec35908eb3b539d6ec6688e58584772730fad49ce416",
+      "compiled_at": "2026-10-30T12:24:36Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:14b62406b7ea77f164881d6c550ac3a123b5ccb64f76160251400c148262f5bc",
+      "digest": "sha256:1c777c66b4267f42d6835272570b60b03f33c7e0361d8da12031f6f47bdc53c1",
       "evidence_files": 1362,
-      "evidence_root": "sha256:a250df0bf0dbf481d048a21e459cd8bdb4509c242fd7978fe95a4bedfefbdfd6",
-      "files": 1516,
-      "generated_at_commit": "463123e6aeb77b0ec269f479941310921e6521ff",
-      "source_tree": "sha256:cf289c908f7a202f242735624b7d66af6525442f424cadf66850bf0c8ed0fa1b"
+      "evidence_root": "sha256:b34fb847357649aa1d669b0777089299d6123f95c292511fe7709d29fa30d6ee",
+      "files": 1552,
+      "generated_at_commit": "43a199b3a3f665a4b292722a78b322386fbeb2a8",
+      "source_tree": "sha256:406a9e75dde205a19012b2fdf2a539aa164e7264d1d049c428e5544d44b71574"
     }
   },
   "name": "neuralese",

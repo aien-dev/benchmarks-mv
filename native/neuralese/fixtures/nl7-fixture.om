@@ -1,0 +1,203 @@
+om2
+note Native synthetic scorer fixtures. Argument 0 valid,1 parse,2 truncated,3 duplicate,
+note 4 payload,5 split membership probe,6 RM double accepted,7 exact mandatory wrong,
+note 8 invalid mode,9 refusal with non-sentinel prediction. No candidate learning code.
+global Case ulong 1
+text COMMA ","
+text LF "\n"
+text TAG "N,"
+text BADSEED "0101"
+text DIAG "D,nl7 public fixture\nP,not scoring evidence\n"
+fn putout a view uchar * n ulong to void
+p = ulong 0
+while lt p n
+k = write 1 a p sub n p
+if le k 0
+exit 93
+end
+p = add p ulong k
+end
+end
+fn number n ulong to void
+b = new uchar 20 0
+p = ulong 20
+while true bound 20
+p = sub p 1
+put b p uchar add rem n 10 48
+n = div n 10
+if eq n 0
+break
+end
+end
+putout part b p sub ulong 20 p sub ulong 20 p
+end
+fn flag v bool to ulong
+if v
+ret 1
+end
+ret 0
+end
+fn sep to void
+putout COMMA 1
+end
+fn validmode arm ulong mode ulong to bool
+if or eq arm 0 or eq arm 2 eq arm 3
+ret le mode 18
+end
+if eq mode 0
+ret true
+end
+n = ulong 8
+if eq arm 4
+n = 4
+end
+if and ge mode 100 lt mode add 100 n
+ret true
+end
+if lt mode 200
+ret false
+end
+i = div sub mode 200 8
+j = rem sub mode 200 8
+ret and lt i j lt j n
+end
+fn seedvalue si ulong to ulong
+if eq si 0
+ret 101
+end
+if eq si 1
+ret 211
+end
+ret 307
+end
+fn budvalue bi ulong to ulong
+if eq bi 0
+ret 8
+end
+if eq bi 1
+ret 24
+end
+if eq bi 2
+ret 96
+end
+ret 192
+end
+fn prediction arm ulong id ulong mode ulong split ulong to ulong
+if or eq arm 2 eq arm 3
+if and eq get Case 0 5 and eq arm 2 eq mode 0
+if or and eq split 1 eq id 6 and eq split 2 eq id 3
+ret id
+end
+end
+ret 99
+end
+if and eq arm 1 ge mode 200
+ret 99
+end
+if and eq arm 4 ne mode 0
+if lt mode 200
+ret xor id shl ulong 1 sub mode 100
+end
+i = div sub mode 200 8
+j = rem sub mode 200 8
+ret xor xor id shl ulong 1 i shl ulong 1 j
+end
+ret id
+end
+fn payloadbits arm ulong budget ulong to ulong
+if eq arm 1
+ret 8
+end
+if eq arm 4
+ret 4
+end
+if eq budget 8
+ret 6
+end
+ret budget
+end
+fn emitrec base ulong id ulong mode ulong pred ulong status ulong to void
+arm = rem div base 4 5
+budget = budvalue rem base 4
+putout TAG len TAG
+if and eq get Case 0 1 eq base 0
+putout BADSEED len BADSEED
+else
+number seedvalue div base 60
+end
+sep
+number rem div base 20 3
+sep
+number arm
+sep
+number id
+sep
+number budget
+sep
+if and eq get Case 0 8 eq base 0
+number 19
+else
+number mode
+end
+sep
+number pred
+sep
+number status
+sep
+if and eq get Case 0 4 eq base 0
+number 7
+else
+number payloadbits arm budget
+end
+putout LF 1
+end
+fn record base ulong id ulong mode ulong to void
+if and eq get Case 0 2 and eq base 179 and eq id 15 eq mode 219
+ret
+end
+arm = rem div base 4 5
+pred = prediction arm id mode rem div base 20 3
+status = flag eq pred 99
+if and eq get Case 0 6 and eq arm 1 eq mode 201
+pred = id
+status = 0
+end
+if and eq get Case 0 7 and eq base 3 and eq id 0 eq mode 1
+pred = 1
+end
+if and eq get Case 0 9 and eq arm 2 eq mode 0
+pred = 0
+status = 1
+end
+emitrec base id mode pred status
+end
+fn main to int
+arg = new uchar 1 0
+if ne argcnt 2
+ret 90
+end
+k = argread 1 arg 0 1
+if ne k 1
+ret 90
+end
+c = get arg 0
+if or lt c 48 gt c 57
+ret 90
+end
+put Case 0 ulong sub c 48
+putout DIAG len DIAG
+for base ulong 180
+arm = rem div base 4 5
+for mode ulong 256
+if validmode arm mode
+for id ulong 16
+record base id mode
+if and eq get Case 0 3 and eq base 0 and eq id 0 eq mode 0
+record base id mode
+end
+end
+end
+end
+end
+ret 0
+end

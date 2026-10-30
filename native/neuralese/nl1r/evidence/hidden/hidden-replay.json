@@ -1,0 +1,81 @@
+[
+  {
+    "stage": "capacity",
+    "unit": 0,
+    "replay_exit": 0,
+    "semantic_replay_exact": true,
+    "replay_raw_sha256": "ce6dc2aa0a217dcee5d5e24c12dcd881225b3a055d4cc96cdd9a878c3776086a",
+    "replay_start_ns": 96556187114685,
+    "replay_finish_ns": 96556192908650,
+    "import_exit": 0,
+    "import_judge_exit": 0,
+    "import_parameters_exact": true,
+    "import_rows_exact": true
+  },
+  {
+    "stage": "capacity",
+    "unit": 1,
+    "replay_exit": 0,
+    "semantic_replay_exact": true,
+    "replay_raw_sha256": "23a339b6079889927099a1cb93aad67db597b82b369b0afd0e61cac831cf44f3",
+    "replay_start_ns": 96556197955233,
+    "replay_finish_ns": 96556209488778,
+    "import_exit": 0,
+    "import_judge_exit": 0,
+    "import_parameters_exact": true,
+    "import_rows_exact": true
+  },
+  {
+    "stage": "capacity",
+    "unit": 2,
+    "replay_exit": 0,
+    "semantic_replay_exact": true,
+    "replay_raw_sha256": "86b514736bb8f4fed1aa8e7444605a42e1eb461bcce293bb8832fa7a27ab86d4",
+    "replay_start_ns": 96556214300767,
+    "replay_finish_ns": 96556233264226,
+    "import_exit": 0,
+    "import_judge_exit": 0,
+    "import_parameters_exact": true,
+    "import_rows_exact": true
+  },
+  {
+    "stage": "capacity",
+    "unit": 3,
+    "replay_exit": 0,
+    "semantic_replay_exact": true,
+    "replay_raw_sha256": "f473689f06a17853dd3dd9a344e9264df6e993996fee83a945953eb699047004",
+    "replay_start_ns": 96556238072407,
+    "replay_finish_ns": 96556240721003,
+    "import_exit": 0,
+    "import_judge_exit": 0,
+    "import_parameters_exact": true,
+    "import_rows_exact": true
+  },
+  {
+    "stage": "task",
+    "unit": 0,
+    "replay_exit": 0,
+    "semantic_replay_exact": true,
+    "replay_raw_sha256": "80f8f6435b45d120f6b9e88fab12e61e903ac7ed0aacced3c460123191e38a4e",
+    "replay_start_ns": 96556245618913,
+    "replay_finish_ns": 96556261029336
+  },
+  {
+    "stage": "task",
+    "unit": 1,
+    "replay_exit": 0,
+    "semantic_replay_exact": true,
+    "replay_raw_sha256": "124d98f7ad1c16f1a5febe4f4702eb736fe18f43d313524c86ca4d2e5cc9645d",
+    "replay_start_ns": 96556262248978,
+    "replay_finish_ns": 96556277598088
+  },
+  {
+    "stage": "task",
+    "unit": 2,
+    "replay_exit": 0,
+    "semantic_replay_exact": true,
+    "replay_raw_sha256": "ab3aed478209a39c454e80fa7f611b9363da00590e313cf777f8f3b9f5270515",
+    "replay_start_ns": 96556278843074,
+    "replay_finish_ns": 96556294140984
+  }
+]

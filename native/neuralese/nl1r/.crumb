@@ -1,0 +1,25 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [],
+      "children_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compiled_at": "2026-10-30T12:24:36Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:ca3619a0eb3aa23e9aa178cbc7e147a8f8a6717d00d175bd7ed0cb0750d73f58",
+      "evidence_files": 1362,
+      "evidence_root": "sha256:b34fb847357649aa1d669b0777089299d6123f95c292511fe7709d29fa30d6ee",
+      "files": 1443,
+      "generated_at_commit": "43a199b3a3f665a4b292722a78b322386fbeb2a8",
+      "source_tree": "sha256:1ce009e67c38c8ce3a42e45c7ac245ea5d7a57d0ec51a8b1a808b753928608dc"
+    }
+  },
+  "invariants": [
+    "Freeze configuration and hidden commitment before learned outcomes",
+    "Never expose private split or seed before source and prediction commitments",
+    "No GPU, live service, model downloads or authorization activation",
+    "First-party checker and runner use seeded handwritten Omega"
+  ],
+  "name": "nl1r",
+  "purpose": "Append-only NL1R preregistration and source-independent native actual-wire judging; historical NL6 evidence immutable",
+  "schema_version": "1.0.0"
+}

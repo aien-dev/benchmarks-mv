@@ -1,0 +1,20 @@
+{
+  "command": [
+    "git",
+    "diff",
+    "--name-status",
+    "e4ab4afecd62272f86d67043f74ffc8153ae703e",
+    "--",
+    "native/neuralese"
+  ],
+  "exit": 0,
+  "pre_existing_tracked_file_changes": [],
+  "old_tracked_files_untouched": true,
+  "historical_crumbs_restored_after_scope_bug": [
+    "/home/drakestapleton/fix/nl1r-judge/native/.crumb",
+    "/home/drakestapleton/fix/nl1r-judge/native/neuralese/.crumb",
+    "/home/drakestapleton/fix/nl1r-judge/native/neuralese/fixtures/.crumb"
+  ],
+  "scope_bug": "crumb compile native/neuralese/nl1r rewrites four whole-tree crumbs; historical bytes captured before command and restored exactly afterward",
+  "new_nl1r_files_are_only_additions": true
+}

@@ -1,0 +1,79 @@
+[
+  {
+    "stage": "capacity",
+    "unit": 0,
+    "judge_exit": 0,
+    "judge_stderr": "",
+    "checkpoint_decoder_exit": 0,
+    "judge_monotonic_start_ns": 96190018222681,
+    "judge_monotonic_end_ns": 96190019029583,
+    "judge_stdout_sha256": "8e1ee25177e7e524d870fa4378bbb4ff4089f469ea842f29ed00b4a9257a9a1f",
+    "decoded_checkpoint_sha256": "09e6682fad254309fedfcb6543feecf853017a058475894efb18dec604637cb1"
+  },
+  {
+    "stage": "capacity",
+    "unit": 1,
+    "judge_exit": 0,
+    "judge_stderr": "",
+    "checkpoint_decoder_exit": 0,
+    "judge_monotonic_start_ns": 96190019768245,
+    "judge_monotonic_end_ns": 96190020562332,
+    "judge_stdout_sha256": "656235a00fdd6b9e159677b8c27dba76eace623901b3ab5978ea576617addbde",
+    "decoded_checkpoint_sha256": "36783ca364f772db1588124cc843ceecd09702b0398b031edb69c6af1a4ced4a"
+  },
+  {
+    "stage": "capacity",
+    "unit": 2,
+    "judge_exit": 0,
+    "judge_stderr": "",
+    "checkpoint_decoder_exit": 0,
+    "judge_monotonic_start_ns": 96190021047104,
+    "judge_monotonic_end_ns": 96190021841862,
+    "judge_stdout_sha256": "8d87e8607cd817ac68573ddd326eecae86cc12a77886240f61461f689cdde810",
+    "decoded_checkpoint_sha256": "858115f37fae0387995ec076a01baa9e2e159f3f53bce8aa82af9d1a3e161580"
+  },
+  {
+    "stage": "capacity",
+    "unit": 3,
+    "judge_exit": 0,
+    "judge_stderr": "",
+    "checkpoint_decoder_exit": 0,
+    "judge_monotonic_start_ns": 96190022381754,
+    "judge_monotonic_end_ns": 96190023032303,
+    "judge_stdout_sha256": "0a806bd0195facc023f346d35b4333074f6e81ad242aa6dde70b553c077a70d8",
+    "decoded_checkpoint_sha256": "769166a5716e87a47a306c88d33fcff2089a45ecea5004f92352d2f63b96f95c"
+  },
+  {
+    "stage": "task",
+    "unit": 0,
+    "judge_exit": 0,
+    "judge_stderr": "",
+    "checkpoint_decoder_exit": 0,
+    "judge_monotonic_start_ns": 96190023391938,
+    "judge_monotonic_end_ns": 96190024594268,
+    "judge_stdout_sha256": "9d5d848f656fa937e3bb88209e616f197d3a42e9a81bf69d0cb6b4944f5fc1fa",
+    "decoded_checkpoint_sha256": "54ba2cb8a6a0651ce07667af00e726aed8174cddf60aba94ebcc6ec250519d78"
+  },
+  {
+    "stage": "task",
+    "unit": 1,
+    "judge_exit": 0,
+    "judge_stderr": "",
+    "checkpoint_decoder_exit": 0,
+    "judge_monotonic_start_ns": 96190025043103,
+    "judge_monotonic_end_ns": 96190026200377,
+    "judge_stdout_sha256": "3790ebded16e589943ba172c506960c62598e399fa1522cc4cea02d082b13bfc",
+    "decoded_checkpoint_sha256": "76860ab405d6466bd9ccc664a298f4f12e45ce0b992221335714bf08ca6a421d"
+  },
+  {
+    "stage": "task",
+    "unit": 2,
+    "judge_exit": 0,
+    "judge_stderr": "",
+    "checkpoint_decoder_exit": 0,
+    "judge_monotonic_start_ns": 96190026631340,
+    "judge_monotonic_end_ns": 96190027832502,
+    "judge_stdout_sha256": "3dfe788cb29010fb116d29caa55fa71b9352b2c8bab4dcae29494fce1780904d",
+    "decoded_checkpoint_sha256": "afc9526775f5bee293014dab4df3f5eded873e55556878428570574a79e5da8b"
+  }
+]

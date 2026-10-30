@@ -1,0 +1,162 @@
+note Standalone with io.om. Mode 0 packs C/P carrier; mode 1 checks actual binary then emits B/P.
+note Full C/P/R/T campaign validation remains judge.om, not this conversion tool.
+global BH ulong 8
+global BV ulong 83
+text BC "B,"
+text BP "P,"
+fn bread to ulong
+v = ulong 0
+for k ulong 8
+c = jnext
+if lt c 0
+jinvalid
+end
+v = or v shl ulong c mul k 8
+end
+ret v
+end
+fn bwrite v ulong to void
+for k ulong 8
+put JB k uchar and shr v mul k 8 255
+end
+p = ulong 0
+while lt p 8
+n = write 1 JB p sub ulong 8 p
+if le n 0
+exit 93
+end
+p = add p ulong n
+end
+end
+fn bvalid to void
+if and ne get BH 0 1 ne get BH 0 2
+jinvalid
+end
+if ne get BH 7 0
+jinvalid
+end
+arm = get BH 1
+d = ulong 3
+n = ulong 31
+if eq arm 1
+d = 4
+n = 40
+end
+if eq arm 2
+n = 83
+end
+if eq arm 3
+d = 1
+n = 0
+end
+if gt arm 3
+jinvalid
+end
+if eq get BH 0 2
+if gt arm 2
+jinvalid
+end
+d = 4
+n = 40
+end
+if or ne get BH 2 d ne get BH 3 n
+jinvalid
+end
+if or eq get BH 4 0 gt get BH 4 4294967295
+jinvalid
+end
+if or eq get BH 5 0 gt get BH 5 65535
+jinvalid
+end
+if gt get BH 6 32000
+jinvalid
+end
+end
+fn bparams to void
+for i ulong get BH 3
+if not le fabs bitcast f64 get BV i 1000000.0f64
+jinvalid
+end
+end
+end
+fn bpack to void
+jexpect 67
+jexpect 44
+for k ulong 8
+delim = long 44
+if eq k 7
+delim = 10
+end
+put JC k jvalue delim
+end
+put BH 0 get JC 0
+put BH 1 get JC 1
+put BH 2 get JC 4
+put BH 3 get JC 5
+put BH 4 get JC 2
+put BH 5 get JC 3
+put BH 6 get JC 6
+put BH 7 0
+bvalid
+for i ulong get BH 3
+jexpect 80
+jexpect 44
+if ne jvalue 44 i
+jinvalid
+end
+put BV i jvalue 10
+end
+bparams
+for i ulong 8
+bwrite get BH i
+end
+for i ulong get BH 3
+bwrite get BV i
+end
+end
+fn bunpack to void
+for i ulong 8
+put BH i bread
+end
+bvalid
+for i ulong get BH 3
+put BV i bread
+end
+if ne jnext -1
+jinvalid
+end
+bparams
+jout BC
+for i ulong 8
+jnumber get BH i
+if lt i 7
+jout JSEP
+end
+end
+jout JLF
+for i ulong get BH 3
+jout BP
+jfield i
+jnumber get BV i
+jout JLF
+end
+end
+fn main to int
+if ne argcnt 2
+jinvalid
+end
+ab = new uchar 1 0
+n = argread 1 ab 0 1
+if ne n 1
+jinvalid
+end
+if eq get ab 0 48
+bpack
+else
+if ne get ab 0 49
+jinvalid
+end
+bunpack
+end
+ret 0
+end

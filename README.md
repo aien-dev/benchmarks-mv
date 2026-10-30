@@ -35,11 +35,11 @@ The rules of the race (the frozen contract) are in [CONTRACT.md](prime-drag-race
 | Path | What it is |
 | :--- | :--- |
 | `prime-drag-race/` | Prime Drag Race suite runner (`prime_race`), contract, results and sealed evidence. A standalone Rust crate. |
-| `src/` | The `aien-benchmarks` measurement harness and four helper programs: `bench_canonical_suite`, `bench_branching_neutral`, `bench_verify_records`, `bench_index`. |
+| `src/` | The `aien-benchmarks` measurement harness and five helper programs: `bench_canonical_suite`, `bench_branching_neutral`, `bench_verify_records`, `bench_verify_prereg`, `bench_index`. |
 | `data/` | Datasets from the withdrawn 2026-09-19 sweep, kept as recorded. |
 | `artifacts/gb10_canonical_1789907893_4d762/` | One withdrawn GB10 run bundle with its `SHA256SUMS` file. |
 | `assets/` | SVG charts drawn from `data/`. |
-| `manifests/` | Workload manifests read by `bench_branching_neutral` and `bench_canonical_suite`. |
+| `manifests/` | Workload manifests read by `bench_branching_neutral` and `bench_canonical_suite`; `manifests/prereg/` holds preregistrations checked by `bench_verify_prereg`. |
 | `docs/` | [PIPELINE.md](docs/PIPELINE.md) (how pull requests are tested and merged), [PERF_INDEX.md](docs/PERF_INDEX.md) (generated index), [LIVE_PRESSURE_BENCHMARK.md](docs/LIVE_PRESSURE_BENCHMARK.md) (an older pressure benchmark write-up, not regenerated under the evidence standard). |
 | `tests/gates/` | The Spark test gates (see [How changes are tested](#how-changes-are-tested)). |
 | `tests/fixtures/records/` | Good and bad example records for the evidence check. |
@@ -83,6 +83,9 @@ cargo run --release -- report
 
 # Check records and artifact bundles offline (one line per defect)
 cargo run --release --bin bench_verify_records -- records artifacts tests/fixtures/records/good
+
+# Check preregistration manifests offline (one line per defect)
+cargo run --release --bin bench_verify_prereg -- manifests/prereg
 
 # Check that docs/PERF_INDEX.md matches the generator (drop --check to rewrite it)
 cargo run --release --bin bench_index -- --check
@@ -176,6 +179,10 @@ Status words in a record (source: `src/evidence.rs`):
 - **NOT_RUN**: a required measurement that has not been performed; it carries no numbers and no evidence.
 - **FAIL**: the run happened and did not meet its acceptance check; kept as evidence.
 - **SUPERSEDED**: replaced by a newer record.
+
+### Preregistration
+
+A campaign that compares learning arms is declared before any candidate is trained, in an `aien-bench-prereg/1` file under `manifests/prereg/`: arms, environments, the sealed held-out split and how non-access is enforced, metrics, sample sizes with their power calculation, stopping rules and the Turing profile `T(M;B,D,G,P)` with `T_ideal` and `T_real` kept apart. A preregistration is a plan and carries no measurements. `cargo run --release --bin bench_verify_prereg` (default path `manifests/prereg`) prints one `path: field: reason` line per defect. It refuses a file without `baseline_before_eval` (baselines run and frozen before any evaluation), without a non-empty `G` background naming every pretrained adviser and toolchain an arm uses, with T/J allowed while energy is not `MEASURED`, with unpinned background revisions once `FROZEN`, or with a sample size whose design effect, effective n or power does not add up (source: `src/prereg.rs`). [manifests/prereg/si_genesis_e2.json](manifests/prereg/si_genesis_e2.json) is the SI Genesis E2 and Fusion E1 plan for issues #39 and #38; its status is `SCOPED` and every result in it is `NOT_RUN`.
 
 ## Hardware
 

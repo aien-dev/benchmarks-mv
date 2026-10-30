@@ -10,7 +10,7 @@ AIEN does not compare itself with other people's systems, with one exception. Sp
 
 ## Where this fits in AIEN
 
-[AienOS](https://github.com/aien-dev/aienix) is the core tree of AIEN. Its README lists this repository as an attachment: a repository that lives on its own and plugs into the core at a boundary. Related repositories:
+The whole system is [Sovereign Intelligence (SI)](https://github.com/aien-dev/sovereign-intelligence). [AienOS](https://github.com/aien-dev/AienOS-nv) is only the operating-system layer. [aien-dev/aienix](https://github.com/aien-dev/aienix) is retired. [aien-dev/sovereign-intelligence](https://github.com/aien-dev/sovereign-intelligence) is the integration, release and install center, and where the signed whole-system Spark test runs on one frozen candidate. Other repositories, including this one, keep their own parts ([ADR 0045](https://github.com/aien-dev/aien-architecture-mv/blob/main/docs/adr/0045-aienix-retired-sovereign-intelligence-center.md)). Related repositories:
 
 - [aien-sovereign-core-mv](https://github.com/aien-dev/aien-sovereign-core-mv): host runtime and the Spark verification pipeline that tests this repository. Its [Measured results](https://github.com/aien-dev/aien-sovereign-core-mv#measured-results) section sets the evidence standard used here.
 - [aien-architecture-mv](https://github.com/aien-dev/aien-architecture-mv): architecture and plans. Issue [#233](https://github.com/aien-dev/aien-architecture-mv/issues/233) (performance intelligence) is the plan behind the streaming and evidence work below.

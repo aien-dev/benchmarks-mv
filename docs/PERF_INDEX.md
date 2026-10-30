@@ -30,6 +30,8 @@ Scanned: `src/**/*.rs`, `prime-drag-race/src/**/*.rs`. The text is the first `//
 | `src/bin/bench_branching_neutral.rs` | Neutral out-of-process benchmark runner for agentic branching suites on NVIDIA DGX Spark GB10. |
 | `src/bin/bench_canonical_suite.rs` | Canonical Blackwell GB10 Inference Benchmark Suite |
 | `src/bin/bench_index.rs` | Writes (or with `--check`, compares) `docs/PERF_INDEX.md`, the generated discovery index. |
+| `src/bin/bench_orig3_judge.rs` | ORIG-3 judge: applies the preregistered `orig3_selector.json` decision rule to selmain E output. |
+| `src/bin/bench_orig3_judge_v2.rs` | ORIG-3 v2 judge: applies the frozen `orig3_selector_v2.json` decision rule |
 | `src/bin/bench_verify_prereg.rs` | Offline preregistration check: validates `aien-bench-prereg/1` manifests before any run. |
 | `src/bin/bench_verify_records.rs` | Offline evidence-integrity check: validates benchmark records and SHA256SUMS artifact bundles. |
 | `src/evidence.rs` | Offline evidence-integrity checks for benchmark records (`aien-bench-record/1`) and SHA256SUMS artifact bundles. |

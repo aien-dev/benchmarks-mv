@@ -1,0 +1,32 @@
+[*] cores: Cortex-X925 x10 timed on cpu19; Cortex-A725 x10 timed on cpu14; energy meter: none
+[*] arms: synthesize, verify in a forked child
+    reference     code    0 B  synth      0 ns  verify  1391514 ns  verified
+    scalar        code   72 B  synth   8096 ns  verify  1057655 ns  verified
+    unroll2       code  124 B  synth   3808 ns  verify  1111080 ns  verified
+    unroll4_dual  code  176 B  synth   5072 ns  verify  1621867 ns  verified
+    quad4         code  204 B  synth   6080 ns  verify  1085192 ns  verified
+    planted_wrong code    0 B  synth      0 ns  verify   884326 ns  REFUSED
+[*] power per arm from the cluster meter
+[*] training: the learner runs and measures on its own
+    trained on Cortex-X925: 154 jobs, measured twice in 56 of them; best single arm on training: quad4
+    trained on Cortex-A725: 154 jobs, measured twice in 65 of them; best single arm on training: reference
+[*] validation: an independent judge measures its own work
+    calibration on the other half: spread x1.00
+    learned 0.607 of the fixed rule's time on validation; 80% intervals cover 0.876
+[*] promotion through the generation barrier
+[*] held-out work with the durable model
+    Cortex-X925 H1_unseen_shapes    frozen 0.579 / online 0.633 of the fixed rule; frozen 1.000 of best static (quad4), 1.000 of oracle; online measured 2 jobs; cover80 0.78
+        replay wall: frozen 0.588 of the fixed rule, energy 0.000
+    Cortex-X925 H2_thin_heavy_mix   frozen 0.780 / online 0.799 of the fixed rule; frozen 0.789 of best static (quad4), 1.001 of oracle; online measured 3 jobs; cover80 0.72
+        replay wall: frozen 0.780 of the fixed rule, energy 0.000
+    Cortex-X925 H3_memory_pressure  frozen 0.584 / online 0.655 of the fixed rule; frozen 1.000 of best static (quad4), 1.000 of oracle; online measured 7 jobs; cover80 0.98
+    Cortex-A725 H1_unseen_shapes    frozen 0.558 / online 0.568 of the fixed rule; frozen 0.952 of best static (reference), 1.010 of oracle; online measured 4 jobs; cover80 0.88
+        replay wall: frozen 0.560 of the fixed rule, energy 0.000
+    Cortex-A725 H2_thin_heavy_mix   frozen 0.692 / online 0.699 of the fixed rule; frozen 0.975 of best static (reference), 1.000 of oracle; online measured 1 jobs; cover80 0.80
+        replay wall: frozen 0.691 of the fixed rule, energy 0.000
+    Cortex-A725 H3_memory_pressure  frozen 0.560 / online 0.664 of the fixed rule; frozen 0.956 of best static (reference), 1.011 of oracle; online measured 18 jobs; cover80 1.00
+[*] coverage sample: 600 shapes per core class, tapped as family 5
+    checked 50234 runs against the reference: 0 mismatches
+    held-out verdict: learned selection wins
+checks 44 failures 0
+receipt: build/qual-runs/20261025T141518Z-85641e1ea14b/EMPIRICAL/rx_empirical_optimizer_receipt.json

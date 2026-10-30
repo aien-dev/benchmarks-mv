@@ -4,14 +4,12 @@
 
 Report privately. Do not open a public issue, pull request or discussion about it.
 
-1. GitHub: open this repository's Security tab and choose "Report a vulnerability". This
-   creates a private advisory that only the maintainers can see. If that option is not shown,
-   private vulnerability reporting has not been enabled for this repository yet; use email.
-2. Email: drake@aienos.com with the subject `[benchmarks-mv] security report`.
+Report vulnerabilities privately through the repository's Security tab, "Report a vulnerability",
+at https://github.com/aien-dev/benchmarks-mv/security/advisories/new.
 
 Include the commit or release you tested, the component (path), steps to reproduce, and what an
 attacker gains. If the report involves a secret, say where it was exposed and do not send the
-secret itself. Encrypted mail is not required; do not post proof-of-concept payloads publicly.
+secret itself. Do not post proof-of-concept payloads publicly.
 
 ## Response targets
 

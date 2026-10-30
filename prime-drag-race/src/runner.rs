@@ -40,7 +40,14 @@ pub fn run_and_validate(
     let exp = Expect { name: spec.name.clone(), limit, min_seconds, audit, tags: spec.tags.clone() };
     match execute(&spec.path, limit, min_seconds, audit) {
         Ok(ex) => {
-            let v = validate_run(&exp, &ex);
+            let mut v = validate_run(&exp, &ex);
+            // Timed runs: the implementation's self-reported elapsed time must agree with the
+            // runner's own monotonic clock, which also has to meet the requested minimum.
+            if let (None, Ok(val)) = (audit, &v) {
+                if ex.wall_s < min_seconds || ex.wall_s < val.elapsed {
+                    v = Err(Reject::WallClockShort { wall: ex.wall_s, elapsed: val.elapsed, min: min_seconds });
+                }
+            }
             (Some(ex), v)
         }
         Err(e) => (None, Err(Reject::Spawn(e.to_string()))),
@@ -136,6 +143,22 @@ fn record(
 }
 
 pub fn run(a: &RunArgs) -> Result<RunResult, String> {
+    // `run` produces qualification receipts, not smoke or audit-only verdicts.
+    // Keep the frozen protocol in CONTRACT.md authoritative at the API boundary,
+    // even for callers that bypass the CLI defaults.
+    if a.impls.is_empty() || a.audit_passes != 5 || a.warmup != 1 || a.trials != 10
+        || !a.min_seconds.is_finite() || a.min_seconds < 5.0
+    {
+        return Err("qualification requires implementations, one audit (K=5), one warm-up, 10 timed trials and min_seconds >= 5".into());
+    }
+    // A marker is necessary evidence of the operator's quiet window, not proof
+    // that the machine was actually exclusive; that remains an operator gate.
+    let quiet = fs::read_to_string(&a.quiet_file)
+        .map_err(|e| format!("quiet flag {} is not readable: {e}", a.quiet_file.display()))?;
+    let quiet_start = quiet.trim().to_string();
+    if quiet_start.is_empty() {
+        return Err(format!("quiet flag {} is empty", a.quiet_file.display()));
+    }
     let evidence = check_evidence_dir(&a.evidence_dir)?;
     fs::create_dir_all(evidence.join("blobs")).map_err(|e| e.to_string())?;
     let io = |e: std::io::Error| e.to_string();
@@ -189,6 +212,12 @@ pub fn run(a: &RunArgs) -> Result<RunResult, String> {
         }
     }
 
+    // The window must still hold after the last trial: a removed or rewritten marker means the
+    // operator's quiet window did not cover the whole run, so the run cannot qualify.
+    let quiet_end = fs::read_to_string(&a.quiet_file).ok().map(|s| s.trim().to_string());
+    if failure.is_none() && quiet_end.as_deref() != Some(quiet_start.as_str()) {
+        failure = Some(format!("quiet flag {} was removed or changed during the run", a.quiet_file.display()));
+    }
     let pass = failure.is_none();
     let mut impls = serde_json::Map::new();
     let mut summary_json = serde_json::Map::new();
@@ -232,7 +261,9 @@ pub fn run(a: &RunArgs) -> Result<RunResult, String> {
         "hardware": hardware(),
         "conditions": {
             "quiet_flag_file": a.quiet_file.display().to_string(),
-            "quiet_flag_contents": fs::read_to_string(&a.quiet_file).ok().map(|s| s.trim().to_string()),
+            "quiet_flag_contents": quiet_start,
+            "quiet_flag_contents_at_end": quiet_end,
+            "quiet_flag_semantics": "operator-asserted marker, checked present at start and unchanged at end; exclusivity of the machine is not verified by the runner",
             "governors": governors(),
             "loadavg_at_start": records.first().map(|r| r["loadavg_before"].clone()),
             "loadavg_at_end": records.last().map(|r| r["loadavg_after"].clone()),

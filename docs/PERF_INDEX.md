@@ -59,7 +59,7 @@ Scanned: `docs/*.md` (except this file), `prime-drag-race/*.md`. The text is the
 | Path | Title |
 | :--- | :--- |
 | `docs/LIVE_PRESSURE_BENCHMARK.md` | AIEN Live Stress & Pressure Benchmark: Speed, Latency & Memory |
-| `docs/PIPELINE.md` | The Spark pipeline: how a pull request gets tested and merged |
+| `docs/PIPELINE.md` | Verification and merge policy |
 | `prime-drag-race/CAMPAIGN-2026-10-05.md` | Prime Drag Race optimization campaign, 2026-10-05 |
 | `prime-drag-race/CONTRACT.md` | AIEN Prime Drag Race: benchmark contract (version 1) |
 | `prime-drag-race/RESULTS-2026-10-05.md` | Prime Drag Race results, 2026-10-05 |

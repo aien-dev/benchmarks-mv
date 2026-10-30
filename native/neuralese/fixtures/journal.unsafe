@@ -1,0 +1,4 @@
+goal synthetic_public
+propose unauthorized_write
+verify admitted
+complete exact_result

@@ -2,7 +2,7 @@
 
 ## Execution Environment & Hardware Substrate
 
-- **Workstation**: NVIDIA DGX Spark (`spark-b87b`)
+- **Workstation**: NVIDIA DGX Spark (`spark`)
 - **Processor**: NVIDIA Grace Blackwell (GB10, aarch64, 128-bit NEON / SVE)
 - **Memory**: 121 GB Unified LPDDR5X (Unified CPU/GPU Physical Memory)
 - **Host Kernel**: Linux 7.0.0-1019-nvidia (4 KB page size)

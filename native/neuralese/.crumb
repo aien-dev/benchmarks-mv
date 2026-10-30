@@ -1,0 +1,26 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [
+        {
+          "digest": "4e6820a5ada94b0ab3e2c3d3991ca0fd13581b5011c65d20ff94b71bda85ab7e",
+          "last_commit": "e4ab4af",
+          "name": "fixtures",
+          "purpose": "Public deterministic scorer controls, never sealed experiments"
+        }
+      ],
+      "children_root": "sha256:5539dd99280dbf385d481038870979ce97efd2e51533b0f95f8795691cf03a7d",
+      "compiled_at": "2026-10-29T02:16:36Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:6b1fdb27e40393c248f8364b52f1902dbf1a6ab369e41392f1263732ce4ad788",
+      "evidence_files": 0,
+      "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "files": 73,
+      "generated_at_commit": "e4ab4afecd62272f86d67043f74ffc8153ae703e",
+      "source_tree": "sha256:85028f409b74b027763e4132eaba2f8f0699b7b7ee2623febe62e55eee1cc373"
+    }
+  },
+  "name": "neuralese",
+  "purpose": "Independent raw-output fixture scoring for frozen NL6 design",
+  "schema_version": "1.0.0"
+}

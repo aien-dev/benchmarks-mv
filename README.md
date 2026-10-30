@@ -4,7 +4,9 @@
 
 This repository holds AIEN's performance measurements and the Rust tools that take and check them. Every measurement in it comes from one machine, the NVIDIA DGX Spark (Grace Blackwell GB10, aarch64). It has two parts: the Prime Drag Race suite runner in [prime-drag-race/](prime-drag-race/CONTRACT.md), which builds on its own, and the main measurement harness (the `aien-benchmarks` crate at the root), which needs a sibling checkout to build (see [Build and test](#build-and-test)).
 
-AIEN does not compare itself with other people's systems. Speed is measured against the machine's physical limit and our own previous run, and correctness against our own reference.
+AIEN does not compare itself with other people's systems, with one exception. Speed is measured against the machine's physical limit and our own previous run, and correctness against our own reference.
+
+**Exception: same-machine head-to-head (bar P0, added 2026-10-27 on Drake's order).** llama.cpp and vLLM, each at its own current release built for sm_121, may be run against our stack on the same DGX Spark, with the same model (Qwen3.6-35B-A3B), the same prompts and the same measurement definition; the bar is defined in [omega-mv docs/OMEGA.md](https://github.com/aien-dev/omega-mv/blob/main/docs/OMEGA.md). Every number in such a table is measured by us on this machine and labelled that way, with raw logs and SHA-256 digests. The result is published whether we win or lose. Numbers published by others are never placed in the same table as ours, and nothing from the other systems enters our serving path. The 2026-10-15 withdrawals below stand; this exception does not restore them.
 
 ## Where this fits in AIEN
 
@@ -14,6 +16,117 @@ AIEN does not compare itself with other people's systems. Speed is measured agai
 - [aien-architecture-mv](https://github.com/aien-dev/aien-architecture-mv): architecture and plans. Issue [#233](https://github.com/aien-dev/aien-architecture-mv/issues/233) (performance intelligence) is the plan behind the streaming and evidence work below.
 - [omega-mv](https://github.com/aien-dev/omega-mv): the language and GPU engine that the Prime Drag Race native GB10 entry runs on.
 - [aien-receipts](https://github.com/aien-dev/aien-receipts): where the Spark publishes the signed test bundle for each tested commit of this repository.
+
+## Neuralese independent evaluation (NL-6)
+
+Issue [#55](https://github.com/aien-dev/benchmarks-mv/issues/55), extending
+[#38](https://github.com/aien-dev/benchmarks-mv/issues/38), freezes its design at
+`8ee0a494bf73230c9d37647eb3caea792298fa8d` in
+[`manifests/neuralese_prereg.json`](manifests/neuralese_prereg.json). The
+[`raw Wolfram calls/results`](manifests/neuralese_wolfram_raw.json) establish the
+statistical planning calculations, not experimental results. The design includes
+an eight-combination training/eight-combination test split, matched text,
+typed-semantic and deterministic Omega baselines, full lifecycle costs and
+adversarial controls. A frozen design is not a sealed, executed campaign.
+
+[`native/neuralese/score.om`](native/neuralese/score.om) is a seeded handwritten
+Omega evidence checker. It supplements the existing signed Spark judge; it does
+not create an authority or execute proposed effects. Public synthetic fixtures
+qualify only the checker, never model performance or physical throughput.
+
+Compile the checker and the existing Omega conductor with the compiler from
+`omega-mv@e79566c191ea8ef11888e69ce50d8fadf375d4fd`, SHA-256
+`d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84`.
+This binary originated at `1fe5976d398646b17acabbf6d9dfae96b017e439`; it is
+not either of the older documented `2c824805` / `49923639` compiler pins.
+The conductor source is `seed/qualification/om2/gate.om` at that same revision.
+It verifies the compiler digest itself, compiles every source and mutant, runs
+each child with a deadline, compares exact stdout/stderr/status and writes raw
+artifacts. Never run a binary left by a failed compile.
+
+Run the conductor in a disposable replay directory containing `native` linked
+to this checkout's `native`, and `seed` linked to the pinned Omega checkout's
+`seed` (the conductor reads its committed SHA-256 constants there):
+
+```text
+<compiled-gate> <pinned-omc> d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84 native/neuralese/host.cases <new-scratch-directory>
+```
+
+Direct checker interface: `score MODE TRUSTED_REFERENCE ACTUAL_RAW_OUTPUT`.
+`MODE=1` compares ordered lines of exactly four ASCII bits and LF, reporting
+total/correct/wrong rows. Its reference comes from the independent task inputs,
+not a candidate's `expected_bits`; self-reported counts or extra fields fail.
+`MODE=2` compares a nonempty raw journal byte-for-byte with a separately frozen
+reference. `MODE=3` parses the NL4 boundary record, independently binds all
+operation/operand/type-shape/effect fields and recomputes increment, double or
+identity. Refusals must contain no residual operation, effects or result.
+The trusted reference starts `NL4REF1`; its final numeric field is reserved zero,
+not a supplied expected result. Actual records start `NL4R1`. Both have exactly
+ten decimal fields and LF; no leading zeroes, trailing fields or oversized values.
+Exit `0` means matching fixture evidence, `1` means wrong/missing-length output,
+`90` means invalid input/setup, and `93` means output I/O failure.
+
+Raw artifacts must come from independently replayed commands with pinned
+source/compiler/binary/input hashes and actual exits, not copied producer
+summary fields. Journal equality alone does not establish authorization; the
+reference and the existing capability authority must establish that separately.
+Neither row counts nor a `PASS` line establish independent test custody,
+distinct task IDs, safety certification or a quality-floor campaign. The
+checker deliberately does not accept producer timing, token, privacy, consent
+or hardware claims. Missing instrument evidence stays NOT_MEASURED/NOT_RUN.
+
+The fixtures include wrong-but-valid results, wrong operations/shapes/effects,
+all-refuse candidates, forged summaries, malformed/short/trailing records and
+guard-removal mutants. Changed equality/result/metadata guards must accept the
+bad fixture in the mutant while the original refuses it. Signals, timeouts and
+compile failures never count as mutation kills. The oracle arithmetic/parity
+queries and raw tool results are in
+[`native/neuralese/arithmetic_wolfram_raw.json`](native/neuralese/arithmetic_wolfram_raw.json).
+All learned, model-native and GB10 campaigns remain NOT_RUN/BLOCKED unless
+separately admitted and executed. No model, GPU or live-serving access is part
+of this checker.
+
+For NL1 CSV evidence, concatenate `native/neuralese/learnscore.om` and
+`native/neuralese/learn-cli.om` in that order before compilation, then run
+`learnscore RAW_CSV_FILE`. This bounded-streaming checker interprets the raw
+IEEE-754 carriers itself, derives fixture meanings from input IDs, recomputes
+threshold decisions and abstentions, rejects forged prediction/status fields
+and rejects duplicate or missing selected cases. It reports every seed,
+training/held-out partition and frozen quantization arm separately. It neither
+trusts the producer's aggregation nor counts abstention as recovery. Return
+zero means the evidence was scored, not that recovery was perfect.
+
+[`qualification.json`](native/neuralese/qualification.json) records the native
+conductor's 41/41 synthetic checks, including six guard-removal mutants.
+[`nl1-independent.json`](native/neuralese/nl1-independent.json) records an
+independent rebuild and CPU replay of learned sender/receiver source
+`aien-train@c5992ca0b015a233bca6f9af7af892a71c558403`.
+Its held-out full-precision learned recovery is 5/8, 5/8 and 6/8 for seeds
+17, 29 and 43; the fixed-basis and discrete controls each recover all eight.
+These filed native-checker counts are not independent objective samples for
+the preregistered statistical campaign. No parameters were tuned from them.
+The exact independently generated raw CSV is retained as
+[`nl1-replay.stdout`](native/neuralese/nl1-replay.stdout).
+The original `0e01c58` stream is preserved in
+[`nl1-pre-repair.stdout`](native/neuralese/nl1-pre-repair.stdout): its discrete
+control incorrectly decoded the original input ID rather than its transmitted
+byte. The repair changes only that causal control, not learned parameters.
+An independently compiled direct-ID mutant exits 77 when the control changes
+only the transmitted byte, while the repaired source completes successfully.
+[`nl4-independent.json`](native/neuralese/nl4-independent.json) records an
+independent compile of `omega-mv@09b1394fe68287eaa10b0d90cf07a9dd00e6cb60`
+with its locked projection and envelope dependencies. The successful pure
+operation and foreign-tenant refusal were replayed with their actual channels
+and exits; the checker recomputes the result from separately bound request
+fields. This is a closed host boundary, not signed capability authorization.
+[`nl5-independent.json`](native/neuralese/nl5-independent.json) records
+independent proposal and unchanged-kernel replay of the 30 Allen scenarios.
+It explicitly distinguishes proposal refusal, kernel admission and real task
+execution; C remains a typed fallback, not a learned transport.
+The six ordinary/corrected states were also checked against independent
+Wolfram-derived references, including a wrong-terminal-state negative control;
+[`nl5_wolfram_raw.json`](native/neuralese/nl5_wolfram_raw.json) retains the
+actual arithmetic tool calls and results.
 
 ## Status (2026-10-19)
 
@@ -98,7 +211,7 @@ On the Spark on 2026-10-19 with the sibling in place: `verify`, `report`, `bench
 
 ### How changes are tested
 
-The Spark is the only test judge for this repository. For each pull request head, a worker on the Spark runs the gates in `tests/gates/` that the change touches, plus the always-run gates in `.aien/always`, signs the result and publishes it to [aien-receipts/benchmarks](https://github.com/aien-dev/aien-receipts/tree/main/benchmarks). The one GitHub check, `AIEN Verification` (`.github/workflows/aien-verification.yml`), only checks that signed bundle; it does not build or test this repository's code. The full process, including how a pull request gets merged, is in [docs/PIPELINE.md](docs/PIPELINE.md).
+The `AIEN Checks` GitHub job on pull requests and `main` is advisory. It runs `crumb verify` and, for enrolled repositories, portable smoke gates from the base ref; it does **not** download a signed Spark bundle or attest that the full gate set ran. On `alpha/*` tag pushes, `AIEN Alpha` verifies a full signed Spark bundle for a commit on `main`. The Spark judge and signed receipts remain available for qualification. See [docs/PIPELINE.md](docs/PIPELINE.md) for the current process and the historical PR bridge.
 
 The gates, each a step of `tests/gates/run.sh`:
 
@@ -186,9 +299,15 @@ A campaign that compares learning arms is declared before any candidate is train
 
 ## Hardware
 
-All measurements here come from one NVIDIA DGX Spark (`spark-b87b`), Grace Blackwell GB10, aarch64. The withdrawn dataset `data/benchmarks_latest.json` records kernel `7.0.0-1019-nvidia` and `rustc 1.98.1 (48a229cea 2026-09-01)`. On 2026-10-19 the Spark reported the same kernel and compiler, a 4096-byte page size (`getconf PAGESIZE`) and 121 GiB of memory (`free -g`). Nothing in this repository measures or tests any other platform. Work across other machines is planned in issues #31 and #32 and has no results yet.
+All measurements here come from one NVIDIA DGX Spark (`spark`), Grace Blackwell GB10, aarch64. The withdrawn dataset `data/benchmarks_latest.json` records kernel `7.0.0-1019-nvidia` and `rustc 1.98.1 (48a229cea 2026-09-01)`. On 2026-10-19 the Spark reported the same kernel and compiler, a 4096-byte page size (`getconf PAGESIZE`) and 121 GiB of memory (`free -g`). Nothing in this repository measures or tests any other platform. Work across other machines is planned in issues #31 and #32 and has no results yet.
 
 ---
+
+## Human-Directed Agentic Engineering
+
+Development follows Human-Directed Agentic Engineering (HDAE): humans define goals, architecture, constraints, acceptance criteria, and stopping points; agents implement, execute checks, diagnose failures, and revise within those boundaries. Human review retains responsibility for claims, acceptance, and release decisions.
+
+For the documented method and a systems-software case study, see Gregory M. Kurtzer, [*Ginux: Building an Independent Kernel That Runs Linux Userspace through Human-Directed Agentic Engineering* (2026)](https://doi.org/10.5281/zenodo.23682548). This describes current development, not the protocol or validity of historical measurements below.
 
 ## Historical record (withdrawn figures)
 

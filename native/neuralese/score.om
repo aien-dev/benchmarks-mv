@@ -1,0 +1,360 @@
+om2
+note NL6 independent raw output evidence checker, frozen design 8ee0a494.
+note No candidate summary, expected_bits, PASS flag or authorization claim is read.
+note Trusted reference files must be judge-owned and committed before prediction reveal.
+note mode1 four ASCII bits plus LF per row; mode2 exact raw journal; mode3 NL4 typed record.
+note mode3 op1 increment, op2 double, op3 identity; matches NL4 boundary contract.
+const CAP ulong 65536
+global refbuf uchar CAP
+global obsbuf uchar CAP
+global lens ulong 2
+global vals long 20
+global state ulong 3
+text prefix "NL6 total="
+text middle " correct="
+text last " wrong="
+text lf "\n"
+text bad "NL6 INVALID\n"
+text fail "NL6 FAIL\n"
+text pass "NL6 PASS\n"
+text magic "NL4R1 "
+text refmag "NL4REF1 "
+fn emit a view uchar * n ulong to void
+p = ulong 0
+while lt p n bound 65536
+k = write 1 a p sub n p
+if le k 0
+exit 93
+end
+p = add p ulong k
+end
+end
+fn number v ulong to void
+b = new uchar 20 0
+p = ulong 20
+x = v
+while true bound 20
+p = sub p 1
+put b p uchar add rem x 10 48
+x = div x 10
+if eq x 0
+break
+end
+end
+q = p
+while lt q 20 bound 20
+k = write 1 b q sub ulong 20 q
+if le k 0
+exit 93
+end
+q = add q ulong k
+end
+end
+fn invalid to void
+emit bad len bad
+exit 90
+end
+fn badout to int
+emit fail len fail
+ret 1
+end
+fn load which ulong arg ulong to void
+path = new uchar 4096 0
+n = argread arg path 0 len path
+if le n 0
+invalid
+end
+fd = fopen path 0 ulong n 524288 0
+if lt fd 0
+invalid
+end
+pos = ulong 0
+while lt pos CAP bound 65536
+k = long 0
+if eq which 0
+k = read int fd refbuf pos sub CAP pos
+else
+k = read int fd obsbuf pos sub CAP pos
+end
+if lt k 0
+z = fclose int fd
+invalid
+end
+if eq k 0
+break
+end
+pos = add pos ulong k
+end
+if eq pos CAP
+z = fclose int fd
+invalid
+end
+z = fclose int fd
+if ne z 0
+invalid
+end
+put lens which pos
+end
+fn byteat which ulong pos ulong to uchar
+if ge pos get lens which
+invalid
+end
+if eq which 0
+ret get refbuf pos
+end
+ret get obsbuf pos
+end
+fn report total ulong correct ulong to void
+emit prefix len prefix
+number total
+emit middle len middle
+number correct
+emit last len last
+number sub total correct
+emit lf len lf
+end
+fn bits to int
+n = get lens 0
+if or eq n 0 ne rem n 5 0
+invalid
+end
+if ne get lens 1 n
+ret badout
+end
+cnt = div n 5
+good = ulong 0
+for row ulong cnt
+same = true
+p = mul row 5
+for col ulong 4
+a = byteat 0 add p col
+b = byteat 1 add p col
+if and ne a 48 ne a 49
+invalid
+end
+if and ne b 48 ne b 49
+invalid
+end
+if ne a b
+same = false
+end
+end
+if or ne byteat 0 add p 4 10 ne byteat 1 add p 4 10
+invalid
+end
+if same
+good = add good 1
+end
+end
+report cnt good
+if ne cnt good
+ret badout
+end
+emit pass len pass
+ret 0
+end
+fn journal to int
+n = get lens 0
+if eq n 0
+invalid
+end
+if ne n get lens 1
+ret badout
+end
+same = true
+for i ulong n
+if ne byteat 0 i byteat 1 i
+same = false
+end
+end
+correct = ulong 0
+if same
+correct = 1
+end
+report 1 correct
+if not same
+ret badout
+end
+emit pass len pass
+ret 0
+end
+note Strict bounded signed decimal parser. Values limited to +/-1000000 to avoid overflow.
+fn getnum which ulong to long
+p = get state 0
+n = get lens which
+if ge p n
+invalid
+end
+negv = false
+if eq byteat which p 45
+negv = true
+p = add p 1
+end
+start = p
+v = long 0
+while lt p n bound 65536
+c = byteat which p
+if or eq c 32 eq c 10
+break
+end
+if or lt c 48 gt c 57
+invalid
+end
+v = add mul v 10 long sub c 48
+if gt v 1000000
+invalid
+end
+p = add p 1
+end
+if eq p start
+invalid
+end
+if ge p n
+invalid
+end
+if and gt sub p start 1 eq byteat which start 48
+invalid
+end
+if and negv eq v 0
+invalid
+end
+put state 0 add p 1
+put state 1 ulong byteat which p
+if negv
+ret neg v
+end
+ret v
+end
+fn parse which ulong to void
+n = ulong 6
+if eq which 0
+n = 8
+end
+if lt get lens which n
+invalid
+end
+for i ulong n
+c = uchar 0
+if eq which 0
+c = get refmag i
+else
+c = get magic i
+end
+if ne byteat which i c
+invalid
+end
+end
+put state 0 n
+for j ulong 10
+v = getnum which
+put vals add mul which 10 j v
+want = ulong 32
+if eq j 9
+want = 10
+end
+if ne get state 1 want
+invalid
+end
+end
+if ne get state 0 get lens which
+invalid
+end
+end
+note Reference fields decision op lhs rhs rank dim0 dim1 elements effects result.
+note Reference result must be zero reserved; executed result is independently recomputed.
+note Permitted scalar op1 increment, op2 double, op3 identity. Metadata is independently checked.
+fn boundary to int
+parse 0
+parse 1
+if ne get vals 9 0
+invalid
+end
+if lt get vals 0 0
+invalid
+end
+for j ulong 9
+if ne get vals j get vals add j 10
+ret badout
+end
+end
+if ne get vals 0 0
+for j ulong 9
+if ne get vals add j 1 0
+invalid
+end
+if ne get vals add j 11 0
+ret badout
+end
+end
+report 1 1
+emit pass len pass
+ret 0
+end
+if ne get vals 8 0
+invalid
+end
+if or lt get vals 2 0 gt get vals 2 3
+invalid
+end
+if or ne get vals 4 1 ne get vals 5 1
+invalid
+end
+if or ne get vals 6 0 ne get vals 7 1
+invalid
+end
+op = get vals 1
+a = get vals 2
+b = get vals 3
+want = long 0
+if eq op 1
+if ne b 1
+invalid
+end
+want = add a 1
+else
+if eq op 2
+if ne b 2
+invalid
+end
+want = mul a 2
+else
+if eq op 3
+if ne b 0
+invalid
+end
+want = a
+else
+invalid
+end
+end
+end
+if ne get vals 19 want
+ret badout
+end
+report 1 1
+emit pass len pass
+ret 0
+end
+fn main to int
+if ne argcnt 4
+invalid
+end
+modebuf = new uchar 2 0
+n = argread 1 modebuf 0 len modebuf
+if ne n 1
+invalid
+end
+mode = get modebuf 0
+if or lt mode 49 gt mode 51
+invalid
+end
+load 0 2
+load 1 3
+if eq mode 49
+ret bits
+end
+if eq mode 50
+ret journal
+end
+ret boundary
+end

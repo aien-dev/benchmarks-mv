@@ -1,0 +1,357 @@
+note Native judge validates full input before publishing any metrics.
+fn jheader to void
+jexpect 67
+jexpect 44
+for i ulong 8
+delim = long 44
+if eq i 7
+delim = 10
+end
+put JC i jvalue delim
+end
+schema = get JC 0
+unit = get JC 1
+if and ne schema 1 ne schema 2
+jinvalid
+end
+if or eq get JC 2 0 gt get JC 2 4294967295
+jinvalid
+end
+if or eq get JC 3 0 gt get JC 3 65535
+jinvalid
+end
+d = ulong 4
+n = ulong 40
+if eq schema 1
+if gt unit 3
+jinvalid
+end
+if eq unit 0
+d = 3
+n = 31
+end
+if eq unit 2
+d = 3
+n = 83
+end
+if eq unit 3
+d = 1
+n = 0
+end
+else
+if or gt unit 2 ne get JC 7 0
+jinvalid
+end
+end
+if or ne get JC 4 d ne get JC 5 n
+jinvalid
+end
+mode = get JC 7
+if or gt mode 5 eq mode 4
+jinvalid
+end
+if and eq mode 1 ne unit 1
+jinvalid
+end
+if and or eq mode 2 eq mode 3 ne unit 2
+jinvalid
+end
+count = ulong 0
+for id ulong 16
+count = add count and shr get JC 3 id 1
+end
+updates = mul count 2000
+if or ne mode 0 and eq schema 1 eq unit 3
+updates = 0
+end
+if eq mode 5
+if gt get JC 6 32000
+jinvalid
+end
+else
+if ne get JC 6 updates
+jinvalid
+end
+end
+for i ulong n
+jexpect 80
+jexpect 44
+if ne jvalue 44 i
+jinvalid
+end
+v = bitcast f64 jvalue 10
+if not le fabs v 1000000.0f64
+jinvalid
+end
+put JP i v
+end
+end
+fn jparse_row to ulong
+jexpect 82
+jexpect 44
+put JR 0 jvalue 44
+if eq get JC 0 2
+put JR 49 jvalue 44
+end
+for i ulong 46
+ix = add i 1
+delim = long 44
+if and eq ix 46 eq get JC 0 1
+delim = 10
+end
+put JR ix jvalue delim
+end
+if eq get JC 0 2
+put JR 47 jvalue 44
+put JR 48 jvalue 10
+end
+id = get JR 0
+if gt id 15
+jinvalid
+end
+group = get JR 1
+if eq get JC 0 1
+if gt group 5
+jinvalid
+end
+else
+if or gt group 2 gt get JR 49 4
+jinvalid
+end
+group = add mul get JR 49 3 group
+context = ulong 0
+if eq get JC 1 2
+context = and id 3
+end
+if or ne get JR 47 context ne get JR 48 0
+jinvalid
+end
+end
+bit = shl ulong 1 id
+if ne and get Seen group bit 0
+jinvalid
+end
+put Seen group or get Seen group bit
+for i ulong 32
+if gt get JR add i 3 255
+jinvalid
+end
+end
+ret group
+end
+fn jwirecheck to void
+n = mul get JC 4 8
+if eq get JC 0 1
+if eq get JC 1 3
+n = 1
+end
+jcapacitywire
+else
+n = 1
+if eq get JR 49 4
+n = 4
+end
+if or eq get JR 1 2 eq get JR 49 3
+n = 0
+end
+jtaskwire
+end
+if ne get JR 2 n
+jinvalid
+end
+for b ulong 32
+if ne get JR add b 3 ulong get JB b
+jinvalid
+end
+end
+end
+fn jactive j ulong to bool
+if eq get JC 0 1
+ret true
+end
+if eq get JC 1 1
+ret eq j 0
+end
+if eq get JC 1 2
+ret ge j 2
+end
+ret true
+end
+fn jtarget to ulong
+id = get JR 0
+if and eq get JC 0 2 eq get JC 1 1
+ret jparity id
+end
+ret id
+end
+fn jgrade group ulong to void
+status = ulong 0
+if and eq get JC 0 2 eq get JR 1 2
+status = 2
+end
+if ne get JR 46 status
+jinvalid
+end
+if eq get JC 0 1
+jcapacitydecode
+else
+jtaskdecode
+end
+exact = ulong 1
+abst = ulong 0
+errors = ulong 0
+if ne status 0
+abst = 1
+exact = 0
+end
+for j ulong 4
+score = bitcast f64 get JR add j 35
+if not le fabs sub score get JS j 0.000000000001f64
+jinvalid
+end
+pred = ulong 0
+if and eq status 0 ge get JS j 0.5f64
+pred = 1
+end
+if ne get JR add j 39 pred
+jinvalid
+end
+if jactive j
+if eq status 0
+if lt fabs sub get JS j 0.5f64 0.1f64
+abst = 1
+end
+end
+if ne pred and shr jtarget j 1
+exact = 0
+errors = add errors 1
+end
+end
+end
+if ne get JR 43 abst
+jinvalid
+end
+for phase ulong 3
+belongs = true
+train = ne and shr get JC 3 get JR 0 1 0
+if eq phase 1
+belongs = train
+end
+if eq phase 2
+belongs = not train
+end
+if belongs
+jinc group phase 0 1
+jinc group phase 1 exact
+if eq abst 0
+if eq exact 1
+jinc group phase 2 1
+else
+jinc group phase 3 1
+end
+end
+jinc group phase 4 abst
+jinc group phase 5 errors
+jinc group phase 6 get JR 44
+jinc group phase 7 get JR 45
+end
+end
+row = add mul group 16 get JR 0
+put Sizes row get JR 2
+for b ulong 32
+put Logs add mul row 32 b uchar get JR add b 3
+end
+end
+fn jmember id ulong phase ulong to bool
+if eq phase 0
+ret true
+end
+train = ne and shr get JC 3 id 1 0
+if eq phase 1
+ret train
+end
+ret not train
+end
+fn jpayseq ai ulong bi ulong to bool
+if ne get Sizes ai get Sizes bi
+ret false
+end
+for k ulong 32
+if ne get Logs add mul ai 32 k get Logs add mul bi 32 k
+ret false
+end
+end
+ret true
+end
+fn jcollisions group ulong phase ulong to ulong
+n = ulong 0
+for a ulong 16
+for b ulong 16
+if and lt a b and jmember a phase jmember b phase
+ai = add mul group 16 a
+bi = add mul group 16 b
+if jpayseq ai bi
+n = add n 1
+end
+end
+end
+end
+ret n
+end
+fn jreport groups ulong to void
+jout JMAG
+for group ulong groups
+for phase ulong 3
+jout JREC
+for i ulong 4
+jfield get JC i
+end
+jfield group
+jfield phase
+for i ulong 6
+jfield get Stats jstat group phase i
+end
+jfield jcollisions group phase
+jfield get Stats jstat group phase 6
+jnumber get Stats jstat group phase 7
+jout JLF
+end
+end
+jout JEND
+end
+fn main to int
+if ne argcnt 1
+jinvalid
+end
+jheader
+groups = ulong 6
+if eq get JC 0 2
+groups = 15
+end
+for i ulong mul groups 16
+group = jparse_row
+jwirecheck
+jgrade group
+end
+for group ulong groups
+if ne get Seen group 65535
+jinvalid
+end
+end
+jexpect 84
+jexpect 44
+start = jvalue 44
+finish = jvalue 10
+if or eq start 0 lt finish start
+jinvalid
+end
+jexpect 69
+jexpect 78
+jexpect 68
+jexpect 10
+if ne jnext -1
+jinvalid
+end
+jreport groups
+ret 0
+end

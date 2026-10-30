@@ -1,0 +1,7 @@
+{
+  "attempt": 5,
+  "compiler_sha256": "d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84",
+  "source_sha256": "f6a5c875d80a44fb82030e2078f608a0e035de2c3d11b3d51cabb2d745df39ce",
+  "exit": 12,
+  "stderr": "omc: line 661: error 12\n"
+}

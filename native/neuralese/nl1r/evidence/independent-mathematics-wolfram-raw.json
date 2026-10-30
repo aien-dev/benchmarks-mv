@@ -1,0 +1,15 @@
+{
+  "text": "Out[1]= {15, 14, True, 15, {{-1, -1, -1, -1}}, t >= 0, t <= -1/4 || t >= 1/4, 16, {1/3, 2/3}, 1/6, True, True, 1/4, {31, 40, 83}, True, {{120, 16, True, 16, 4}, {64, 2, True, 2, 1}, {24, 4, True, 4, 2}}}",
+  "details": {
+    "serverName": "wolfram",
+    "mcpToolName": "WolframLanguageEvaluator",
+    "rawContent": [
+      {
+        "type": "text",
+        "text": "Out[1]= {15, 14, True, 15, {{-1, -1, -1, -1}}, t >= 0, t <= -1/4 || t >= 1/4, 16, {1/3, 2/3}, 1/6, True, True, 1/4, {31, 40, 83}, True, {{120, 16, True, 16, 4}, {64, 2, True, 2, 1}, {24, 4, True, 4, 2}}}"
+      }
+    ],
+    "provider": "native",
+    "providerName": "OMP"
+  }
+}

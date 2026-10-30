@@ -1,0 +1,66 @@
+[
+  {
+    "fixture": "native/neuralese/nl1r/fixtures/task-bad-1.csv",
+    "sha256": "3264cfb6c26f1366e61198e9dbbff38271291e58e4901ae99182fff281f5fce4",
+    "exit": 90,
+    "stdout": "",
+    "stderr": "NL1RJ INVALID\n",
+    "atomic_refusal": true
+  },
+  {
+    "fixture": "native/neuralese/nl1r/fixtures/task-bad-2.csv",
+    "sha256": "765257b079df2871de846738b8c9cf18096840dfcb42fe51010347746d569600",
+    "exit": 90,
+    "stdout": "",
+    "stderr": "NL1RJ INVALID\n",
+    "atomic_refusal": true
+  },
+  {
+    "fixture": "native/neuralese/nl1r/fixtures/task-bad-3.csv",
+    "sha256": "acb432fbc24fd815fe5095046d098f25dfe9f5f7c419a57e4494309d6ba520b3",
+    "exit": 90,
+    "stdout": "",
+    "stderr": "NL1RJ INVALID\n",
+    "atomic_refusal": true
+  },
+  {
+    "fixture": "native/neuralese/nl1r/fixtures/task-bad-4.csv",
+    "sha256": "1140ac7a76888202c30250f7ab20c1b20f203ac48f8ae7c998285fef276eb89e",
+    "exit": 90,
+    "stdout": "",
+    "stderr": "NL1RJ INVALID\n",
+    "atomic_refusal": true
+  },
+  {
+    "fixture": "native/neuralese/nl1r/fixtures/task-bad-5.csv",
+    "sha256": "8e354fdf5b4050d2832e18644a142b4dccdabf941ade478694a3167f1b5f794c",
+    "exit": 90,
+    "stdout": "",
+    "stderr": "NL1RJ INVALID\n",
+    "atomic_refusal": true
+  },
+  {
+    "fixture": "native/neuralese/nl1r/fixtures/task-bad-6.csv",
+    "sha256": "500b1fcd2d298167e743c9a185de29788df5f71d43b6255545d5a54436377a75",
+    "exit": 90,
+    "stdout": "",
+    "stderr": "NL1RJ INVALID\n",
+    "atomic_refusal": true
+  },
+  {
+    "fixture": "native/neuralese/nl1r/fixtures/task-bad-7.csv",
+    "sha256": "f6d6d68ea203b2cea180aca6783af9fa5e5f5eabcb6f54f0a33df327abc293cd",
+    "exit": 90,
+    "stdout": "",
+    "stderr": "NL1RJ INVALID\n",
+    "atomic_refusal": true
+  },
+  {
+    "fixture": "native/neuralese/nl1r/fixtures/task-bad-8.csv",
+    "sha256": "bc4ad4487e808bb14c813164a9365121a033a4c32e735b316eaa247a39cfec11",
+    "exit": 90,
+    "stdout": "",
+    "stderr": "NL1RJ INVALID\n",
+    "atomic_refusal": true
+  }
+]

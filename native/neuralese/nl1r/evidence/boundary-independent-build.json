@@ -1,0 +1,49 @@
+{
+  "schema": "NL1R-boundary-independent-build/1",
+  "verified_utc": "2026-10-28T22:59:29.660205+00:00",
+  "source_freeze_commit": "18b3d08cdf383033e2c8d674a37325d11f010fc4",
+  "boundary_source_sha256": "731b682f46488efc15dd1dfd0fdf83045bd29034e6c04142260fa3172aa320ba",
+  "composition_source_sha256": "4ef19efde998f6c6b8f4dea144b2851a942d1190fbe21b77b3c3dd4fc1246b55",
+  "composition_binary_sha256": "a20add32ece35549870e7ef3f2e7a07e213ae28c9d58fb2dd80aa053a292d63f",
+  "binary_bytes": 50440,
+  "compiler_sha256": "d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84",
+  "compile_argv": [
+    "/home/drakestapleton/fix/nl-boundary/seed/out/omc"
+  ],
+  "compile_stdin": "boundary-independent-source.om",
+  "compile_exit": 0,
+  "compile_stderr": "",
+  "prefix": {
+    "path": "/home/drakestapleton/fix/nl-boundary/neuralese/host-proposal.om",
+    "lines": [
+      1,
+      144
+    ],
+    "sha256": "161c1cfe1f2dbb82a622aab29c6ee6a1f3329c08bd07b5f1725fb39df3a1b81d"
+  },
+  "dependencies": [
+    {
+      "path": "/home/drakestapleton/fix/nl-boundary/build/nl4-deps/h.om",
+      "sha256": "da4a1b91fcd72b4f5fa3a70461932626acdbc62a9a8d0b9876433f4a44f6ed20"
+    },
+    {
+      "path": "/home/drakestapleton/fix/nl-boundary/neuralese/proposal.om",
+      "sha256": "2a83bfc17f6897d2d1ed017d57a1cfe9b8e1ed15286d13c27a23b9907628319b"
+    },
+    {
+      "path": "/home/drakestapleton/fix/nl-boundary/build/nl4-deps/v.om",
+      "sha256": "e85d174839f7d0c3406f783ec0fd69d52ce5576bdcca4892c16b21b09f14b003"
+    },
+    {
+      "path": "/home/drakestapleton/fix/nl-boundary/om/tls/sha2.om",
+      "sha256": "5cf0f98116def6917d3a373f2bd4c3932d46e3ff84d9567bbae9e720366fdb33"
+    }
+  ],
+  "context": {
+    "path": "/home/drakestapleton/fix/nl-boundary/neuralese/fixtures/nl4-context.bin",
+    "sha256": "c6332471d8888778f362fd93cc3cc857fac358d915d191f8e9f7de69ce9bf2c4",
+    "bytes": 1024
+  },
+  "live_remote_branch": "b90ba509067e05e2428884461bcef44bda83b643 (later evidence commit; chosen source remains18b3d08)",
+  "permission": "Main explicit resumption and boundary source freeze message; host-only, no live effects"
+}

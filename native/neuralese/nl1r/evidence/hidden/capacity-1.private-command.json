@@ -1,0 +1,23 @@
+{
+  "argv": [
+    "/home/drakestapleton/fix/nl1r-judge/native/neuralese/nl1r/evidence/capacity-independent",
+    "1",
+    "3729207599",
+    "63840"
+  ],
+  "record": {
+    "stage": "capacity",
+    "unit": 1,
+    "producer_exit": 0,
+    "checkpoint_pack_exit": 0,
+    "raw_sha256": "39139bb65d0b2203813b84dff54ecbc7b383490f01dc7f84a514ad23a6e995d3",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "checkpoint_sha256": "c744476f3943459c49fd3a75792d23af564184a74146bcd54f3ea138619aff68",
+    "parameter_carriers_sha256": "7aeb6c9c3f2c7c3cf442227915b3011f52169c6b07d49bb3fac6e461a9b23ba4",
+    "all_predictions_sha256": "462917313718d118d9ec2516615dad3c296933dbfdcfdd701da27d054f3d948a",
+    "raw_bytes": 20615,
+    "checkpoint_bytes": 384,
+    "process_monotonic_start_ns": 96162054405752,
+    "process_monotonic_end_ns": 96162061139966
+  }
+}

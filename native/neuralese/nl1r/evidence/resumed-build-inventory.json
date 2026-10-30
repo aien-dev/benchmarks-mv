@@ -1,0 +1,50 @@
+{
+  "schema": "NL1R-resumed-build-inventory/1",
+  "original_judge_sources": [
+    {
+      "path": "io.om",
+      "sha256": "f9f96869c3d39050d38b21014ac6bb1ddad27588fd3bc5cfed4dad474652ee38",
+      "source_freeze": "1ffdbf1",
+      "byte_identical_at_release": true
+    },
+    {
+      "path": "arithmetic.om",
+      "sha256": "9b6702e471a2c605afa81ef95b3f11f52bef67cc9e796900901f67c1d9dff706",
+      "source_freeze": "1ffdbf1",
+      "byte_identical_at_release": true
+    },
+    {
+      "path": "judge.om",
+      "sha256": "663f962668a1acdb25240d5e69a01c1358a1bd55ccbbaf6248748c56e26267da",
+      "source_freeze": "1ffdbf1",
+      "byte_identical_at_release": true
+    },
+    {
+      "path": "checkpoint.om",
+      "sha256": "5062ac8d9950d0c4c4e0fa8def0766bda0c06369ac0101b8e7d506f3e17f6217",
+      "source_freeze": "1ffdbf1",
+      "byte_identical_at_release": true
+    }
+  ],
+  "new_post_reveal_boundary_oracle": {
+    "path": "boundary-oracle.om",
+    "bytes": 3121,
+    "sha256": "565b381ac9dd4fa51d93e26c9256a199752145475cb47f77d4d3184f59babba0",
+    "purpose": "Reuse unchanged frozen judge for complete actual-wire validation; emit exhaustive commands and expected pure NL4 receipts only. Does not amend scientific model/metric or frozen run.",
+    "composition": [
+      "io.om",
+      "arithmetic.om",
+      "judge.om lines1..321 excluding main",
+      "boundary-oracle.om"
+    ],
+    "composed_source_sha256": "66e80b7967a3779298c0494b0922578abdfcca01a7fe52667495ce8a1be30904",
+    "binary_sha256": "1b25596c47ee2a9a18417940c55f847db925c884afa97069a099ecd34dca68e3",
+    "binary_bytes": 22140,
+    "compile_receipt": "boundary-oracle-compile.json"
+  },
+  "boundary_frozen_independent_build": "boundary-independent-build.json",
+  "controls": "boundary-replay/controls.json:18pass; boundary-oracle-malformed.json:8atomicrefusals; boundary-mutants.json:all4detected",
+  "prior_native_qualification": "native-qualification-1.stdout30cases; native-qualification-2.stdout23cases unchanged",
+  "frozen_prereg_sha256": "2fe5c72edbfe24df38f70b72275bb008ac71779e66455501662ca8e7d911751c",
+  "not_committed": "Derived executable ELFs; exact hashes/lengths retained. Raw binary data checkpoints and envelope frames are committed."
+}

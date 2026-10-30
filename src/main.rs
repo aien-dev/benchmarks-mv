@@ -13,9 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod harness;
-mod models;
-mod svg_chart;
+use aien_benchmarks::{harness, models, svg_chart};
 
 use clap::{Parser, Subcommand};
 use models::BenchmarkData;

@@ -3,21 +3,21 @@
     "generated": {
       "children": [
         {
-          "digest": "1eb73ff32ae2da002525c0a3824e9a4e981e3aff88f5d0d8c53acc9948af1c1e",
+          "digest": "090ab966abbe14ebbcd746d71fe35b80eb0c8fcaac3223bacb296a8960294fa8",
           "last_commit": "d2e99b2",
           "name": "neuralese",
           "purpose": "Independent raw-output fixture scoring for frozen NL6 design"
         }
       ],
-      "children_root": "sha256:5ab0cc0e5953fffbcc1860a7982876a6eec851afb32e1c7902a98f221d619a13",
-      "compiled_at": "2026-10-29T20:32:31Z",
+      "children_root": "sha256:42d3ad91950fba2dd85cb5193bc57f6956c04f5599568f5f339aa2b84cf9095a",
+      "compiled_at": "2026-10-30T03:16:15Z",
       "compiler": "crumb-compile/1",
-      "digest": "sha256:447a33a592757f71319a932b57261c5ef12035ff89a961f600744af8dfc3c078",
+      "digest": "sha256:58abbb2355a1cb90369451d5455c1b8b4bfc289e7cc2249ea9880790d218624c",
       "evidence_files": 0,
       "evidence_root": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "files": 109,
-      "generated_at_commit": "b31ea7a622a864d9129b1eebd62938680f9406bb",
-      "source_tree": "sha256:fae77dd247d625d57c4ff3800aae7387da1f9c806364259d0ed5c32870540531"
+      "generated_at_commit": "bed7fb143c38c9d65337153dc1b9e73b0697322a",
+      "source_tree": "sha256:d88d4ad69ca0213269e0d221e617a990329659a24f921a3ffbbf7dae9fbd253a"
     }
   },
   "name": "native",

@@ -74,13 +74,16 @@ Per trial the runner records passes per second, the raw line, the report, and th
 before and after. Statistics (median, min, max, mean, sample standard deviation, coefficient of
 variation of passes per second) are computed only when every audit and trial passed.
 
-`prime_race run` emits qualification receipts only for the frozen counts/timing:
-exactly K=5, one warm-up, 10 timed trials and a finite minimum of at least 5
-seconds, with at least one implementation. It also refuses a missing or empty
-operator quiet flag before writing evidence. A nonempty file is necessary
-recorded context, **not** proof of an actually exclusive machine; the owner
-must authorize and maintain that window separately. Use `prime_race verify`
-for a bounded correctness check rather than calling an audit-only run PASS.
+`prime_race run` emits qualification receipts only for the frozen counts and requested minimum:
+exactly K=5, one warm-up, 10 timed trials and a finite minimum of at least 5 seconds, with at
+least one implementation. A timed run fails unless the runner's own monotonic wall time is at
+least both the requested minimum and the elapsed time the implementation reported, so a
+self-reported duration alone cannot qualify. The runner also refuses a missing or empty operator
+quiet flag before writing evidence, records the marker it checked, and fails the run if the marker
+is removed or changed by the end. A nonempty, unchanged file is necessary recorded context,
+**not** proof of an actually exclusive machine; the owner must authorize and maintain that window
+separately, and the receipt says so in `conditions.quiet_flag_semantics`. Use
+`prime_race verify` for a bounded correctness check rather than calling an audit-only run PASS.
 
 ## Correctness gates (before any speed number)
 

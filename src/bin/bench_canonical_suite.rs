@@ -117,7 +117,7 @@ struct CanonicalBenchmarkSummary {
 
 fn get_git_sha(repo_dir: &str) -> String {
     std::process::Command::new("git")
-        .args(&["-C", repo_dir, "rev-parse", "HEAD"])
+        .args(["-C", repo_dir, "rev-parse", "HEAD"])
         .output()
         .ok()
         .and_then(|out| {
@@ -141,7 +141,7 @@ fn read_uname() -> String {
 
 fn read_gpu_telemetry() -> (f64, u32) {
     let out = std::process::Command::new("nvidia-smi")
-        .args(&[
+        .args([
             "--query-gpu=power.draw,utilization.gpu",
             "--format=csv,noheader,nounits",
         ])

@@ -1,0 +1,302 @@
+om2
+note NL6 continuation: independent strict parser, never reads producer summaries.
+const JCAP ulong 16384
+global JBuf uchar JCAP
+global JIo ulong 2
+global JC ulong 8
+global JR ulong 50
+global JP f64 83
+global JH f64 4
+global JU f64 8
+global JS f64 4
+global JB uchar 32
+global Seen ulong 15
+global Logs uchar 7680
+global Sizes ulong 240
+global Stats ulong 360
+text JBAD "NL1RJ INVALID\n"
+text JMAG "NL1RJ1,schema,unit,seed,trainmask,group,partition,total,exact,accepted_correct,wrong_accepted,abstained,feature_errors,collision_pairs,encode_ns,decode_ns\n"
+text JREC "M,"
+text JSEP ","
+text JLF "\n"
+text JEND "NL1RJ END\n"
+fn jout a view uchar * to void
+p = ulong 0
+while lt p len a
+n = write 1 a p sub len a p
+if le n 0
+exit 93
+end
+p = add p ulong n
+end
+end
+fn jinvalid to void
+n = write 2 JBAD 0 len JBAD
+exit 90
+end
+fn jnext to long
+if eq get JIo 0 get JIo 1
+n = read 0 JBuf 0 JCAP
+if lt n 0
+jinvalid
+end
+if eq n 0
+ret -1
+end
+put JIo 0 0
+put JIo 1 ulong n
+end
+p = get JIo 0
+put JIo 0 add p 1
+ret long get JBuf p
+end
+fn jexpect c long to void
+if ne jnext c
+jinvalid
+end
+end
+fn jvalue delim long to ulong
+v = ulong 0
+n = ulong 0
+first = long -1
+while true bound 21
+c = jnext
+if eq c delim
+if eq n 0
+jinvalid
+end
+if and gt n 1 eq first 48
+jinvalid
+end
+ret v
+end
+if or lt c 48 gt c 57
+jinvalid
+end
+if eq n 0
+first = c
+end
+if or gt v 1844674407370955161 and eq v 1844674407370955161 gt c 53
+jinvalid
+end
+v = add mul v 10 ulong sub c 48
+n = add n 1
+end
+ret 0
+end
+fn jnumber v ulong to void
+b = new uchar 20 0
+p = ulong 20
+while true bound 20
+p = sub p 1
+put b p uchar add rem v 10 48
+v = div v 10
+if eq v 0
+break
+end
+end
+while lt p 20 bound 20
+n = write 1 b p sub ulong 20 p
+if le n 0
+exit 93
+end
+p = add p ulong n
+end
+end
+fn jfield v ulong to void
+jnumber v
+jout JSEP
+end
+fn jparity id ulong to ulong
+ret and xor xor xor id shr id 1 shr id 2 shr id 3 1
+end
+fn jsoft x f64 to f64
+ret div x add 1.0f64 fabs x
+end
+fn jrelu x f64 to f64
+if gt x 0.0f64
+ret x
+end
+ret 0.0f64
+end
+fn jstore k ulong v ulong to void
+for b ulong 8
+put JB add mul k 8 b uchar and shr v mul b 8 255
+end
+end
+fn jload k ulong to ulong
+v = ulong 0
+for b ulong 8
+v = or v shl get JR add 3 add mul k 8 b mul b 8
+end
+ret v
+end
+fn jstat group ulong phase ulong col ulong to ulong
+ret add mul add mul group 3 phase 8 col
+end
+fn jinc group ulong phase ulong col ulong val ulong to void
+ix = jstat group phase col
+put Stats ix add get Stats ix val
+end
+note Standalone with io.om. Mode 0 packs C/P carrier; mode 1 checks actual binary then emits B/P.
+note Full C/P/R/T campaign validation remains judge.om, not this conversion tool.
+global BH ulong 8
+global BV ulong 83
+text BC "B,"
+text BP "P,"
+fn bread to ulong
+v = ulong 0
+for k ulong 8
+c = jnext
+if lt c 0
+jinvalid
+end
+v = or v shl ulong c mul k 8
+end
+ret v
+end
+fn bwrite v ulong to void
+for k ulong 8
+put JB k uchar and shr v mul k 8 255
+end
+p = ulong 0
+while lt p 8
+n = write 1 JB p sub ulong 8 p
+if le n 0
+exit 93
+end
+p = add p ulong n
+end
+end
+fn bvalid to void
+if and ne get BH 0 1 ne get BH 0 2
+jinvalid
+end
+if ne get BH 7 0
+jinvalid
+end
+arm = get BH 1
+d = ulong 3
+n = ulong 31
+if eq arm 1
+d = 4
+n = 40
+end
+if eq arm 2
+n = 83
+end
+if eq arm 3
+d = 1
+n = 0
+end
+if gt arm 3
+jinvalid
+end
+if eq get BH 0 2
+if gt arm 2
+jinvalid
+end
+d = 4
+n = 40
+end
+if or ne get BH 2 d ne get BH 3 n
+jinvalid
+end
+if or eq get BH 4 0 gt get BH 4 4294967295
+jinvalid
+end
+if or eq get BH 5 0 gt get BH 5 65535
+jinvalid
+end
+if gt get BH 6 32000
+jinvalid
+end
+end
+fn bparams to void
+for i ulong get BH 3
+if false
+jinvalid
+end
+end
+end
+fn bpack to void
+jexpect 67
+jexpect 44
+for k ulong 8
+delim = long 44
+if eq k 7
+delim = 10
+end
+put JC k jvalue delim
+end
+put BH 0 get JC 0
+put BH 1 get JC 1
+put BH 2 get JC 4
+put BH 3 get JC 5
+put BH 4 get JC 2
+put BH 5 get JC 3
+put BH 6 get JC 6
+put BH 7 0
+bvalid
+for i ulong get BH 3
+jexpect 80
+jexpect 44
+if ne jvalue 44 i
+jinvalid
+end
+put BV i jvalue 10
+end
+bparams
+for i ulong 8
+bwrite get BH i
+end
+for i ulong get BH 3
+bwrite get BV i
+end
+end
+fn bunpack to void
+for i ulong 8
+put BH i bread
+end
+bvalid
+for i ulong get BH 3
+put BV i bread
+end
+if ne jnext -1
+jinvalid
+end
+bparams
+jout BC
+for i ulong 8
+jnumber get BH i
+if lt i 7
+jout JSEP
+end
+end
+jout JLF
+for i ulong get BH 3
+jout BP
+jfield i
+jnumber get BV i
+jout JLF
+end
+end
+fn main to int
+if ne argcnt 2
+jinvalid
+end
+ab = new uchar 1 0
+n = argread 1 ab 0 1
+if ne n 1
+jinvalid
+end
+if eq get ab 0 48
+bpack
+else
+if ne get ab 0 49
+jinvalid
+end
+bunpack
+end
+ret 0
+end

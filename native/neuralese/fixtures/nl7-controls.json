@@ -1,0 +1,44 @@
+{
+  "schema": "nl7-score-controls/1",
+  "scope": "HOST_SYNTHETIC_CHECKER_ONLY; recipes are unexecuted until parent records results",
+  "source": "native/neuralese/nl7-score.om",
+  "fixture_source": "native/neuralese/fixtures/nl7-fixture.om",
+  "fixture_arguments": {
+    "0": {"name":"valid_complete", "expected_exit":0, "stdout_contains":["NL7 CHECKS PASS\n","NL7 LEARNED NOT_SUPPORTED\n"]},
+    "1": {"name":"noncanonical_decimal", "expected_exit":90},
+    "2": {"name":"missing_last_record", "expected_exit":90},
+    "3": {"name":"duplicate_tuple", "expected_exit":90},
+    "4": {"name":"payload_mismatch", "expected_exit":90},
+    "5": {"name":"independent_split_membership", "expected_exit":0, "stdout_contains":["S,101,1,2,192,0,1,8,1,7,0\n","S,101,2,2,192,0,1,8,1,7,0\n"]},
+    "6": {"name":"rm_double_accepted", "expected_exit":1},
+    "7": {"name":"exact_small_noise_wrong_at_192", "expected_exit":1},
+    "8": {"name":"numeric_mode_out_of_range", "expected_exit":90},
+    "9": {"name":"refusal_not_atomic_sentinel", "expected_exit":90}
+  },
+  "source_mutants": [
+    {"name":"canonical_parse_removed", "replace":"if and gt n 1 eq first 48\ninvalid\nend", "with":"note MUTANT canonical decimal guard removed", "fixture":"1", "mutant_expected_exit":0, "kill":"original rejects fixture; mutant accepts"},
+    {"name":"completeness_removed", "replace":"if ne get Seen add mul base 256 mode 65535\ninvalid\nend", "with":"note MUTANT completeness guard removed", "fixture":"2", "mutant_expected_exit":0, "kill":"original rejects fixture; mutant accepts"},
+    {"name":"duplicate_guard_removed", "replace":"if ne and get Seen idx bit 0\ninvalid\nend", "with":"note MUTANT duplicate guard removed", "fixture":"3", "mutant_expected_exit":0, "kill":"original rejects fixture; mutant accepts"},
+    {"name":"payload_guard_removed", "replace":"if or ne get Row 8 payload gt get Row 8 get Row 4\ninvalid\nend", "with":"note MUTANT payload budget guard removed", "fixture":"4", "mutant_expected_exit":0, "kill":"original rejects fixture; mutant accepts"},
+    {"name":"split1_membership_wrong", "replace":"if or eq id 3 or eq id 5 eq id 9", "with":"if or eq id 6 or eq id 5 eq id 9", "fixture":"5", "mutant_expected_exit":0, "stdout_contains":["S,101,1,2,192,0,1,8,0,8,0\n"], "kill":"compare original independent membership fixture count against expected original line, not exit code alone"},
+    {"name":"rm_radius_zero", "replace":"if le hamming word codeword cand 1", "with":"if le hamming word codeword cand 0", "fixture":"0", "mutant_expected_exit":1, "kill":"complete known-valid single-flip fixture must pass original and fail radius mutant"},
+    {"name":"rm_expectation_guard_removed", "replace":"if ne pred expected\nviolation\nend\nif ne status flag eq expected 99\nviolation\nend", "with":"note MUTANT RM expected decoding guards removed", "fixture":"6", "mutant_expected_exit":0, "kill":"original rejects accepted distance-two errors; mutant accepts"},
+    {"name":"exact_mandatory_noise_removed", "replace":"if and ge get Row 4 96 le mode 6\nmust = true\nend", "with":"note MUTANT exact high-precision small-noise guarantee removed", "fixture":"7", "mutant_expected_exit":0, "kill":"original rejects mandatory small-noise error; mutant accepts"},
+    {"name":"packed_source_id_oracle", "replace":"expected = corrupt id mode", "with":"expected = id", "fixture":"0", "mutant_expected_exit":1, "kill":"valid packed bit-corrupt predictions must pass original and fail source-ID decoder mutant"}
+  ],
+  "additional_byte_fixtures": [
+    {"name":"empty", "bytes":"", "expected_exit":90},
+    {"name":"untagged_diagnostic", "bytes":"diagnostic\n", "expected_exit":90},
+    {"name":"diagnostic_without_comma", "bytes":"Dnot-a-tag\n", "expected_exit":90},
+    {"name":"diagnostic_eof", "bytes":"D,truncated", "expected_exit":90},
+    {"name":"negative_integer", "bytes":"N,-101,0,0,0,8,0,0,0,6\n", "expected_exit":90},
+    {"name":"trailing_field", "bytes":"N,101,0,0,0,8,0,0,0,6,0\n", "expected_exit":90},
+    {"name":"truncated_field", "bytes":"N,101,0,0,0,8,0,0,0,6", "expected_exit":90},
+    {"name":"unknown_seed", "bytes":"N,102,0,0,0,8,0,0,0,6\n", "expected_exit":90},
+    {"name":"unknown_split", "bytes":"N,101,3,0,0,8,0,0,0,6\n", "expected_exit":90},
+    {"name":"unknown_budget", "bytes":"N,101,0,0,0,9,0,0,0,6\n", "expected_exit":90},
+    {"name":"rm_invalid_double_order", "bytes":"N,101,0,1,0,8,208,99,1,8\n", "expected_exit":90},
+    {"name":"packed_invalid_flip", "bytes":"N,101,0,4,0,8,104,0,0,4\n", "expected_exit":90}
+  ],
+  "execution": "Compile each source independently with pinned omc; require successful compilation before chmod/execution. Generate fixture through nl7-fixture ARG > regular.csv, then nl7-score < regular.csv. For each source mutant require replace occurs exactly once. Record actual statuses and stdout; recipe predictions are not PASS receipts."
+}

@@ -1,0 +1,7 @@
+{
+  "attempt": 2,
+  "compiler_sha256": "d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84",
+  "source_sha256": "d6b2ac766a0c13426617d2fb11bd771bb2b38ed57eca952277224e654fb02aae",
+  "exit": 16,
+  "stderr": "omc: line 134: error 16\n"
+}

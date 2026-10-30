@@ -93,6 +93,8 @@ pub enum Reject {
     LineReportMismatch(String),
     PassesZero,
     ElapsedBelowMin { elapsed: f64, min: f64 },
+    /// The runner's own monotonic wall clock contradicts the implementation's report.
+    WallClockShort { wall: f64, elapsed: f64, min: f64 },
     AuditPassCount { got: u64, want: u32 },
     BitmapMissing,
     BitmapLength { got: usize, want: usize },
@@ -116,6 +118,7 @@ impl Reject {
             Reject::LineReportMismatch(_) => "line_report_mismatch",
             Reject::PassesZero => "passes_zero",
             Reject::ElapsedBelowMin { .. } => "elapsed_below_min",
+            Reject::WallClockShort { .. } => "wall_clock_short",
             Reject::AuditPassCount { .. } => "audit_pass_count",
             Reject::BitmapMissing => "bitmap_missing",
             Reject::BitmapLength { .. } => "bitmap_length",
@@ -138,6 +141,9 @@ impl std::fmt::Display for Reject {
             Reject::ReportMissing => write!(f, "report file not written"),
             Reject::PassesZero => write!(f, "passes is 0"),
             Reject::ElapsedBelowMin { elapsed, min } => write!(f, "elapsed {elapsed} is below min_seconds {min}"),
+            Reject::WallClockShort { wall, elapsed, min } => {
+                write!(f, "runner wall time {wall} is below reported elapsed {elapsed} or min_seconds {min}")
+            }
             Reject::AuditPassCount { got, want } => write!(f, "audit passes {got}, wanted {want}"),
             Reject::BitmapMissing => write!(f, "bitmap file not written"),
             Reject::BitmapLength { got, want } => write!(f, "bitmap is {got} bytes, expected {want}"),

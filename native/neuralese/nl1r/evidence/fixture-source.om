@@ -1,0 +1,541 @@
+om2
+note NL6 continuation: independent strict parser, never reads producer summaries.
+const JCAP ulong 16384
+global JBuf uchar JCAP
+global JIo ulong 2
+global JC ulong 8
+global JR ulong 50
+global JP f64 83
+global JH f64 4
+global JU f64 8
+global JS f64 4
+global JB uchar 32
+global Seen ulong 15
+global Logs uchar 7680
+global Sizes ulong 240
+global Stats ulong 360
+text JBAD "NL1RJ INVALID\n"
+text JMAG "NL1RJ1,schema,unit,seed,trainmask,group,partition,total,exact,accepted_correct,wrong_accepted,abstained,feature_errors,collision_pairs,encode_ns,decode_ns\n"
+text JREC "M,"
+text JSEP ","
+text JLF "\n"
+text JEND "NL1RJ END\n"
+fn jout a view uchar * to void
+p = ulong 0
+while lt p len a
+n = write 1 a p sub len a p
+if le n 0
+exit 93
+end
+p = add p ulong n
+end
+end
+fn jinvalid to void
+n = write 2 JBAD 0 len JBAD
+exit 90
+end
+fn jnext to long
+if eq get JIo 0 get JIo 1
+n = read 0 JBuf 0 JCAP
+if lt n 0
+jinvalid
+end
+if eq n 0
+ret -1
+end
+put JIo 0 0
+put JIo 1 ulong n
+end
+p = get JIo 0
+put JIo 0 add p 1
+ret long get JBuf p
+end
+fn jexpect c long to void
+if ne jnext c
+jinvalid
+end
+end
+fn jvalue delim long to ulong
+v = ulong 0
+n = ulong 0
+first = long -1
+while true bound 21
+c = jnext
+if eq c delim
+if eq n 0
+jinvalid
+end
+if and gt n 1 eq first 48
+jinvalid
+end
+ret v
+end
+if or lt c 48 gt c 57
+jinvalid
+end
+if eq n 0
+first = c
+end
+if or gt v 1844674407370955161 and eq v 1844674407370955161 gt c 53
+jinvalid
+end
+v = add mul v 10 ulong sub c 48
+n = add n 1
+end
+ret 0
+end
+fn jnumber v ulong to void
+b = new uchar 20 0
+p = ulong 20
+while true bound 20
+p = sub p 1
+put b p uchar add rem v 10 48
+v = div v 10
+if eq v 0
+break
+end
+end
+while lt p 20 bound 20
+n = write 1 b p sub ulong 20 p
+if le n 0
+exit 93
+end
+p = add p ulong n
+end
+end
+fn jfield v ulong to void
+jnumber v
+jout JSEP
+end
+fn jparity id ulong to ulong
+ret and xor xor xor id shr id 1 shr id 2 shr id 3 1
+end
+fn jsoft x f64 to f64
+ret div x add 1.0f64 fabs x
+end
+fn jrelu x f64 to f64
+if gt x 0.0f64
+ret x
+end
+ret 0.0f64
+end
+fn jstore k ulong v ulong to void
+for b ulong 8
+put JB add mul k 8 b uchar and shr v mul b 8 255
+end
+end
+fn jload k ulong to ulong
+v = ulong 0
+for b ulong 8
+v = or v shl get JR add 3 add mul k 8 b mul b 8
+end
+ret v
+end
+fn jstat group ulong phase ulong col ulong to ulong
+ret add mul add mul group 3 phase 8 col
+end
+fn jinc group ulong phase ulong col ulong val ulong to void
+ix = jstat group phase col
+put Stats ix add get Stats ix val
+end
+
+note Independent implementation from declared functions and actual transmitted bytes.
+note No producer forward/gradient/summary function is linked into this judge.
+fn jsender id ulong d ulong to void
+for k ulong d
+v = get JP add mul 4 d k
+for j ulong 4
+v = add v mul f64 and shr id j 1 get JP add mul j d k
+end
+put JH k jsoft v
+end
+end
+fn jaffine d ulong to void
+for j ulong 4
+v = get JP add mul 9 d j
+for k ulong d
+v = add v mul get JH k get JP add mul 5 d add mul k 4 j
+end
+put JS j mul 0.5f64 add 1.0f64 jsoft v
+end
+end
+fn jnonlinear to void
+for k ulong 8
+v = get JP add 39 k
+for j ulong 3
+v = add v mul get JH j get JP add 15 add mul j 8 k
+end
+put JU k jrelu v
+end
+for j ulong 4
+v = get JP add 79 j
+for k ulong 8
+v = add v mul get JU k get JP add 47 add mul k 4 j
+end
+put JS j mul 0.5f64 add 1.0f64 jsoft v
+end
+end
+fn jcodec to void
+t = mul 3.0f64 get JH 0
+a = jrelu sub t 1.0f64
+b = jrelu sub t 2.0f64
+put JS 0 sub a b
+put JS 1 add sub t mul 2.0f64 a mul 2.0f64 b
+put JS 2 get JH 1
+put JS 3 get JH 2
+end
+fn jcapacitywire to void
+arm = get JC 1
+id = get JR 0
+q = get JR 1
+d = get JC 4
+for i ulong 32
+put JB i uchar 0
+end
+if eq arm 3
+v = id
+if eq q 3
+v = xor v 1
+end
+if eq q 4
+v = or and v 12 or shl and v 1 1 shr and v 2 1
+end
+if eq q 5
+v = 0
+end
+put JB 0 uchar v
+ret
+end
+if eq get JC 7 2
+put JH 0 div f64 add mul and id 1 2 and shr id 1 1 3.0f64
+put JH 1 f64 and shr id 2 1
+put JH 2 f64 and shr id 3 1
+else
+jsender id d
+end
+for k ulong d
+v = get JH k
+if or eq q 1 eq q 2
+f = 16.0f64
+if eq q 2
+f = 32.0f64
+end
+v = div f64 long add mul fabs v f 0.5f64 f
+if lt get JH k 0.0f64
+v = neg v
+end
+end
+if and eq q 3 eq k 0
+v = neg v
+end
+if eq q 5
+v = 0.0f64
+end
+put JH k v
+end
+if eq q 4
+v = get JH 0
+put JH 0 get JH 1
+put JH 1 v
+end
+for k ulong d
+jstore k bitcast ulong get JH k
+end
+end
+fn jcapacitydecode to void
+if eq get JC 1 3
+for j ulong 4
+put JS j f64 and shr get JR 3 j 1
+end
+ret
+end
+for k ulong get JC 4
+v = bitcast f64 jload k
+if not le fabs v 1.0f64
+jinvalid
+end
+put JH k v
+end
+if eq get JC 7 2
+jcodec
+else
+if eq get JC 1 2
+jnonlinear
+else
+jaffine get JC 4
+end
+end
+end
+fn jtaskwire to void
+id = get JR 0
+arm = get JR 49
+variant = get JR 1
+for i ulong 32
+put JB i uchar 0
+end
+if or eq variant 2 eq arm 3
+ret
+end
+if eq variant 1
+id = rem add id 1 16
+end
+if eq arm 0
+v = id
+if eq get JC 1 1
+v = jparity id
+end
+if eq get JC 1 2
+v = shr id 2
+end
+put JB 0 uchar v
+ret
+end
+if eq arm 4
+for j ulong 4
+put JB j uchar add and shr id j 1 48
+end
+ret
+end
+jsender id 4
+v = ulong 0
+for j ulong 4
+if eq arm 1
+code = ulong long add mul add get JH j 1.0f64 1.5f64 0.5f64
+if gt code 3
+code = 3
+end
+v = or v shl code mul j 2
+else
+if ge get JH j 0.0f64
+v = or v shl 1 j
+end
+end
+end
+put JB 0 uchar v
+end
+fn jtaskdecode to void
+arm = get JR 49
+task = get JC 1
+for j ulong 4
+put JS j 0.0f64
+end
+if eq get JR 1 2
+ret
+end
+if or eq arm 0 eq arm 4
+id = get JR 3
+if eq arm 4
+id = 0
+for j ulong 4
+v = get JR add 3 j
+if and ne v 48 ne v 49
+jinvalid
+end
+id = or id shl sub v 48 j
+end
+end
+if eq arm 4
+if eq task 1
+id = jparity id
+end
+if eq task 2
+id = shr id 2
+end
+end
+if eq task 2
+id = or shl id 2 get JR 47
+end
+for j ulong 4
+put JS j f64 and shr id j 1
+end
+ret
+end
+v = get JR 3
+for j ulong 4
+h = 0.0f64
+if eq arm 1
+code = and shr v mul j 2 3
+h = div sub mul f64 code 2.0f64 3.0f64 3.0f64
+end
+if eq arm 2
+h = sub mul f64 and shr v j 1 2.0f64 1.0f64
+end
+put JH j h
+end
+jaffine 4
+if eq task 1
+for j ulong 3
+put JS add j 1 0.0f64
+end
+end
+if eq task 2
+for j ulong 2
+put JS j f64 and shr get JR 47 j 1
+end
+end
+end
+
+note Synthetic checker controls only. Times 1/2 are fixture constants, not measurements.
+text FHEAD "C,"
+text FPAR "P,"
+text FROW "R,"
+text FTAIL "T,1,2\nEND\n"
+text FLEAD "00"
+text FBIG "18446744073709551616"
+fn fparam i ulong mode ulong to void
+jout FPAR
+ix = i
+if and eq mode 25 eq i 0
+ix = 1
+end
+jfield ix
+v = bitcast ulong get JP i
+if eq i 0
+if eq mode 22
+v = 9221120237041090560
+end
+if eq mode 23
+v = 9218868437227405312
+end
+if eq mode 24
+v = bitcast ulong 10000000.0f64
+end
+end
+jnumber v
+jout JLF
+end
+fn frow id ulong q ulong mode ulong to void
+put JR 0 id
+put JR 1 q
+put JC 7 1
+if eq get JC 1 3
+put JC 7 0
+end
+n = jcapacitywire
+put JR 2 n
+for k ulong 32
+put JR add 3 k ulong get JB k
+end
+jcapacitydecode
+for k ulong 4
+put JR add 35 k bitcast ulong get JS k
+v = ulong 0
+if ge get JS k 0.5f64
+v = 1
+end
+put JR add 39 k v
+end
+put JR 43 0
+put JR 44 1
+put JR 45 2
+put JR 46 0
+if and eq id 0 eq q 0
+if eq mode 1
+put JR 3 xor get JR 3 1
+end
+if eq mode 2
+put JR 35 bitcast ulong 0.25f64
+end
+if eq mode 3
+put JR 39 1
+end
+if eq mode 4
+put JR 43 1
+end
+if eq mode 5
+put JR 0 1
+end
+if eq mode 9
+put JR 2 2
+end
+if eq mode 10
+put JR 34 1
+end
+if eq mode 11
+put JR 35 9221120237041090560
+end
+if eq mode 12
+put JR 35 9218868437227405312
+end
+end
+jout FROW
+for k ulong 47
+if and and eq id 0 eq q 0 and eq k 0 eq mode 14
+jout FLEAD
+else
+if and and eq id 0 eq q 0 and eq k 0 eq mode 15
+jout FBIG
+else
+jnumber get JR k
+end
+end
+if lt k 46
+jout JSEP
+end
+end
+jout JLF
+end
+fn main to int
+if ne argcnt 2
+ret 90
+end
+ab = new uchar 3 0
+n = argread 1 ab 0 3
+mode = ulong 0
+for k ulong ulong n
+mode = add mul mode 10 ulong sub get ab k 48
+end
+put JC 0 1
+put JC 1 3
+put JC 2 17
+put JC 3 65535
+put JC 4 0
+put JC 5 0
+put JC 6 0
+put JC 7 0
+if ge mode 21
+put JC 1 1
+put JC 4 4
+put JC 5 40
+put JC 7 1
+for i ulong 4
+put JP add mul i 4 i 2.0f64
+put JP add 16 i -1.0f64
+put JP add 20 add mul i 4 i 1.0f64
+end
+end
+jout FHEAD
+for k ulong 8
+v = get JC k
+if and eq mode 7 eq k 0
+v = 3
+end
+if and eq mode 8 eq k 4
+v = 3
+end
+jnumber v
+if lt k 7
+jout JSEP
+end
+end
+jout JLF
+for i ulong get JC 5
+if not and eq mode 26 eq i 39
+fparam i mode
+end
+end
+for id ulong 16
+for q ulong 6
+if not and eq mode 6 and eq id 15 eq q 5
+frow id q mode
+end
+end
+end
+if ne mode 16
+jout FTAIL
+end
+if eq mode 13
+jout JLF
+end
+ret 0
+end

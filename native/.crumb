@@ -1,0 +1,26 @@
+{
+  "extensions": {
+    "generated": {
+      "children": [
+        {
+          "digest": "1c777c66b4267f42d6835272570b60b03f33c7e0361d8da12031f6f47bdc53c1",
+          "last_commit": "43a199b",
+          "name": "neuralese",
+          "purpose": "Independent raw-output fixture scoring for frozen NL6 design"
+        }
+      ],
+      "children_root": "sha256:85242376c75c3b3bea44393a86f3911dc95049b917d2c336e70c969bc83d1079",
+      "compiled_at": "2026-10-30T12:24:36Z",
+      "compiler": "crumb-compile/1",
+      "digest": "sha256:69fcf915f2c5df934a3e9776a80a1abc7548b29aa6218abaa5cdd64484a69591",
+      "evidence_files": 1362,
+      "evidence_root": "sha256:b34fb847357649aa1d669b0777089299d6123f95c292511fe7709d29fa30d6ee",
+      "files": 1552,
+      "generated_at_commit": "43a199b3a3f665a4b292722a78b322386fbeb2a8",
+      "source_tree": "sha256:406a9e75dde205a19012b2fdf2a539aa164e7264d1d049c428e5544d44b71574"
+    }
+  },
+  "name": "native",
+  "purpose": "Seeded handwritten Omega benchmark evidence tools",
+  "schema_version": "1.0.0"
+}

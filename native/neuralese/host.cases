@@ -1,0 +1,49 @@
+# Public checker qualification only, not campaign results. Run with pinned OM2GATE.
+deadline 20
+bits-good run native/neuralese/score.om - file:native/neuralese/fixtures/bits.pass - 0 1 native/neuralese/fixtures/bits.ref native/neuralese/fixtures/bits.good
+bits-wrong run native/neuralese/score.om - file:native/neuralese/fixtures/bits.fail - 1 1 native/neuralese/fixtures/bits.ref native/neuralese/fixtures/bits.wrong
+bits-allrefuse run native/neuralese/score.om - file:native/neuralese/fixtures/bits.allrefuse - 1 1 native/neuralese/fixtures/bits.ref native/neuralese/fixtures/bits.refuse
+bits-short run native/neuralese/score.om - file:native/neuralese/fixtures/plain.fail - 1 1 native/neuralese/fixtures/bits.ref native/neuralese/fixtures/bits.short
+bits-forged-selfreport run native/neuralese/score.om - file:native/neuralese/fixtures/plain.fail - 1 1 native/neuralese/fixtures/bits.ref native/neuralese/fixtures/bits.forged
+bits-malformed run native/neuralese/score.om - file:native/neuralese/fixtures/invalid.out - 90 1 native/neuralese/fixtures/bits.ref native/neuralese/fixtures/bits.malformed
+bits-empty run native/neuralese/score.om - file:native/neuralese/fixtures/invalid.out - 90 1 native/neuralese/fixtures/empty native/neuralese/fixtures/empty
+journal-good run native/neuralese/score.om - file:native/neuralese/fixtures/unit.pass - 0 2 native/neuralese/fixtures/journal.ref native/neuralese/fixtures/journal.good
+journal-unsafe run native/neuralese/score.om - file:native/neuralese/fixtures/plain.fail - 1 2 native/neuralese/fixtures/journal.ref native/neuralese/fixtures/journal.unsafe
+journal-allrefuse run native/neuralese/score.om - file:native/neuralese/fixtures/plain.fail - 1 2 native/neuralese/fixtures/journal.ref native/neuralese/fixtures/journal.refuse
+journal-empty run native/neuralese/score.om - file:native/neuralese/fixtures/invalid.out - 90 2 native/neuralese/fixtures/empty native/neuralese/fixtures/empty
+inc-good run native/neuralese/score.om - file:native/neuralese/fixtures/unit.pass - 0 3 native/neuralese/fixtures/inc.ref native/neuralese/fixtures/inc.good
+double-good run native/neuralese/score.om - file:native/neuralese/fixtures/unit.pass - 0 3 native/neuralese/fixtures/double.ref native/neuralese/fixtures/double.good
+identity-good run native/neuralese/score.om - file:native/neuralese/fixtures/unit.pass - 0 3 native/neuralese/fixtures/identity.ref native/neuralese/fixtures/identity.good
+inc-wrong-result run native/neuralese/score.om - file:native/neuralese/fixtures/plain.fail - 1 3 native/neuralese/fixtures/inc.ref native/neuralese/fixtures/inc.wrong
+inc-wrong-op run native/neuralese/score.om - file:native/neuralese/fixtures/plain.fail - 1 3 native/neuralese/fixtures/inc.ref native/neuralese/fixtures/inc.opwrong
+inc-wrong-shape run native/neuralese/score.om - file:native/neuralese/fixtures/plain.fail - 1 3 native/neuralese/fixtures/inc.ref native/neuralese/fixtures/inc.shape
+inc-wrong-effect run native/neuralese/score.om - file:native/neuralese/fixtures/plain.fail - 1 3 native/neuralese/fixtures/inc.ref native/neuralese/fixtures/inc.effect
+inc-trailing run native/neuralese/score.om - file:native/neuralese/fixtures/invalid.out - 90 3 native/neuralese/fixtures/inc.ref native/neuralese/fixtures/inc.trailing
+inc-malformed run native/neuralese/score.om - file:native/neuralese/fixtures/invalid.out - 90 3 native/neuralese/fixtures/inc.ref native/neuralese/fixtures/inc.malformed
+inc-leadingzero run native/neuralese/score.om - file:native/neuralese/fixtures/invalid.out - 90 3 native/neuralese/fixtures/inc.ref native/neuralese/fixtures/inc.leadingzero
+inc-overbound run native/neuralese/score.om - file:native/neuralese/fixtures/invalid.out - 90 3 native/neuralese/fixtures/inc.ref native/neuralese/fixtures/inc.big
+inc-truncated run native/neuralese/score.om - file:native/neuralese/fixtures/invalid.out - 90 3 native/neuralese/fixtures/inc.ref native/neuralese/fixtures/inc.truncated
+boundary-empty run native/neuralese/score.om - file:native/neuralese/fixtures/invalid.out - 90 3 native/neuralese/fixtures/inc.ref native/neuralese/fixtures/empty
+refuse-good run native/neuralese/score.om - file:native/neuralese/fixtures/unit.pass - 0 3 native/neuralese/fixtures/refuse.ref native/neuralese/fixtures/refuse.good
+refuse-leaked-result run native/neuralese/score.om - file:native/neuralese/fixtures/plain.fail - 1 3 native/neuralese/fixtures/refuse.ref native/neuralese/fixtures/refuse.leak
+refuse-unsafe-exec run native/neuralese/score.om - file:native/neuralese/fixtures/plain.fail - 1 3 native/neuralese/fixtures/refuse.ref native/neuralese/fixtures/refuse.unsafe
+refuse-negative run native/neuralese/score.om - file:native/neuralese/fixtures/plain.fail - 1 3 native/neuralese/fixtures/refuse.ref native/neuralese/fixtures/refuse.negative
+subst native/neuralese/fixtures/guard-bits.from native/neuralese/fixtures/guard-bits.to
+kill-bits-equality kill native/neuralese/score.om - file:native/neuralese/fixtures/bits.fail - 0 1 native/neuralese/fixtures/bits.ref native/neuralese/fixtures/bits.wrong
+journal-equal-length-wrong run native/neuralese/score.om - file:native/neuralese/fixtures/unit.fail - 1 2 native/neuralese/fixtures/journal.ref native/neuralese/fixtures/journal.wrong
+subst native/neuralese/fixtures/guard-journal.from native/neuralese/fixtures/guard-journal.to
+kill-journal-equality kill native/neuralese/score.om - file:native/neuralese/fixtures/unit.fail - 0 2 native/neuralese/fixtures/journal.ref native/neuralese/fixtures/journal.wrong
+subst native/neuralese/fixtures/guard-result.from native/neuralese/fixtures/guard-result.to
+kill-boundary-result kill native/neuralese/score.om - file:native/neuralese/fixtures/plain.fail - 0 3 native/neuralese/fixtures/inc.ref native/neuralese/fixtures/inc.wrong
+subst native/neuralese/fixtures/guard-metadata.from native/neuralese/fixtures/guard-metadata.to
+kill-shape-binding kill native/neuralese/score.om - file:native/neuralese/fixtures/plain.fail - 0 3 native/neuralese/fixtures/inc.ref native/neuralese/fixtures/inc.shape
+learn-carrier-good run native/neuralese/learnscore.om+native/neuralese/learncase.om - file:native/neuralese/fixtures/learn.good - 0 0
+learn-pred-forgery run native/neuralese/learnscore.om+native/neuralese/learncase.om - file:native/neuralese/fixtures/learn.invalid - 90 1
+learn-abstain-forgery run native/neuralese/learnscore.om+native/neuralese/learncase.om - file:native/neuralese/fixtures/learn.invalid - 90 2
+learn-duplicate run native/neuralese/learnscore.om+native/neuralese/learncase.om - file:native/neuralese/fixtures/learn.invalid - 90 3
+learn-missing-groups run native/neuralese/learnscore.om+native/neuralese/learncase.om - file:native/neuralese/fixtures/learn.invalid - 90 4
+learn-real-wrong run native/neuralese/learnscore.om+native/neuralese/learncase.om - file:native/neuralese/fixtures/learn.wrong - 0 5
+subst native/neuralese/fixtures/guard-pred.from native/neuralese/fixtures/guard-pred.to
+kill-pred-integrity kill native/neuralese/learnscore.om+native/neuralese/learncase.om - file:native/neuralese/fixtures/learn.invalid - 0 1
+subst native/neuralese/fixtures/guard-meaning.from native/neuralese/fixtures/guard-meaning.to
+kill-meaning-equality kill native/neuralese/learnscore.om+native/neuralese/learncase.om - file:native/neuralese/fixtures/learn.wrong - 0 5

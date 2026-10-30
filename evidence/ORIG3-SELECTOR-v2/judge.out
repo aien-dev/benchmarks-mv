@@ -1,0 +1,39 @@
+orig3_v2 rule=manifests/prereg/orig3_selector_v2.json protocol=docs/orig3/PROTOCOL-v2.md
+overhead reps=7 median_wall_us disabled=31291 mlp=169856 near=141121 scored mlp=1714 near=1714 per_decision_ps mlp=80843057 retrieval=64078179 heuristics=0
+core=0 heldout_n=205 validation_n=139 validation_total_ps fixed_rule=22795377229 always_reference=20718880062 best_static=16039448149 heuristic=best_static
+core=0 policy=mlp_scratch_v2 choice_ps=21509991719 overhead_ps=16572826685 total_ps=38082818404 choice/oracle=1.0018 total/oracle_choice=1.7737 total/min(retrieval,heuristic)=1.7728
+core=0 policy=retrieval choice_ps=21486791131 overhead_ps=13136026695 total_ps=34622817826 choice/oracle=1.0007 total/oracle_choice=1.6126 total/min(retrieval,heuristic)=1.6118
+core=0 policy=heuristic choice_ps=21481159572 overhead_ps=0 total_ps=21481159572 choice/oracle=1.0005 total/oracle_choice=1.0005 total/min(retrieval,heuristic)=1.0000
+core=0 policy=best_static choice_ps=21481159572 overhead_ps=0 total_ps=21481159572 choice/oracle=1.0005 total/oracle_choice=1.0005 total/min(retrieval,heuristic)=1.0000
+core=0 policy=fixed_rule choice_ps=33951654356 overhead_ps=0 total_ps=33951654356 choice/oracle=1.5813 total/oracle_choice=1.5813 total/min(retrieval,heuristic)=1.5805
+core=0 policy=always_reference choice_ps=31435535044 overhead_ps=0 total_ps=31435535044 choice/oracle=1.4641 total/oracle_choice=1.4641 total/min(retrieval,heuristic)=1.4634
+core=0 policy=untrained_control choice_ps=24668696574 overhead_ps=16572826685 total_ps=41241523259 choice/oracle=1.1489 total/oracle_choice=1.9208 total/min(retrieval,heuristic)=1.9199
+core=0 policy=shuffled_label_control choice_ps=32781796498 overhead_ps=16572826685 total_ps=49354623183 choice/oracle=1.5268 total/oracle_choice=2.2987 total/min(retrieval,heuristic)=2.2976
+core=0 policy=constant_control choice_ps=31435535044 overhead_ps=16572826685 total_ps=48008361729 choice/oracle=1.4641 total/oracle_choice=2.2360 total/min(retrieval,heuristic)=2.2349
+core=0 policy=oracle choice_ps=21470711527 overhead_ps=0 total_ps=21470711527 choice/oracle=1.0000 total/oracle_choice=1.0000 total/min(retrieval,heuristic)=0.9995
+core=0 primary policy=mlp_scratch_v2 P1(total<=0.99*min)=0 P2(sign<=0.0125 vs both)=0 vs_retrieval wins=0 discordant=205 p=1.000e0 vs_heuristic wins=0 discordant=205 p=1.000e0 PRIMARY=0
+core=0 primary policy=untrained_control P1(total<=0.99*min)=0 P2(sign<=0.0125 vs both)=0 vs_retrieval wins=0 discordant=205 p=1.000e0 vs_heuristic wins=0 discordant=205 p=1.000e0 PRIMARY=0
+core=0 primary policy=shuffled_label_control P1(total<=0.99*min)=0 P2(sign<=0.0125 vs both)=0 vs_retrieval wins=0 discordant=205 p=1.000e0 vs_heuristic wins=0 discordant=205 p=1.000e0 PRIMARY=0
+core=0 primary policy=constant_control P1(total<=0.99*min)=0 P2(sign<=0.0125 vs both)=0 vs_retrieval wins=0 discordant=205 p=1.000e0 vs_heuristic wins=0 discordant=205 p=1.000e0 PRIMARY=0
+core=0 noninferiority_fail(total>1.01*min)=1 candidate/min=1.7728
+core=0 amortization comparator=heuristic saving_ps_per_decision=-80983701.6 train_ms=10017 collect_ms=70575 break_even_decisions=none per_call_saving_ps=-238.091 mean_calls_per_decision=590.7 break_even_calls_per_decision=none
+core=0 reported_pressure1 n=18 choice/oracle mlp=1.0000 retrieval=1.0000 heuristic=1.0000 best_static=1.0000 fixed_rule=1.7514
+core=1 heldout_n=183 validation_n=149 validation_total_ps fixed_rule=58728294965 always_reference=38763808773 best_static=40500463237 heuristic=always_reference
+core=1 policy=mlp_scratch_v2 choice_ps=40646334314 overhead_ps=14794279431 total_ps=55440613745 choice/oracle=1.0203 total/oracle_choice=1.3917 total/min(retrieval,heuristic)=1.2844
+core=1 policy=retrieval choice_ps=40235848120 overhead_ps=11726306757 total_ps=51962154877 choice/oracle=1.0100 total/oracle_choice=1.3044 total/min(retrieval,heuristic)=1.2038
+core=1 policy=heuristic choice_ps=43163761484 overhead_ps=0 total_ps=43163761484 choice/oracle=1.0835 total/oracle_choice=1.0835 total/min(retrieval,heuristic)=1.0000
+core=1 policy=best_static choice_ps=43910081228 overhead_ps=0 total_ps=43910081228 choice/oracle=1.1022 total/oracle_choice=1.1022 total/min(retrieval,heuristic)=1.0173
+core=1 policy=fixed_rule choice_ps=66847154939 overhead_ps=0 total_ps=66847154939 choice/oracle=1.6780 total/oracle_choice=1.6780 total/min(retrieval,heuristic)=1.5487
+core=1 policy=always_reference choice_ps=43163761484 overhead_ps=0 total_ps=43163761484 choice/oracle=1.0835 total/oracle_choice=1.0835 total/min(retrieval,heuristic)=1.0000
+core=1 policy=untrained_control choice_ps=45148107058 overhead_ps=14794279431 total_ps=59942386489 choice/oracle=1.1333 total/oracle_choice=1.5047 total/min(retrieval,heuristic)=1.3887
+core=1 policy=shuffled_label_control choice_ps=61660821848 overhead_ps=14794279431 total_ps=76455101279 choice/oracle=1.5478 total/oracle_choice=1.9192 total/min(retrieval,heuristic)=1.7713
+core=1 policy=constant_control choice_ps=43163761484 overhead_ps=14794279431 total_ps=57958040915 choice/oracle=1.0835 total/oracle_choice=1.4549 total/min(retrieval,heuristic)=1.3427
+core=1 policy=oracle choice_ps=39837489595 overhead_ps=0 total_ps=39837489595 choice/oracle=1.0000 total/oracle_choice=1.0000 total/min(retrieval,heuristic)=0.9229
+core=1 primary policy=mlp_scratch_v2 P1(total<=0.99*min)=0 P2(sign<=0.0125 vs both)=0 vs_retrieval wins=0 discordant=183 p=1.000e0 vs_heuristic wins=10 discordant=183 p=1.000e0 PRIMARY=0
+core=1 primary policy=untrained_control P1(total<=0.99*min)=0 P2(sign<=0.0125 vs both)=0 vs_retrieval wins=5 discordant=183 p=1.000e0 vs_heuristic wins=4 discordant=183 p=1.000e0 PRIMARY=0
+core=1 primary policy=shuffled_label_control P1(total<=0.99*min)=0 P2(sign<=0.0125 vs both)=0 vs_retrieval wins=0 discordant=183 p=1.000e0 vs_heuristic wins=7 discordant=183 p=1.000e0 PRIMARY=0
+core=1 primary policy=constant_control P1(total<=0.99*min)=0 P2(sign<=0.0125 vs both)=0 vs_retrieval wins=0 discordant=183 p=1.000e0 vs_heuristic wins=0 discordant=183 p=1.000e0 PRIMARY=0
+core=1 noninferiority_fail(total>1.01*min)=1 candidate/min=1.2844
+core=1 amortization comparator=heuristic saving_ps_per_decision=-67086624.4 train_ms=10017 collect_ms=70575 break_even_decisions=none per_call_saving_ps=15225.208 mean_calls_per_decision=903.5 break_even_calls_per_decision=5310
+core=1 reported_pressure1 n=17 choice/oracle mlp=1.0108 retrieval=1.0395 heuristic=1.0743 best_static=1.0234 fixed_rule=1.8197
+ORIG3_V2_VERDICT=NO-GO

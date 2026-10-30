@@ -81,9 +81,11 @@ struct Manifest {
     model_id: String,
     model_revision: String,
     prefix_token_count: usize,
-    prefix_token_hash: String,
+    #[serde(rename = "prefix_token_hash")]
+    _prefix_token_hash: String,
     prefix_token_ids: Vec<u32>,
-    prefix_text: Option<String>,
+    #[serde(rename = "prefix_text")]
+    _prefix_text: Option<String>,
     branches: Vec<BranchSpec>,
 }
 
@@ -91,9 +93,11 @@ struct Manifest {
 struct BranchSpec {
     branch_id: usize,
     category: String,
-    text: String,
+    #[serde(rename = "text")]
+    _text: String,
     token_ids: Vec<u32>,
-    token_count: usize,
+    #[serde(rename = "token_count")]
+    _token_count: usize,
     #[serde(default)]
     expected_first_token: Option<u32>,
     #[serde(default)]
@@ -412,19 +416,19 @@ async fn execute_single_branch(
         0.0
     };
 
-    let oracle_match = if let Some(ref exp) = branch
+    let oracle_match = if let Some(exp) = branch
         .expected_output_tokens
         .as_ref()
         .or(branch.expected_full_tokens.as_ref())
     {
         if !exp.is_empty() && !generated_token_ids.is_empty() {
-            Some(&generated_token_ids == *exp)
+            Some(&generated_token_ids == exp)
         } else {
             None
         }
     } else if let Some(ref exp_16) = branch.expected_first_16_tokens {
         if !exp_16.is_empty() && generated_token_ids.len() >= exp_16.len() {
-            Some(&generated_token_ids[..exp_16.len()] == &exp_16[..])
+            Some(generated_token_ids[..exp_16.len()] == exp_16[..])
         } else {
             Some(false)
         }

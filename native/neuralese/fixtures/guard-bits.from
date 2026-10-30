@@ -1,0 +1,3 @@
+if ne a b
+same = false
+end

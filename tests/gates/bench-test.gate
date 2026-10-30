@@ -1,7 +1,8 @@
 # tests/gates/bench-test.gate
 # Mirrors hosted: .forgejo/workflows/ci.yml and GitHub ci.yml (manual dispatch) 'cargo test --verbose' (hosted job 28 s total)
-# Inputs include all of tests/ and every path the integration tests read (evidence fixtures,
-# artifacts/, and the docs/PERF_INDEX.md generator inputs).
+# Inputs include all of tests/ and every path the integration tests read (evidence/,
+# artifacts/, and the docs/PERF_INDEX.md generator inputs). tests/orig3_judge.rs and
+# tests/orig3_judge_v2.rs read evidence/ORIG3-SELECTOR and evidence/ORIG3-SELECTOR-v2.
 gate: BENCH-TEST
 manifest_version: 2
 owner: benchmarks
@@ -16,6 +17,7 @@ inputs:
   - records/
   - artifacts/
   - docs/
+  - evidence/
   - prime-drag-race/
   - tests/
 run:

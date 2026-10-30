@@ -1,0 +1,26 @@
+OM2GATE START cases=native/neuralese/fixtures/nl7-wire.cases scratch=/tmp/nl7-wire-qualification
+IDENTITY omc /home/drakestapleton/fix/neuralese/seed/out/omc sha256=d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84 pinned=d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84 match
+DEADLINE 20
+CASE nl7-wire-real line=3
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /tmp/nl7-wire-qualification/3.src > /tmp/nl7-wire-qualification/3.elf 2> /tmp/nl7-wire-qualification/3.cerr
+  $ /tmp/nl7-wire-qualification/3.elf < inputs/nl7-real.csv > /tmp/nl7-wire-qualification/3.out 2> /tmp/nl7-wire-qualification/3.err
+VERDICT nl7-wire-real PASS run exit=0 expected=0 stdout=match stderr=match
+SUBST native/neuralese/fixtures/nl7-wire-receiver_weights.from native/neuralese/fixtures/nl7-wire-receiver_weights.to
+CASE nl7-wire-kill-receiver_weights line=5
+  MUTATE exact-once substitution at byte 4623
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /tmp/nl7-wire-qualification/5.src > /tmp/nl7-wire-qualification/5.elf 2> /tmp/nl7-wire-qualification/5.cerr
+  $ /tmp/nl7-wire-qualification/5.elf < inputs/nl7-real.csv > /tmp/nl7-wire-qualification/5.out 2> /tmp/nl7-wire-qualification/5.err
+VERDICT nl7-wire-kill-receiver_weights PASS run exit=1 expected=1 killed: stdout differs from the oracle at byte 8 stderr=match
+SUBST native/neuralese/fixtures/nl7-wire-carrier_decode.from native/neuralese/fixtures/nl7-wire-carrier_decode.to
+CASE nl7-wire-kill-carrier_decode line=7
+  MUTATE exact-once substitution at byte 3839
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /tmp/nl7-wire-qualification/7.src > /tmp/nl7-wire-qualification/7.elf 2> /tmp/nl7-wire-qualification/7.cerr
+  $ /tmp/nl7-wire-qualification/7.elf < inputs/nl7-real.csv > /tmp/nl7-wire-qualification/7.out 2> /tmp/nl7-wire-qualification/7.err
+VERDICT nl7-wire-kill-carrier_decode PASS run exit=1 expected=1 killed: stdout differs from the oracle at byte 8 stderr=match
+SUBST native/neuralese/fixtures/nl7-wire-receiver_threshold.from native/neuralese/fixtures/nl7-wire-receiver_threshold.to
+CASE nl7-wire-kill-receiver_threshold line=9
+  MUTATE exact-once substitution at byte 4864
+  $ /home/drakestapleton/fix/neuralese/seed/out/omc < /tmp/nl7-wire-qualification/9.src > /tmp/nl7-wire-qualification/9.elf 2> /tmp/nl7-wire-qualification/9.cerr
+  $ /tmp/nl7-wire-qualification/9.elf < inputs/nl7-real.csv > /tmp/nl7-wire-qualification/9.out 2> /tmp/nl7-wire-qualification/9.err
+VERDICT nl7-wire-kill-receiver_threshold PASS run exit=1 expected=1 killed: stdout differs from the oracle at byte 8 stderr=match
+OM2GATE PASS cases=4 pass=4 fail=0 invalid=0 not_run=0

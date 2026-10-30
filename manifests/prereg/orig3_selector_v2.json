@@ -1,0 +1,1171 @@
+{
+  "schema": "aien-bench-prereg/1",
+  "manifest_version": "2.0.0",
+  "benchmark_suite": "orig3-selector",
+  "prereg_id": "orig3-selector-v2-prereg-2026-10-25",
+  "supersedes": "orig3-selector-prereg-2026-10-25 (manifests/prereg/orig3_selector.json, FROZEN, sealed verdict INCONCLUSIVE; that file, its evidence and its verdict stay unchanged; this file governs every new ORIG-3 run)",
+  "created_at": "2026-10-25T12:07:59Z",
+  "status": "FROZEN",
+  "results_status": "FAIL",
+  "issues": [
+    "aien-dev/benchmarks-mv#45",
+    "aien-dev/aien-train#24",
+    "aien-dev/aien-train#25",
+    "aien-dev/omega-mv#731"
+  ],
+  "parent": "aien-dev/aien-train#19",
+  "protocol": "docs/orig3/PROTOCOL-v2.md",
+  "judge": "src/bin/bench_orig3_judge_v2.rs (tests/orig3_judge_v2.rs), committed in the same commit as this file; benchmarks keeps its pure-Rust harness rule untouched",
+  "why_v2": [
+    "Integrity audit (aien-train evidence/SI19-ORIG1-v2/, omexpmain mode A): the v1 SEALED-FINAL file re-measured exactly the development workloads (738/738 (core, M, N, job seed) keys, 710/738 same oracle arm), because the harness regenerates jobs from fixed seeds; 116 of 240 v1 H1+H2 records share a log2 shape family with TRAIN; TRAIN holds every shape twice (155 duplicate state keys).",
+    "v1 criterion F was mis-specified: the controls clear a 5 % margin over a 1.7x-oracle incumbent.",
+    "v1 charged no per-decision overhead; the shadow scorer costs about 0.14 ms per decision (omega-mv#734) against a nanosecond fixed rule."
+  ],
+  "contract": {
+    "file": "aien-dev/aien-train docs/si19/ORIG1-CONTRACT-v2.md (branch feat/24-orig1-selector-contract, commit a15042d8a7f5009e93e7943f01694377392de88f) on top of the unchanged ORIG1-CONTRACT.md",
+    "rule": "Admission, splits and retrieval follow contract v2; features, target, normalization, provenance and allow-list follow contract v1 unchanged."
+  },
+  "authority": {
+    "judge": "The evaluator is the benchmarks-mv maintainer running the sealed tap and the .om evaluation on the Spark host. This file declares the protocol; measurements live under evidence/ORIG3-SELECTOR/ and only their verdict, claim statuses and hashes are recorded here (sealed_run, claims).",
+    "never_writable_by": "Any trained arm. No arm may write the sealed record file, the allow-list, this preregistration or the result table. The scorer has no execution authority: deterministic code generates, verifies, selects and runs.",
+    "owners": {
+      "consumer_and_record_tap": "aien-dev/omega-mv#731 (rx_empirical_optimizer tap, omexp-v1)",
+      "task_and_dataset_contract": "aien-dev/aien-train#24 (ORIG-1)",
+      "scorer_and_trainer": "aien-dev/aien-train#25 (ORIG-2)",
+      "evaluation_protocol": "aien-dev/benchmarks-mv#45 (ORIG-3, this file)",
+      "programme": "aien-dev/aien-train#19"
+    },
+    "freeze_rule": "status SCOPED may still change by reviewed commit. FROZEN requires every turing_profile.G.background revision pinned (no PENDING_PIN), the candidate checkpoint sha256 recorded, the sha256 of this file recorded in the benchmarks-mv commit that flips the status, and no SEALED-FINAL record in existence. After FROZEN any change is a new prereg_id; the old one is SUPERSEDED, never edited."
+  },
+  "phases": [
+    "preregistration_freeze",
+    "collection",
+    "baseline_run",
+    "candidate_training",
+    "overhead_run",
+    "sealed_eval",
+    "analysis",
+    "report"
+  ],
+  "phase_definitions": {
+    "preregistration_freeze": "This file, PROTOCOL-v2.md and the v2 judge are committed and pushed to benchmarks-mv branch prereg/orig3-selector before C2 exists. Every G revision below is pinned.",
+    "collection": "One run of the pinned harness with the record tap and OMEGA_EMPIRICAL_COVERAGE=600 (PROTOCOL-v2.md s.2), started after the freeze commit was pushed; the meta file records commit, dirty flag, binary sha256, start/end UTC, load average, exit code.",
+    "baseline_run": "fixed_rule, always_reference, best_static, retrieval and the heuristic selection are deterministic functions of C2 TRAIN/VALIDATION computed by selmain mode E; they exist before any held-out outcome is read by the judge.",
+    "candidate_training": "run-select.sh V2=1: the candidate and the shuffled and untrained controls train once each on C2 TRAIN with early stopping on C2 VALIDATION (flag 8); no hyperparameter is chosen on any data.",
+    "overhead_run": "tests/orig4/run.sh ORIG4_OVERHEAD=1 ORIG4_REPS=7 over C2 with the candidate image (PROTOCOL-v2.md s.4).",
+    "sealed_eval": "selmain mode E (flags 14) for every image over C2 VALIDATION + HELD-OUT; per-record files kept as evidence.",
+    "analysis": "bench_orig3_judge_v2 applies metrics.decision_rule verbatim; nothing else is gated.",
+    "report": "Verdict table per core class, overhead, amortization, refusal counts, host-only list; negative and inconclusive results are kept."
+  },
+  "baseline_before_eval": {
+    "required": true,
+    "baseline_arms": [
+      "retrieval",
+      "heuristic",
+      "best_static",
+      "fixed_rule",
+      "always_reference"
+    ],
+    "rule": "The baselines are deterministic functions of C2 TRAIN/VALIDATION; they are computed by the same evaluation pass and fixed before the judge reads any HELD-OUT outcome."
+  },
+  "consumer": {
+    "decision": "Omega empirical cost model matvec realization choice, rx_cm_decide in src/runtime/rx_costmodel.{c,h}, exercised by tests/runtime/rx_empirical_optimizer.c (make test-empirical)",
+    "repository_revision": "aien-dev/omega-mv 18c653b3101fa09c157dca8d222efab41ab5e89d (main, 2026-10-25); consumer files byte-identical to a0eafa39",
+    "record_tap": "tests/runtime/rx_empirical_optimizer.c at 85641e1ea14b1e4a2d2d5790001aacb0bac41093 (branch feat/731-orig4-shadow-advice): tap plus the default-off coverage sample OMEGA_EMPIRICAL_COVERAGE (family 5)",
+    "admissible_candidates": "the consumer's eligible bit mask: an arm is admissible only when its forked differential verification passed (g_verified) and the caller allows it; arm 0 (reference) is always admissible",
+    "transformation_family": "integer matvec y = A x on one AArch64 core: 0 reference (compiled), 1 scalar, 2 unroll2, 3 unroll4_dual, 4 quad4, 5 planted_wrong (never admissible); cap 8 arms (RX_CM_ARMS)",
+    "incumbent_planner": "omega_matvec_dispatch fixed rule: unroll2 when N <= 8, else unroll4_dual",
+    "verifier": "every timed run's output digest equals the reference digest for that job (time_arm); a table with any mismatch is ineligible (word 31 != 0 refuses the record)",
+    "cost_unit": "picoseconds per call, best of 5 rounds per arm, rotating order (truth_table)",
+    "hardware_profile": "DGX Spark host, Linux 7.0.0-1019-nvidia aarch64; core classes from MIDR: 0 Cortex-X925 (last private cache 2097152 B), 1 Cortex-A725 (524288 B), 2 other (1048576 B). The 2026-10-25 owner tap run observed classes 0 and 1 only.",
+    "record_format": "omexp-v1: 32 little-endian 64-bit words per record (ORIG1-CONTRACT.md section 2); a file is a whole number of records, at most 2048",
+    "features": "ORIG1-CONTRACT.md section 3: state vector x of 12 integers in 1/16 units (bias, lg16 M, lg16 N, lg16 M * lg16 N >> 8, lg16 N squared >> 8, N <= 3 flag, N rem 4 != 0 flag, cache doublings capped at 256, core one-hot x3, 16 * min(pressure, 15)); candidate one-hot c of 8; thermal, calls, seed, sequence and time are never features",
+    "target": "ORIG1-CONTRACT.md section 4: t16 = lg16 ps_a - lg16 ps_0 per (record, admissible arm); normalization mu16, sh fitted on TRAIN only; y = (t16 - mu16) / 2^(4 + sh) as binary32; selection is the smallest score among admissible arms, lowest index on a tie; loss is squared error summed over admissible arms, averaged over records"
+  },
+  "arms": [
+    {
+      "id": "mlp_scratch_v2",
+      "role": "candidate",
+      "kind": "learned",
+      "description": "select.om ReLU MLP 20-32-1 (705 parameters) from the declared random init (seed 19024), lr 2^-8, at most 64 epochs, patience 16 on VALIDATION loss, best-on-VALIDATION params; trains on C2 TRAIN only.",
+      "pretrained": false,
+      "initialization": "seeded LCG (wsrand recurrence), zero biases",
+      "learns_from": [
+        "C2 TRAIN"
+      ],
+      "requires_gpu": false,
+      "overhead_charged": "O_mlp"
+    },
+    {
+      "id": "retrieval",
+      "role": "baseline",
+      "kind": "rules",
+      "description": "Contract v2 s.4: nearest C2 TRAIN record of the same core class and pressure bucket by L1 on (lg16 M, lg16 N); its cheapest admissible arm, reference if not admissible.",
+      "pretrained": false,
+      "initialization": "none",
+      "learns_from": [
+        "C2 TRAIN"
+      ],
+      "requires_gpu": false,
+      "overhead_charged": "O_near"
+    },
+    {
+      "id": "heuristic",
+      "role": "baseline",
+      "kind": "rules",
+      "description": "Per core class, the one of fixed_rule, always_reference, best_static with the lowest calls-weighted total on C2 VALIDATION pressure-0 decisions (ties in that order).",
+      "pretrained": false,
+      "initialization": "none",
+      "learns_from": [],
+      "requires_gpu": false,
+      "overhead_charged": "0"
+    },
+    {
+      "id": "best_static",
+      "role": "baseline",
+      "kind": "rules",
+      "description": "The single arm with the lowest total C2 TRAIN cost per core class (contract v1 s.7).",
+      "pretrained": false,
+      "initialization": "none",
+      "learns_from": [],
+      "requires_gpu": false,
+      "overhead_charged": "0"
+    },
+    {
+      "id": "fixed_rule",
+      "role": "baseline",
+      "kind": "rules",
+      "description": "Incumbent planner: arm 2 when N <= 8 else arm 3, if admissible, else arm 0.",
+      "pretrained": false,
+      "initialization": "none",
+      "learns_from": [],
+      "requires_gpu": false,
+      "overhead_charged": "0"
+    },
+    {
+      "id": "always_reference",
+      "role": "baseline",
+      "kind": "rules",
+      "description": "Arm 0.",
+      "pretrained": false,
+      "initialization": "none",
+      "learns_from": [],
+      "requires_gpu": false,
+      "overhead_charged": "0"
+    },
+    {
+      "id": "untrained_control",
+      "role": "control",
+      "kind": "learned",
+      "description": "The candidate's declared init, no update (max epochs 0).",
+      "pretrained": false,
+      "initialization": "seeded LCG",
+      "learns_from": [],
+      "requires_gpu": false,
+      "overhead_charged": "O_mlp"
+    },
+    {
+      "id": "shuffled_label_control",
+      "role": "control",
+      "kind": "learned",
+      "description": "The candidate's trainer with targets permuted among TRAIN pairs (control 1).",
+      "pretrained": false,
+      "initialization": "seeded LCG",
+      "learns_from": [
+        "C2 TRAIN (permuted targets)"
+      ],
+      "requires_gpu": false,
+      "overhead_charged": "O_mlp"
+    },
+    {
+      "id": "constant_control",
+      "role": "control",
+      "kind": "rules",
+      "description": "A constant score: every arm ties and the frozen tie rule picks arm 0.",
+      "pretrained": false,
+      "initialization": "none",
+      "learns_from": [],
+      "requires_gpu": false,
+      "overhead_charged": "O_mlp"
+    },
+    {
+      "id": "oracle",
+      "role": "control",
+      "kind": "rules",
+      "description": "Cheapest admissible arm (analysis bound only, never gated).",
+      "pretrained": false,
+      "initialization": "none",
+      "learns_from": [],
+      "requires_gpu": false,
+      "overhead_charged": "0"
+    }
+  ],
+  "environments": [
+    {
+      "id": "TRAIN",
+      "split": 0,
+      "families": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          0,
+          6
+        ],
+        [
+          0,
+          8
+        ],
+        [
+          0,
+          10
+        ],
+        [
+          0,
+          11
+        ],
+        [
+          0,
+          13
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          1,
+          7
+        ],
+        [
+          1,
+          8
+        ],
+        [
+          1,
+          10
+        ],
+        [
+          1,
+          11
+        ],
+        [
+          1,
+          13
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          2,
+          7
+        ],
+        [
+          2,
+          9
+        ],
+        [
+          2,
+          10
+        ],
+        [
+          2,
+          11
+        ],
+        [
+          2,
+          12
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          3,
+          11
+        ],
+        [
+          3,
+          12
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          4,
+          11
+        ],
+        [
+          4,
+          12
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          5,
+          9
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          5,
+          12
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          6,
+          8
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          6,
+          13
+        ],
+        [
+          7,
+          0
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          7,
+          9
+        ],
+        [
+          7,
+          11
+        ],
+        [
+          7,
+          12
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          8,
+          1
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          8,
+          11
+        ],
+        [
+          9,
+          0
+        ],
+        [
+          9,
+          2
+        ],
+        [
+          9,
+          5
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          9,
+          9
+        ],
+        [
+          9,
+          10
+        ],
+        [
+          10,
+          0
+        ],
+        [
+          10,
+          1
+        ],
+        [
+          10,
+          2
+        ],
+        [
+          10,
+          5
+        ],
+        [
+          10,
+          7
+        ],
+        [
+          10,
+          8
+        ],
+        [
+          11,
+          0
+        ],
+        [
+          11,
+          3
+        ],
+        [
+          11,
+          4
+        ],
+        [
+          11,
+          5
+        ],
+        [
+          11,
+          6
+        ],
+        [
+          11,
+          8
+        ],
+        [
+          12,
+          0
+        ],
+        [
+          12,
+          1
+        ],
+        [
+          12,
+          3
+        ],
+        [
+          12,
+          4
+        ],
+        [
+          12,
+          6
+        ],
+        [
+          13,
+          0
+        ],
+        [
+          13,
+          2
+        ],
+        [
+          13,
+          4
+        ],
+        [
+          13,
+          5
+        ]
+      ],
+      "role": "training, best_static, retrieval memory"
+    },
+    {
+      "id": "VALIDATION",
+      "split": 1,
+      "families": [
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          9
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          10
+        ],
+        [
+          4,
+          7
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          4,
+          13
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          5,
+          11
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          6,
+          12
+        ],
+        [
+          7,
+          1
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          7,
+          10
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          8,
+          10
+        ],
+        [
+          9,
+          1
+        ],
+        [
+          9,
+          4
+        ],
+        [
+          10,
+          3
+        ],
+        [
+          10,
+          4
+        ],
+        [
+          10,
+          9
+        ],
+        [
+          11,
+          1
+        ],
+        [
+          12,
+          7
+        ],
+        [
+          13,
+          1
+        ],
+        [
+          13,
+          6
+        ]
+      ],
+      "role": "early stopping and heuristic selection"
+    },
+    {
+      "id": "HELD-OUT",
+      "split": 2,
+      "families": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          7
+        ],
+        [
+          0,
+          12
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          6
+        ],
+        [
+          1,
+          9
+        ],
+        [
+          1,
+          12
+        ],
+        [
+          2,
+          6
+        ],
+        [
+          2,
+          8
+        ],
+        [
+          2,
+          13
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          7
+        ],
+        [
+          3,
+          8
+        ],
+        [
+          3,
+          13
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          4,
+          8
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          8
+        ],
+        [
+          5,
+          13
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          6,
+          11
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          9,
+          3
+        ],
+        [
+          9,
+          6
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          10,
+          6
+        ],
+        [
+          11,
+          2
+        ],
+        [
+          11,
+          7
+        ],
+        [
+          12,
+          2
+        ],
+        [
+          12,
+          5
+        ],
+        [
+          13,
+          3
+        ]
+      ],
+      "role": "evaluation only; pressure 0 gated, pressure 1 reported"
+    }
+  ],
+  "heldout": {
+    "splits": {
+      "family": "(floor log2 M, floor log2 N); split = FNV-1a 64 over the two bytes, (h >> 32) mod 10: 0..5 TRAIN, 6..7 VALIDATION, 8..9 HELD-OUT (aien-train oxhspl).",
+      "table": "aien-train docs/si19/orig1-v2-splits.txt sha256 c072d49843ecb5162fa03323790254cd96c96b9138461c80562d6051ed84f4cb (168 families: 100 / 32 / 36), printed by omexpmain mode S and listed under environments.",
+      "admission": "oxadm2 per-record refusals with counted reasons (unsupported -2/-3, shape -4, profile -9, unpaired -14, out of range -10, unverified -7, sequence -8, duplicate state -15); oxdisj refuses the file if a family or shape occurs in two splits.",
+      "gated": "HELD-OUT, pressure 0, core classes 0 (Cortex-X925) and 1 (Cortex-A725)."
+    },
+    "sealing": {
+      "mechanism": "Temporal and workload-disjoint. C2 does not exist when this file, the training code (aien-train 692d85104369cf0fc0bec9f35c4ca693cf746012), the shadow/overhead code (omega-mv 85641e1ea14b1e4a2d2d5790001aacb0bac41093) and the judge are committed; every later step is a fixed program of C2 with no free choice (fixed seed, lr, epochs, patience, margins). HELD-OUT families are absent from TRAIN and VALIDATION by the frozen split table. The trainer admits HELD-OUT records but never reads their costs (training pairs are split 0, early stopping split 1; tested by select-test tv2 and its mutant).",
+      "hash_only_is_not_sealing": true,
+      "prediction_commit_before_reveal": true,
+      "judge_independent": true,
+      "judge_independence_caveat": "There is no second operator on this machine. The evaluator and the trainer are the same owner; independence here means the sealed records cannot have influenced training because they did not exist, and the pinned image cannot change after the pin. This is weaker than an independent judge and is stated on every report.",
+      "single_use": true,
+      "breach_action": "Any rerun of training or collection after HELD-OUT outcomes were produced, any edit of the pinned code, or a whole-file admission refusal ends the campaign INCONCLUSIVE; a new attempt needs a new prereg_id."
+    }
+  },
+  "metrics": {
+    "primary": {
+      "id": "overhead_inclusive_total_cost",
+      "unit": "HELD-OUT pressure-0 decision",
+      "definition": "Per decision r and arm p: calls_r * ps_p(r) + O_p (calls = the record's timed calls, the consumer's batch per decision; O_p the per-decision overhead of metrics.overhead). Totals C_p per core class. Comparator C* = min(C_retrieval, C_heuristic).",
+      "direction": "lower is better"
+    },
+    "overhead": {
+      "definition": "O_p = (median wall_us of the advisor run - median wall_us of the disabled run) * 1e6 / scored decisions, 7 interleaved repetitions over the whole C2 file under v2 admission (tests/orig4/run.sh ORIG4_OVERHEAD=1). Contains record admission, feature extraction, inference or nearest-neighbour search, argmin dispatch, fallback checks and one synchronous output line per decision.",
+      "charged": {
+        "mlp_scratch_v2": "O_mlp",
+        "untrained_control": "O_mlp",
+        "shuffled_label_control": "O_mlp",
+        "constant_control": "O_mlp",
+        "retrieval": "O_near",
+        "heuristic": "0",
+        "best_static": "0",
+        "fixed_rule": "0",
+        "always_reference": "0"
+      },
+      "bias": "Overstates a resident in-process advisor for the learned arms and retrieval alike (file admission is included); heuristics are charged 0 (constant-time C comparison, not measured)."
+    },
+    "decision_rule": {
+      "P1": "C_p <= 0.99 * C* (superiority margin 1 %)",
+      "P2": "exact one-sided sign test of per-decision overhead-inclusive cost against retrieval and against the heuristic separately, ties dropped: P(X >= wins | n discordant, 1/2) <= 0.0125 for both (0.05 / 4 contrasts)",
+      "PRIMARY": "P1 and P2, per arm and core class",
+      "INVALID": "any of untrained_control, shuffled_label_control, constant_control meets PRIMARY on any gated core class",
+      "GO": "not INVALID and mlp_scratch_v2 meets PRIMARY on both core classes",
+      "NO-GO": "not INVALID, not GO, and C_mlp > 1.01 * C* on some core class (non-inferiority fails)",
+      "INCONCLUSIVE": "every other outcome",
+      "not_gated": "choice-only ratios to oracle and comparators, HELD-OUT pressure 1, VALIDATION totals, best_static, fixed_rule, always_reference"
+    },
+    "amortization": "Training wall and collection wall reported separately. Break-even decisions = (training + collection wall in ps) / overhead-inclusive saving per HELD-OUT decision against the cheaper comparator, 'none' if not positive. Break-even calls per decision = O_mlp / choice-only per-call saving against the same comparator, 'none' if not positive.",
+    "energy": {
+      "status": "NOT_MEASURED",
+      "reason": "No energy meter is instrumented for this evaluation."
+    },
+    "gb10": {
+      "status": "NOT_RUN",
+      "reason": "Host AArch64 cores only; no GPU work."
+    }
+  },
+  "resource_budget": {
+    "training_wall_max_min": 30,
+    "collection_wall_max_min": 15,
+    "params_cap": 705,
+    "records_max": 2048,
+    "collections": 1,
+    "training_runs_per_arm": 1,
+    "evaluations": 1,
+    "overhead_campaigns": 1
+  },
+  "sample_size": {
+    "computed_with": "Python exact binomial sums, cross-checked with the Wolfram Language evaluator 2026-10-25: crit[n_] := First@Select[Range[0, n], 1 - CDF[BinomialDistribution[n, 1/2], # - 1] <= 1/80 &]; power = 1 - CDF[BinomialDistribution[n, 13/20], crit[n] - 1]; crit[150] = 90, power 0.9135515; crit[111] = 68, power 0.8229822; minimum power over n in 111..400 is 0.8035851 (first n with power >= 0.8 is 104, not monotone).",
+    "studies": [
+      {
+        "id": "heldout_sign_test_per_core_class_and_comparator",
+        "unit": "discordant HELD-OUT pressure-0 decision of one core class",
+        "sided": "one",
+        "alpha_familywise": 0.05,
+        "confirmatory_contrasts": 4,
+        "alpha_per_contrast": 0.0125,
+        "power_target": 0.8,
+        "min_effect_win_probability": 0.65,
+        "exact_min_effective_n": 111,
+        "exact_power_at_min": 0.822982,
+        "families": 36,
+        "tasks_planned": 150,
+        "units_per_cluster": 1,
+        "icc_assumed": 0,
+        "design_effect": 1,
+        "units_planned": 150,
+        "effective_n_planned": 150,
+        "exact_power_at_planned": 0.913552,
+        "sensitivity": "Planned from the v1 owner file under v2 admission (69 to 76 HELD-OUT records per class without coverage) plus about 24 % of the 600 coverage shapes per class; fewer decisions lower the power but not the level of the exact test. Families are clusters in principle; icc 0 is assumed and stated."
+      }
+    ]
+  },
+  "stopping_rules": [
+    {
+      "id": "fixed_n",
+      "trigger": "Always.",
+      "action": "One collection, one training run per arm, one evaluation, one overhead campaign; no interim look, no optional stopping, no retraining or added records after HELD-OUT outcomes exist."
+    },
+    {
+      "id": "collection_invalid",
+      "trigger": "Harness exit code not 0, any digest mismatch, or a whole-file admission refusal (-1, -11).",
+      "action": "Campaign INCONCLUSIVE with the reason; no second collection under this prereg_id."
+    },
+    {
+      "id": "budget_overrun",
+      "trigger": "Training wall over 30 min or collection wall over 15 min.",
+      "action": "Campaign INCONCLUSIVE; the run is reported."
+    },
+    {
+      "id": "control_passes",
+      "trigger": "Any control meets PRIMARY on a gated class.",
+      "action": "INVALID: the criterion does not separate learning from chance on this data; reported, no GO."
+    },
+    {
+      "id": "missing_arm",
+      "trigger": "An arm, its per-record file or the overhead runs are missing or refused.",
+      "action": "INCONCLUSIVE; never imputed."
+    }
+  ],
+  "turing_profile": {
+    "formula": "T(M;B,D,G,P) = [L(B|G) + L(D|B,G)] - [L(M|G) + L(D|M,G)]",
+    "source": "https://doi.org/10.5281/zenodo.23437498 (formal preprint v1.14)",
+    "unit": "bits",
+    "applies_to": "Learned predictive explanatory gain of the candidate scorer on D only; not service price, a single decision or a per-job metric. Reported beside, never inside, the GO decision.",
+    "B": {
+      "arm": "fixed_rule",
+      "description": "The incumbent planner coded under P; frozen at baseline_run."
+    },
+    "D": {
+      "split": "C2 HELD-OUT pressure 0",
+      "blinded": true,
+      "description": "Held-out decisions' oracle arm per record, coded under P after the collection."
+    },
+    "G": {
+      "version": "orig3-selector-G/2",
+      "background": [
+        {
+          "id": "omega_consumer",
+          "kind": "source",
+          "owner": "aien-dev/omega-mv",
+          "revision": "18c653b3101fa09c157dca8d222efab41ab5e89d",
+          "pin_basis": "ORIG1-CONTRACT.md s.1, unchanged."
+        },
+        {
+          "id": "record_tap_and_coverage",
+          "kind": "source",
+          "owner": "aien-dev/omega-mv#731",
+          "revision": "85641e1ea14b1e4a2d2d5790001aacb0bac41093",
+          "pin_basis": "tests/runtime/rx_empirical_optimizer.c with the default-off coverage sample; the same commit holds the v2 shadow/overhead path."
+        },
+        {
+          "id": "harness_binary",
+          "kind": "toolchain",
+          "owner": "aien-dev/omega-mv#731",
+          "revision": "sha256:37f4c229293d148313d6972898f9f4e8237775a8505bc1e53c20eb8ebf681339",
+          "pin_basis": "build/rx_empirical_optimizer_test from a clean tree at the tap commit (make -j2, AIENOS_LOCK_REPO=aienos-b84c0a67); rebuilt twice, identical."
+        },
+        {
+          "id": "om_seeded_compiler",
+          "kind": "toolchain",
+          "owner": "aien-dev/omega-bridge",
+          "revision": "sha256:191b776ef98821597c3e30655da6d680a9b66edbc9ceaca3c39c61ea6df098e9",
+          "pin_basis": "aien-train docs/si19/dependencies.json (R5b); every unit also compiles under R6 734f0a39."
+        },
+        {
+          "id": "orig1_contract_v2_and_loader",
+          "kind": "source",
+          "owner": "aien-dev/aien-train#24",
+          "revision": "a15042d8a7f5009e93e7943f01694377392de88f",
+          "pin_basis": "docs/si19/ORIG1-CONTRACT-v2.md, native/si19/omexp.om (oxadm2, oxhspl, oxdisj), docs/si19/orig1-v2-splits.txt."
+        },
+        {
+          "id": "orig2_scorer_and_trainer_v2",
+          "kind": "source",
+          "owner": "aien-dev/aien-train#25",
+          "revision": "692d85104369cf0fc0bec9f35c4ca693cf746012",
+          "pin_basis": "native/si19/select.om, selmain.om (flag 8), tests/si19/run-select.sh V2=1."
+        },
+        {
+          "id": "om_evaluator_unit_v2",
+          "kind": "toolchain",
+          "owner": "aien-dev/aien-train#25",
+          "revision": "sha256:01b6e63fe8a579a4db6300a9bba237e3dd30e143dba58e07781a9727ef00a62f",
+          "pin_basis": "selmain ELF (unit source sha256 8bd2f333e4c7d6d747fc5b4ba48f3202f139a41adc29593590f91798a76163b9) built by om_seeded_compiler from the pinned trainer commit; the R6 compiler emits the same bytes."
+        },
+        {
+          "id": "shadow_advisor_unit_v2",
+          "kind": "toolchain",
+          "owner": "aien-dev/omega-mv#731",
+          "revision": "sha256:9b54d88afd5fc4892e1b809087506bb49ba607a527c79d4110ce6aef7b49692d",
+          "pin_basis": "tests/orig4/run.sh build of native/orig4/shadow.om + shadowmain.om at the tap commit with omega-mv seed/out/omc 734f0a39; units pinned by native/orig4/orig4.pin (aien-train 692d8510)."
+        },
+        {
+          "id": "split_table",
+          "kind": "data",
+          "owner": "aien-dev/aien-train#24",
+          "revision": "sha256:c072d49843ecb5162fa03323790254cd96c96b9138461c80562d6051ed84f4cb",
+          "pin_basis": "docs/si19/orig1-v2-splits.txt."
+        }
+      ]
+    },
+    "P": {
+      "encoding": "Per record: the chosen arm index coded with a fixed uniform code over the admissible arms of that record (log2 of the admissible count bits when the policy picks the oracle arm, plus the cost penalty code of the chosen arm's t16 under a fixed Laplace model fitted on TRAIN); L(M|G) is the byte length of the checkpoint image plus the .om source of select.om times 8, both given G.",
+      "baseline": "B as declared above (fixed_rule has L(B|G) equal to its .om source bits).",
+      "sampling": "All C2 HELD-OUT pressure-0 records, no subsampling.",
+      "energy": "Joules only from an instrumented, reconciled measurement; otherwise NOT_MEASURED.",
+      "statistical_test": "Per-record paired code-length differences; one-sided sign-flip permutation test with 100000 permutations at alpha 0.05, reported beside but separate from metrics.confirmatory."
+    },
+    "T_ideal": {
+      "definition": "Code lengths as the sum of -log2 of the probability the policy's score distribution assigns to the oracle arm (softmin of negated scores at a temperature fixed on DEV), plus ideal L(M|G).",
+      "status": "NOT_RUN"
+    },
+    "T_real": {
+      "definition": "Actual bits under the P encoding for B and M computed by an .om coder in the evaluation unit; valid only after a round-trip check (decode reproduces the chosen arm sequence).",
+      "requires": [
+        "om_coder_round_trip"
+      ],
+      "status": "NOT_RUN"
+    },
+    "energy": {
+      "status": "NOT_MEASURED",
+      "instrument": "none declared",
+      "reconciliation": "Required before any T/J: measured joules reconciled against an independent meter for the same interval."
+    },
+    "tj": {
+      "allowed": false,
+      "reason": "No energy instrument is declared and no joules are measured; T/J is not reported."
+    },
+    "attribution": "One joint gain under one profile is counted once; it is never minted per contributor."
+  },
+  "claims": [
+    {
+      "id": "v2_overhead_inclusive_cost_vs_retrieval_and_heuristic",
+      "status": "FAIL",
+      "note": "Non-inferiority fails on both gated classes: candidate/min(retrieval, heuristic) is 1.7728 on core 0 (evidence/ORIG3-SELECTOR-v2/judge.out L4 and L18) and 1.2844 on core 1 (L22 and L36), both above 1.01. L39 is ORIG3_V2_VERDICT=NO-GO."
+    },
+    {
+      "id": "v2_controls_fail_primary",
+      "status": "PASS",
+      "note": "PRIMARY=0 for untrained_control, shuffled_label_control and constant_control on core 0 (evidence/ORIG3-SELECTOR-v2/judge.out L15, L16, L17) and core 1 (L33, L34, L35). No control meets PRIMARY on either gated class, so the run is not INVALID."
+    },
+    {
+      "id": "v2_amortization",
+      "status": "FAIL",
+      "note": "Overhead-inclusive saving per decision against the heuristic is negative on both classes, and break_even_decisions is none: core 0 saving_ps_per_decision=-80983701.6 (evidence/ORIG3-SELECTOR-v2/judge.out L19), core 1 saving_ps_per_decision=-67086624.4 (L37). L37 also records a choice-only per-call saving of 15225.208 ps and break_even_calls_per_decision=5310; that does not repay the decision-level cost. Core 0 per_call_saving_ps is -238.091 and break_even_calls_per_decision is none (L19)."
+    },
+    {
+      "id": "gb10",
+      "status": "NOT_RUN",
+      "note": "No GPU work in ORIG-1..4."
+    },
+    {
+      "id": "energy",
+      "status": "NOT_RUN",
+      "note": "NOT_MEASURED."
+    }
+  ],
+  "freeze_disclosure": "Same operator fleet as v1. The v2 rule, code and judge were written after the v1 verdict and after reading the v1 owner and sealed files (the integrity audit); they were committed before C2 existed. The v1 data are not used by any v2 arm. Pipeline development used the SYNTHETIC fixture only.",
+  "claim_rules": [
+    "A GO here is a development result on one host; it is not a promotion of the scorer into the consumer, which needs its own omega-mv review.",
+    "Host-only results are development results, never hardware qualification; GB10 stays NOT_RUN.",
+    "Fixture (SYNTHETIC) evidence and real-record evidence are never mixed in one number.",
+    "A missing sealed run, a void sealed set or a missing baseline is INCONCLUSIVE or NOT_RUN, never PASS.",
+    "Simulated time or energy is never reported as measured."
+  ],
+  "out_of_scope_here": [
+    "Promotion of any scorer into the consumer: needs its own omega-mv review even after a GO.",
+    "A second-operator sealed holdout: not available on this machine.",
+    "Larger models: excluded by the 705-parameter cap of this prereg."
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "prereg_commit": "c8aefbc",
+  "prereg_sha256": "2fe5c72edbfe24df38f70b72275bb008ac71779e66455501662ca8e7d911751c",
+  "custody_commitment_sha256": "39ce89eebff948ccc78f49f54564fa722efeaa8e618bda8bd0895f09d7ec2772",
+  "checker_source_commit": "1e77119",
+  "checker_binary_sha256": "1f322eae5c7bd0c2fb30665f666d038df4f61132a701e1ce91e3f7cd441e0093",
+  "capacity_source_commit": "fed670a",
+  "capacity_source_sha256": "9c2870a866bd9bc16fd8338385d0d61a1f7d871189cdc2b2b4cbfd7d9e5d01b2",
+  "capacity_binary_sha256": "2161414c6dd5b59f30eb5dc6c136ababf44f408b6b0d36c95b962ea843a8f8d7",
+  "task_source_commit": "1bae5bda767c9024c1408ae866c7993eb3d7deb0",
+  "task_source_sha256": "eb9f871fb0f79c2eab16c4a78199491388353f9b2792eff82dec61d2702abd29",
+  "task_binary_sha256": "244f0871f57f833d0de51ff3f420476b4cdfeb761df023bd7de4d98d65cd7679",
+  "checkpoint_verifier_source_sha256": "3fbd9304e19640a28f09cd364361e7f9594a47a3682b94d811058facf63ddf64",
+  "checkpoint_verifier_binary_sha256": "5e72c7b67af2ac9198f0a806b216185a07952a15fbbb1b954b6511c90bf378f6",
+  "checkpoint_wire": "8LE64 words {schema,unit,dim,nparams,seed,trainmask,updates,reserved0}; params LE64 unsigned binary64 carriers. schema1 capacity arm;schema2 taskid. Decoder source extended before any hidden run.",
+  "no_hidden_execution_before_this_record": true
+}

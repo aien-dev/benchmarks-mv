@@ -4,16 +4,281 @@
 
 This repository holds AIEN's performance measurements and the Rust tools that take and check them. Every measurement in it comes from one machine, the NVIDIA DGX Spark (Grace Blackwell GB10, aarch64). It has two parts: the Prime Drag Race suite runner in [prime-drag-race/](prime-drag-race/CONTRACT.md), which builds on its own, and the main measurement harness (the `aien-benchmarks` crate at the root), which needs a sibling checkout to build (see [Build and test](#build-and-test)).
 
-AIEN does not compare itself with other people's systems. Speed is measured against the machine's physical limit and our own previous run, and correctness against our own reference.
+AIEN does not compare itself with other people's systems, with one exception. Speed is measured against the machine's physical limit and our own previous run, and correctness against our own reference.
+
+**Exception: same-machine head-to-head (bar P0, added 2026-10-27 on Drake's order).** llama.cpp and vLLM, each at its own current release built for sm_121, may be run against our stack on the same DGX Spark, with the same model (Qwen3.6-35B-A3B), the same prompts and the same measurement definition; the bar is defined in [omega-mv docs/OMEGA.md](https://github.com/aien-dev/omega-mv/blob/main/docs/OMEGA.md). Every number in such a table is measured by us on this machine and labelled that way, with raw logs and SHA-256 digests. The result is published whether we win or lose. Numbers published by others are never placed in the same table as ours, and nothing from the other systems enters our serving path. The 2026-10-15 withdrawals below stand; this exception does not restore them.
 
 ## Where this fits in AIEN
 
-[AienOS](https://github.com/aien-dev/aienix) is the core tree of AIEN. Its README lists this repository as an attachment: a repository that lives on its own and plugs into the core at a boundary. Related repositories:
+The whole system is [Sovereign Intelligence (SI)](https://github.com/aien-dev/sovereign-intelligence). [AienOS](https://github.com/aien-dev/AienOS-nv) is only the operating-system layer. [aien-dev/aienix](https://github.com/aien-dev/aienix) is retired. [aien-dev/sovereign-intelligence](https://github.com/aien-dev/sovereign-intelligence) is the integration, release and install center, and where the signed whole-system Spark test runs on one frozen candidate. Other repositories, including this one, keep their own parts ([ADR 0045](https://github.com/aien-dev/aien-architecture-mv/blob/main/docs/adr/0045-aienix-retired-sovereign-intelligence-center.md)). Related repositories:
 
 - [aien-sovereign-core-mv](https://github.com/aien-dev/aien-sovereign-core-mv): host runtime and the Spark verification pipeline that tests this repository. Its [Measured results](https://github.com/aien-dev/aien-sovereign-core-mv#measured-results) section sets the evidence standard used here.
 - [aien-architecture-mv](https://github.com/aien-dev/aien-architecture-mv): architecture and plans. Issue [#233](https://github.com/aien-dev/aien-architecture-mv/issues/233) (performance intelligence) is the plan behind the streaming and evidence work below.
 - [omega-mv](https://github.com/aien-dev/omega-mv): the language and GPU engine that the Prime Drag Race native GB10 entry runs on.
 - [aien-receipts](https://github.com/aien-dev/aien-receipts): where the Spark publishes the signed test bundle for each tested commit of this repository.
+
+## Neuralese independent evaluation (NL-6)
+
+Issue [#55](https://github.com/aien-dev/benchmarks-mv/issues/55), extending
+[#38](https://github.com/aien-dev/benchmarks-mv/issues/38), freezes its design at
+`8ee0a494bf73230c9d37647eb3caea792298fa8d` in
+[`manifests/neuralese_prereg.json`](manifests/neuralese_prereg.json). The
+[`raw Wolfram calls/results`](manifests/neuralese_wolfram_raw.json) establish the
+statistical planning calculations, not experimental results. The design includes
+an eight-combination training/eight-combination test split, matched text,
+typed-semantic and deterministic Omega baselines, full lifecycle costs and
+adversarial controls. A frozen design is not a sealed, executed campaign.
+
+[`native/neuralese/score.om`](native/neuralese/score.om) is a seeded handwritten
+Omega evidence checker. It supplements the existing signed Spark judge; it does
+not create an authority or execute proposed effects. Public synthetic fixtures
+qualify only the checker, never model performance or physical throughput.
+
+Compile the checker and the existing Omega conductor with the compiler from
+`omega-mv@e79566c191ea8ef11888e69ce50d8fadf375d4fd`, SHA-256
+`d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84`.
+This binary originated at `1fe5976d398646b17acabbf6d9dfae96b017e439`; it is
+not either of the older documented `2c824805` / `49923639` compiler pins.
+The conductor source is `seed/qualification/om2/gate.om` at that same revision.
+It verifies the compiler digest itself, compiles every source and mutant, runs
+each child with a deadline, compares exact stdout/stderr/status and writes raw
+artifacts. Never run a binary left by a failed compile.
+
+Run the conductor in a disposable replay directory containing `native` linked
+to this checkout's `native`, and `seed` linked to the pinned Omega checkout's
+`seed` (the conductor reads its committed SHA-256 constants there):
+
+```text
+<compiled-gate> <pinned-omc> d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84 native/neuralese/host.cases <new-scratch-directory>
+```
+
+Direct checker interface: `score MODE TRUSTED_REFERENCE ACTUAL_RAW_OUTPUT`.
+`MODE=1` compares ordered lines of exactly four ASCII bits and LF, reporting
+total/correct/wrong rows. Its reference comes from the independent task inputs,
+not a candidate's `expected_bits`; self-reported counts or extra fields fail.
+`MODE=2` compares a nonempty raw journal byte-for-byte with a separately frozen
+reference. `MODE=3` parses the NL4 boundary record, independently binds all
+operation/operand/type-shape/effect fields and recomputes increment, double or
+identity. Refusals must contain no residual operation, effects or result.
+The trusted reference starts `NL4REF1`; its final numeric field is reserved zero,
+not a supplied expected result. Actual records start `NL4R1`. Both have exactly
+ten decimal fields and LF; no leading zeroes, trailing fields or oversized values.
+Exit `0` means matching fixture evidence, `1` means wrong/missing-length output,
+`90` means invalid input/setup, and `93` means output I/O failure.
+
+Raw artifacts must come from independently replayed commands with pinned
+source/compiler/binary/input hashes and actual exits, not copied producer
+summary fields. Journal equality alone does not establish authorization; the
+reference and the existing capability authority must establish that separately.
+Neither row counts nor a `PASS` line establish independent test custody,
+distinct task IDs, safety certification or a quality-floor campaign. The
+checker deliberately does not accept producer timing, token, privacy, consent
+or hardware claims. Missing instrument evidence stays NOT_MEASURED/NOT_RUN.
+
+The fixtures include wrong-but-valid results, wrong operations/shapes/effects,
+all-refuse candidates, forged summaries, malformed/short/trailing records and
+guard-removal mutants. Changed equality/result/metadata guards must accept the
+bad fixture in the mutant while the original refuses it. Signals, timeouts and
+compile failures never count as mutation kills. The oracle arithmetic/parity
+queries and raw tool results are in
+[`native/neuralese/arithmetic_wolfram_raw.json`](native/neuralese/arithmetic_wolfram_raw.json).
+All learned, model-native and GB10 campaigns remain NOT_RUN/BLOCKED unless
+separately admitted and executed. No model, GPU or live-serving access is part
+of this checker.
+
+For NL1 CSV evidence, concatenate `native/neuralese/learnscore.om` and
+`native/neuralese/learn-cli.om` in that order before compilation, then run
+`learnscore RAW_CSV_FILE`. This bounded-streaming checker interprets the raw
+IEEE-754 carriers itself, derives fixture meanings from input IDs, recomputes
+threshold decisions and abstentions, rejects forged prediction/status fields
+and rejects duplicate or missing selected cases. It reports every seed,
+training/held-out partition and frozen quantization arm separately. It neither
+trusts the producer's aggregation nor counts abstention as recovery. Return
+zero means the evidence was scored, not that recovery was perfect.
+
+[`qualification.json`](native/neuralese/qualification.json) records the native
+conductor's 41/41 synthetic checks, including six guard-removal mutants.
+[`nl1-independent.json`](native/neuralese/nl1-independent.json) records an
+independent rebuild and CPU replay of learned sender/receiver source
+`aien-train@c5992ca0b015a233bca6f9af7af892a71c558403`.
+Its held-out full-precision learned recovery is 5/8, 5/8 and 6/8 for seeds
+17, 29 and 43; the fixed-basis and discrete controls each recover all eight.
+These filed native-checker counts are not independent objective samples for
+the preregistered statistical campaign. No parameters were tuned from them.
+The exact independently generated raw CSV is retained as
+[`nl1-replay.stdout`](native/neuralese/nl1-replay.stdout).
+The original `0e01c58` stream is preserved in
+[`nl1-pre-repair.stdout`](native/neuralese/nl1-pre-repair.stdout): its discrete
+control incorrectly decoded the original input ID rather than its transmitted
+byte. The repair changes only that causal control, not learned parameters.
+An independently compiled direct-ID mutant exits 77 when the control changes
+only the transmitted byte, while the repaired source completes successfully.
+[`nl4-independent.json`](native/neuralese/nl4-independent.json) records an
+independent compile of `omega-mv@09b1394fe68287eaa10b0d90cf07a9dd00e6cb60`
+with its locked projection and envelope dependencies. The successful pure
+operation and foreign-tenant refusal were replayed with their actual channels
+and exits; the checker recomputes the result from separately bound request
+fields. This is a closed host boundary, not signed capability authorization.
+[`nl5-independent.json`](native/neuralese/nl5-independent.json) records
+independent proposal and unchanged-kernel replay of the 30 Allen scenarios.
+It explicitly distinguishes proposal refusal, kernel admission and real task
+execution; C remains a typed fallback, not a learned transport.
+The six ordinary/corrected states were also checked against independent
+Wolfram-derived references, including a wrong-terminal-state negative control;
+[`nl5_wolfram_raw.json`](native/neuralese/nl5_wolfram_raw.json) retains the
+actual arithmetic tool calls and results.
+
+## Neuralese structure follow-up (NL-7)
+
+New freeze: [`neuralese_nl7_prereg.json`](manifests/neuralese_nl7_prereg.json)
+at `989fb7a214d8e0d6c7ed04f5f48c45d68a43d5a3`, posted on BOARD
+2026-10-28T15:21:18Z, before any variant ran. This extends NL-6 without
+rewriting its preregistration or using NL-1's split/seeds.
+
+The fresh public held-out sets are `{6,7,10,11,12,13,14,15}` and
+`{3,5,7,9,11,13,14,15}`. Seed order in every cell below is 101,211,307.
+Fit means a separate all-sixteen-training run; held-out means a separately
+trained eight-combination run. Entries are accepted-correct counts, not
+accepted-only accuracy.
+
+| Variant | Wire bits | Full fit /16 | Split 1 /8 | Split 2 /8 |
+|---|---|---|---|---|
+| Exact 3-coordinate | 8,24,96,192 | 16,16,16 | 8,8,8 | 8,8,8 |
+| RM(1,3) | 8,24,96,192 | 16,16,16 | 8,8,8 | 8,8,8 |
+| Packed semantic | 8,24,96,192 | 16,16,16 | 8,8,8 | 8,8,8 |
+| Learned additive + separation | 8 | 0,0,0 | 1,1,3 | 1,0,3 |
+| Learned additive + separation | 24 | 1,1,1 | 2,4,3 | 1,0,3 |
+| Learned additive + separation | 96,192 | 15,15,15 | 5,6,6 | 3,4,3 |
+| Existing learned softsign | 8 | 8,7,8 | 3,2,3 | 1,1,1 |
+| Existing learned softsign | 24 | 14,14,14 | 0,1,1 | 2,2,1 |
+| Existing learned softsign | 96,192 | 14,14,14 | 0,0,1 | 2,2,1 |
+
+Budgets are transmitted bits, **not coordinates**. Numeric payload is
+6,24,96,192 bits at 2,8,32,64 bits per coordinate; the 8-bit transport has
+two zero padding bits. RM's payload is eight bits and packed semantics four
+bits, padded to every matched wire budget. Thus a four-bit payload still costs
+an actual byte at the smallest tested transport. Codebook, schema and learned
+receiver weights are separate shared-state costs. Learned low-bit quantizers
+refuse values outside [-4,4], rather than clipping; all refusals remain in the
+denominator. The exact construction uses its frozen [0,1] quantizer.
+
+### Guarantees and robustness
+
+Wolfram confirms `16` distinct exact points, minimum Euclidean separation
+`1/3` and strict nearest-decoder perturbation radius `<1/6`. The native
+numeric transport/decoder recovers all sixteen cleanly at all budgets and
+all six axis `+/-1/12` probes at 96/192 bits. The `1/6` boundary is not covered
+by the strict guarantee; boundary and `1/4` probes are recorded descriptively.
+At 192 bits on the all-fit run, across all eighteen nonclean numeric modes,
+exact has `(correct,refused,undetected wrong)=(252,8,28)` out of 288.
+
+Wolfram independently enumerates RM parameters `(16 codewords,8 bits,dmin4)`,
+128/128 single-bit recoveries and 448/448 double-bit refusals. The native
+enumeration matches these at every budget/seed/split. Double-error detection
+is radius-one refusal, not a claim to correct two bits. Packed semantics
+accepts all 64 single-bit and 96 double-bit corruptions as wrong. Repeating
+these deterministic codebooks over seeds does not create independent trials.
+
+The additive construction obeys the composition identity algebraically.
+The maximum observed absolute coordinate residual over all nine models is
+`1.7763568394002504646778106689453125e-15`, independently decoded by Wolfram,
+below the frozen `1e-12`. The separation hinge uses training pairs only.
+The learned receiver can still fail even with separated sender points.
+For 192-bit all-fit runs, additive numeric nonclean counts are
+`(270,0,18)` for each seed; existing learned counts are
+`(252,5,31)`, `(243,16,29)`, `(245,9,34)`, each out of 288.
+Per-held-out robustness, other precisions and individual modes are retained
+in [`nl7-score.csv.gz`](native/neuralese/nl7-score.csv.gz), not silently pooled.
+
+**Verdict: NOT_SUPPORTED** for the frozen additive learned success hypothesis:
+full fit is not 16/16 and held-out recovery is not 8/8. It does improve over the
+existing learned arm on these fresh high-precision splits, without fixing
+recoverability or beating explicit codes. Exact and RM synthetic recovery
+thresholds are **EXERCISED**. This is not useful-compression evidence, real-model
+evidence, hardware qualification, authority, or deployment.
+Johnson-Lindenstrauss projections for real activations are future work only,
+**NOT_RUN** here.
+
+### Native scoring and negative controls
+
+[`nl7-score.om`](native/neuralese/nl7-score.om) is an independent .om scorer
+for all five arms, deriving membership, codewords, Hamming corruptions,
+mandatory exact guarantees, budgets and completeness from the frozen contract.
+It rejects missing/duplicate/noncanonical records and inconsistent
+prediction/status/payload fields. `S` rows contain seed, split, arm, budget,
+mode, scope (0 all-sixteen, 1 held-out), total, correct, refused, undetected wrong;
+`R` rows pool nonclean modes; `L` reports each frozen learned criterion.
+`NL7 CHECKS PASS` means stream/guarantee checks passed, **not learned success**;
+the separate result is `NL7 LEARNED NOT_SUPPORTED`.
+
+`fixtures/nl7-fixture.om` generates ten original checker controls; nine
+guard-removal/incorrect-oracle source mutants are in
+[`nl7-score.cases`](native/neuralese/fixtures/nl7-score.cases).
+All 19 cases passed, including all nine mutants killed. The producer's
+native guards separately passed 16 cases including fourteen source mutants.
+Actual logs, not inferred outcomes, are retained. The compiler is the same
+pinned `d6290c76...` seeded Omega compiler used for NL-1; no Python product path.
+
+Build by redirecting source through the pinned compiler:
+
+```sh
+"$OMC" < native/neuralese/nl7-score.om > "$WORK/nl7-score"
+"$OMC" < native/neuralese/fixtures/nl7-fixture.om > "$WORK/nl7-fixture"
+chmod +x "$WORK/nl7-score" "$WORK/nl7-fixture"
+"$WORK/nl7-score" < "$WORK/all.csv" > "$WORK/score.csv"
+```
+
+For native conductor replay, use a fresh context with read-only `native` and
+the pinned Omega `seed` available under those relative names. Generate
+`inputs/nl7-case-M.csv` with `nl7-fixture M`; capture original scorer stdout as
+`expected/nl7-case-M.score` for M=0..9. Run the pinned OM2 conductor on
+`native/neuralese/fixtures/nl7-score.cases` with a new scratch directory.
+Each KILL requires the exact specified mutant exit and stdout differing from
+the corresponding original oracle. Receiver/transport source and full raw
+stream/Wolfram receipts are published in the companion aien-train draft.
+No compiler/language/host-word, ownership or harness gate changes are made;
+omega-harness guide updates are not applicable.
+
+[`nl7-wire.om`](native/neuralese/nl7-wire.om) additionally replays actual
+numeric carrier bytes with the final parameter snapshots, independently
+recomputing coordinates, perturbations, receiver scores, predictions and
+abstentions. It reports `NL7WIRE PASS frames=21888 refused=3764`.
+All four qualification cases passed, including three mutants for receiver
+weight indexing, carrier decoding and decision threshold. The total across
+the producer guard and two checker conductors is 39 cases, with 26 source
+mutants killed. Refused encodes require `pred99/status1`; their stale carrier
+bytes cannot independently establish sender-overflow causality. This limitation
+does not apply to admitted-carrier decoding, which is replayed.
+To replay, compile `nl7-wire.om`, feed the same `all.csv`, then provide
+`inputs/nl7-real.csv` and original stdout `expected/nl7-wire.out` to the
+native conductor cases in `fixtures/nl7-wire.cases`.
+
+The conductor reads `inputs/` and `expected/` relative to the replay directory;
+without them every NL7 case is `INVALID input, source or fixture unreadable`.
+Exact setup, from a replay directory containing `native`, `seed`, the compiled
+`gate` and the pinned compiler as `omc` (`all.csv` is the gunzipped
+`native/neuralese/evidence/nl7-stream.csv.gz` of the producer revision named in
+`nl7-independent.json`, SHA-256 `a70bc35d...`):
+
+```sh
+./omc < native/neuralese/fixtures/nl7-fixture.om > nl7-fixture
+./omc < native/neuralese/nl7-score.om > nl7-score
+./omc < native/neuralese/nl7-wire.om > nl7-wire
+chmod +x nl7-fixture nl7-score nl7-wire
+mkdir inputs expected
+for M in 0 1 2 3 4 5 6 7 8 9; do
+  ./nl7-fixture $M > inputs/nl7-case-$M.csv
+  ./nl7-score < inputs/nl7-case-$M.csv > expected/nl7-case-$M.score
+done
+cp all.csv inputs/nl7-real.csv
+./nl7-wire < all.csv > expected/nl7-wire.out
+./gate ./omc d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84 native/neuralese/fixtures/nl7-score.cases score-scratch
+./gate ./omc d6290c7663c2b4bafb59eb3fdf812476e977f4c144def71095c6248ef9b96b84 native/neuralese/fixtures/nl7-wire.cases wire-scratch
+```
+
+The scorer exits are 0, 90, 90, 90, 90, 0, 1, 1, 90, 90 for M=0..9, as the
+cases expect. The conductors report `OM2GATE PASS cases=19` and
+`OM2GATE PASS cases=4`.
 
 ## Status (2026-10-19)
 
@@ -35,11 +300,11 @@ The rules of the race (the frozen contract) are in [CONTRACT.md](prime-drag-race
 | Path | What it is |
 | :--- | :--- |
 | `prime-drag-race/` | Prime Drag Race suite runner (`prime_race`), contract, results and sealed evidence. A standalone Rust crate. |
-| `src/` | The `aien-benchmarks` measurement harness and four helper programs: `bench_canonical_suite`, `bench_branching_neutral`, `bench_verify_records`, `bench_index`. |
+| `src/` | The `aien-benchmarks` measurement harness and five helper programs: `bench_canonical_suite`, `bench_branching_neutral`, `bench_verify_records`, `bench_verify_prereg`, `bench_index`. |
 | `data/` | Datasets from the withdrawn 2026-09-19 sweep, kept as recorded. |
 | `artifacts/gb10_canonical_1789907893_4d762/` | One withdrawn GB10 run bundle with its `SHA256SUMS` file. |
 | `assets/` | SVG charts drawn from `data/`. |
-| `manifests/` | Workload manifests read by `bench_branching_neutral` and `bench_canonical_suite`. |
+| `manifests/` | Workload manifests read by `bench_branching_neutral` and `bench_canonical_suite`; `manifests/prereg/` holds preregistrations checked by `bench_verify_prereg`. |
 | `docs/` | [PIPELINE.md](docs/PIPELINE.md) (how pull requests are tested and merged), [PERF_INDEX.md](docs/PERF_INDEX.md) (generated index), [LIVE_PRESSURE_BENCHMARK.md](docs/LIVE_PRESSURE_BENCHMARK.md) (an older pressure benchmark write-up, not regenerated under the evidence standard). |
 | `tests/gates/` | The Spark test gates (see [How changes are tested](#how-changes-are-tested)). |
 | `tests/fixtures/records/` | Good and bad example records for the evidence check. |
@@ -83,6 +348,9 @@ cargo run --release -- report
 
 # Check records and artifact bundles offline (one line per defect)
 cargo run --release --bin bench_verify_records -- records artifacts tests/fixtures/records/good
+
+# Check preregistration manifests offline (one line per defect)
+cargo run --release --bin bench_verify_prereg -- manifests/prereg
 
 # Check that docs/PERF_INDEX.md matches the generator (drop --check to rewrite it)
 cargo run --release --bin bench_index -- --check
@@ -177,11 +445,21 @@ Status words in a record (source: `src/evidence.rs`):
 - **FAIL**: the run happened and did not meet its acceptance check; kept as evidence.
 - **SUPERSEDED**: replaced by a newer record.
 
+### Preregistration
+
+A campaign that compares learning arms is declared before any candidate is trained, in an `aien-bench-prereg/1` file under `manifests/prereg/`: arms, environments, the sealed held-out split and how non-access is enforced, metrics, sample sizes with their power calculation, stopping rules and the Turing profile `T(M;B,D,G,P)` with `T_ideal` and `T_real` kept apart. A preregistration is a plan and carries no measurements. `cargo run --release --bin bench_verify_prereg` (default path `manifests/prereg`) prints one `path: field: reason` line per defect. It refuses a file without `baseline_before_eval` (baselines run and frozen before any evaluation), without a non-empty `G` background naming every pretrained adviser and toolchain an arm uses, with T/J allowed while energy is not `MEASURED`, with unpinned background revisions once `FROZEN`, or with a sample size whose design effect, effective n or power does not add up (source: `src/prereg.rs`). [manifests/prereg/si_genesis_e2.json](manifests/prereg/si_genesis_e2.json) is the SI Genesis E2 and Fusion E1 plan for issues #39 and #38; its status is `SCOPED` and every result in it is `NOT_RUN`.
+
 ## Hardware
 
 All measurements here come from one NVIDIA DGX Spark (`spark`), Grace Blackwell GB10, aarch64. The withdrawn dataset `data/benchmarks_latest.json` records kernel `7.0.0-1019-nvidia` and `rustc 1.98.1 (48a229cea 2026-09-01)`. On 2026-10-19 the Spark reported the same kernel and compiler, a 4096-byte page size (`getconf PAGESIZE`) and 121 GiB of memory (`free -g`). Nothing in this repository measures or tests any other platform. Work across other machines is planned in issues #31 and #32 and has no results yet.
 
 ---
+
+## Human-Directed Agentic Engineering
+
+Development follows Human-Directed Agentic Engineering (HDAE): humans define goals, architecture, constraints, acceptance criteria, and stopping points; agents implement, execute checks, diagnose failures, and revise within those boundaries. Human review retains responsibility for claims, acceptance, and release decisions.
+
+For the documented method and a systems-software case study, see Gregory M. Kurtzer, [*Ginux: Building an Independent Kernel That Runs Linux Userspace through Human-Directed Agentic Engineering* (2026)](https://doi.org/10.5281/zenodo.23682548). This describes current development, not the protocol or validity of historical measurements below.
 
 ## Historical record (withdrawn figures)
 

@@ -86,7 +86,14 @@ cargo run --release -- verify
 cargo run --release --bin bench_verify_records -- records artifacts tests/fixtures/records/good
 cargo run --release --bin bench_index -- --check
 sh scripts/check-no-python.sh
-tests/gates/run.sh fmt|check|test|verify|generate|verify-records|perf-index|zero-disk-secrets
+tests/gates/run.sh fmt &&
+  tests/gates/run.sh check &&
+  tests/gates/run.sh test &&
+  tests/gates/run.sh verify &&
+  tests/gates/run.sh generate &&
+  tests/gates/run.sh verify-records &&
+  tests/gates/run.sh perf-index &&
+  tests/gates/run.sh zero-disk-secrets
 ```
 
 README reports 33 tests passing with 1 ignored for `prime-drag-race` on 2026-10-19. `#[test]`

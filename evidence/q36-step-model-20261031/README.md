@@ -51,7 +51,10 @@ Checkpoint: `~/models/qwen3.6-35b-a3b-fp8-95a723d0` on the Spark; `derived/heade
     scripts/header-bytes.sh ~/models/qwen3.6-35b-a3b-fp8-95a723d0 | cmp - derived/header-bytes.json
     (cd <core d3dec0eb>/evidence/q36-host-20261020 && <this dir>/scripts/union-cells.sh gen-p1.json gen-p2.json) | cmp - derived/union-cells-ladder2-p1p2.json   # likewise for each union-cells file, sets below
     scripts/extract-inputs.sh | cmp - inputs.wl
-    cat inputs.wl q36-step-model.wl   # send as one WolframLanguageEvaluator call; the text must equal q36-step-model-wolfram-raw.json .text
+    { cat inputs.wl; echo; cat q36-step-model.wl; } | cmp - q36-step-model-query.wl
+    { cat inputs.wl; echo; cat negctl-768.wl; echo; cat q36-step-model.wl; } | cmp - negctl-768-query.wl
+    { cat inputs.wl; echo; cat negctl-perturbed.wl; echo; cat q36-step-model.wl; } | cmp - negctl-perturbed-query.wl
+    # send each *-query.wl as one WolframLanguageEvaluator call; the text must equal the matching *-wolfram-raw.json .text
 
 Union sets: `ladder1-p1` {p1}, `ladder2-p1p2` {p1, p2}, `ladder4-p1234` {p1..p4}, `ladder8-setb` {p1..p4, chat-code,
 chat-prose2, chat-chat, chat-review}, `4chat` {chat-code, chat-prose, chat-chat, chat-review}, `8a` {p1..p4, chat-code,
@@ -65,15 +68,17 @@ lever-2 ladder runs (`inputs/stroke{1,2,4,8}l2-real.json`, `conversations`).
 | ladderMediansMatchReadme | the gate median of each `stroke_chip_ns` list equals the README ladder (L247-250) to 0.0005 ms |
 | ladderMediansMatchFileField | and equals the file's own `stroke_chip_ns_median` exactly |
 | stampsMedianMatchesLog | the stamped run's median equals the 84.076 ms in its log |
+| stampsKindsSumToTotal | the per-kind stamp times sum to the timeline's `total_ns` |
 | ladderHeadsAre1248 | the four ladder files are 1, 2, 4, 8 heads |
 | pinnedUnionMeansRederived | Wolfram's mean of the union cells equals each pinned file's `mean_union` (1e-9) |
 | expertBytesContract | header bytes per expert = 3*2048*512 FP8 + 3*(16*4) BF16 scales x 2 B = 3,146,112; shared expert the same; 256 routed experts; 40 layers |
 | lmHeadBytes | lm_head = 248320 x 2048 x 2 B |
 | mixBytesMatchReadme0944GB | mix bytes round to the README's 0.944 GB |
 | fitPublishedReproducedLinearU | the fit procedure below reproduces a, b, c, h, RMS within half a unit of their published last digit |
-| linearUMatchesPinnedUnions | Linear U(4) 30.7 and U(8) 55.6 are the pinned 4chat and mean(set a, set b) unions + 1; U(1) = 9 |
-| contractT8 | t(8, 55.6) = 83.7676 ms and 95.50 tok/s |
-| variantIndep | independent-draw U(8) rounds to 58.4 and gives 93.3 tok/s |
+| linearU4U8MatchPinnedUnions | Linear U(4) 30.7 and U(8) 55.6 are the pinned 4chat and mean(set a, set b) unions + 1 (U(1) = 9 holds by construction; U(2) = 16.3 has no pinned source and is not checked) |
+| indepFormulaMatchesPinnedFiles | 1 + 256(1-(31/32)^n) minus the shared expert equals the `independent_draws` of the pinned 8prompts and 4p files (1e-9) |
+| publishedPinT8 | pin of the published text, reads no input: t(8, 55.6) = 83.7676 ms and 95.50 tok/s |
+| publishedPinIndep8 | pin of the published text, reads no input: independent-draw U(8) rounds to 58.4 and gives 93.3 tok/s |
 | weightClassesBelowCeiling | no weight class runs above 273 GB/s with the corrected bytes |
 
 The gate median is the upper median (element Floor[len/2]+1 of the sorted list), the convention of the stroke gate and
@@ -85,6 +90,10 @@ uses the gate's 25.320206, 32.464756, 44.350601, 85.427837 ms.
     c = (gate_up + down chip time of the stamped lever-2 eight-head stroke) / U(8)  = 38.69792 ms / 55.6
     h = (lm_head chip time of that stroke) / (2 lm_head launches)                   = 9.619136 ms / 2
     a, b = least squares of  median(n) - c U(n) - h Ceiling[n/4]  over n = 1, 2, 4, 8
+
+[INFERENCE] c and h come from ONE stamped shared-chip stroke (`timeline_last_stroke`, total_ns 77738400), not from a
+median, so they carry that stroke's noise and the stamping overhead. c assumes the gate_up + down time is fully
+proportional to U with no fixed per-launch term; a fixed term, if any, is absorbed into a and b.
 
 | U set | a | b | c | h | RMS ms | residuals n = 1, 2, 4, 8 (ms) |
 |---|---|---|---|---|---|---|
@@ -140,10 +149,10 @@ state rather than weights and have no row.
 
 | n | U independent draws | t ms | tok/s | status |
 |---|---|---|---|---|
-| 1 | 9 | 23.494 | 42.564059 | fitted range (lever-2 ladder) |
-| 2 | 16.75 | 32.178 | 62.154267 | fitted range (lever-2 ladder) |
-| 4 | 31.531006 | 49.04558 | 81.556788 | fitted range (lever-2 ladder) |
-| 8 | 58.420831 | 85.730898 | 93.315248 | fitted range (lever-2 ladder) |
+| 1 | 9 | 23.494 | 42.564059 | independent-draw variant (fitted range n <= 8) |
+| 2 | 16.75 | 32.178 | 62.154267 | independent-draw variant (fitted range n <= 8) |
+| 4 | 31.531006 | 49.04558 | 81.556788 | independent-draw variant (fitted range n <= 8) |
+| 8 | 58.420831 | 85.730898 | 93.315248 | independent-draw variant (fitted range n <= 8) |
 | 16 | 102.962162 | 152.671665 | 104.800062 | architecture projection until OMEGA_GPU_Q36_MAX_HEADS > 8 is qualified |
 | 32 | 164.313846 | 267.252437 | 119.736981 | architecture projection until OMEGA_GPU_Q36_MAX_HEADS > 8 is qualified |
 | 64 | 223.442488 | 452.165971 | 141.540947 | architecture projection until OMEGA_GPU_Q36_MAX_HEADS > 8 is qualified |
@@ -166,6 +175,13 @@ claiming a speedup:
    A lever that is designed to change a term (for example h after an XBATCH change) predicts with the revised term
    and states which term it changed.
 4. `scope` marks n > 8 as an architecture projection.
+
+In-sample residuals of the published model on its own ladder, (measured - predicted)/predicted, report key
+`publishedModelResidualFraction`: n = 1 +0.077731, n = 2 +0.018828, n = 4 -0.084936, n = 8 +0.01982 (main run).
+The rule stays as specified (> 10 % opens a model-revision issue), but at n = 4 the model already sits
+1.5064 points inside it (WolframLanguageEvaluator: `100 (1/10 - 0.084936)` -> 1.5064), so a no-op lever can trip
+the rule there from shared-chip drift alone. Measure in a quiet spark-window and compare against the lever's own
+no-op control before opening the issue.
 
 The main run carries two worked examples: measured = 1.05 x predicted gives residual 0.05, `WITHIN_MODEL`;
 1.15 x predicted gives 0.15, `OPEN_MODEL_REVISION_ISSUE`. Applying the rule to a later lever is NOT_RUN here.

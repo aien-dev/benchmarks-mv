@@ -61,6 +61,11 @@ q36in = <|
      c = (gate_up + down chip time of the stamped lever-2 eight-head stroke) / U(8)
      h = (lm_head chip time of that stroke) / (its lm_head launches)
      a, b = least squares of  median(n) - c U(n) - h Ceiling[n/4]  over the lever-2 ladder n = 1, 2, 4, 8.
+   [INFERENCE] c and h come from ONE stamped shared-chip stroke (timeline_last_stroke, total_ns 77738400), not from a
+   median, so they carry that stroke's noise and the stamping overhead. c assumes gate_up + down time is fully
+   proportional to U, with no fixed per-launch term; a fixed term, if any, is absorbed into a and b.
+   In-sample residuals of the published model are up to about 8.5 % of the prediction (report key
+   "publishedModelResidualFraction"), so a no-op lever can approach the 10 % rule at n = 4 from shared-chip drift alone.
 
    Use by later lever issues: recordLever["lever-3", n, U, measuredMs] returns predicted, measured, residual and the
    verdict; |residual| > 10 % of the prediction means OPEN_MODEL_REVISION_ISSUE (a new versioned .wl, never an edit). *)
@@ -159,12 +164,13 @@ q36Report[in_] := Module[{ms, uLinear, uMatched, uQuoted, uIndep, fitLinear, fit
         "tokS" -> q36Num[predictTokS[8, u8stamp]]|>|>;
    proj = Prepend[Table[{n, q36Num[q36Uindep[n]], q36Num[predict[n, q36Uindep[n]]], q36Num[predictTokS[n, q36Uindep[n]]],
        If[n > q36MaxHeadsQualified, "architecture projection until OMEGA_GPU_Q36_MAX_HEADS > 8 is qualified",
-        "fitted range (lever-2 ladder)"]}, {n, {1, 2, 4, 8, 16, 32, 64}}],
+        "independent-draw variant (fitted range n <= 8)"]}, {n, {1, 2, 4, 8, 16, 32, 64}}],
      {"n", "U independent draws", "t ms", "tok/s", "status"}];
    checks = <|
      "ladderMediansMatchReadme" -> AllTrue[Abs[ms - in["readmeLadderMs"]], # <= 5/10000 &],
      "ladderMediansMatchFileField" -> (ms == Table[in["ladderFileMedianNs" <> ToString[k]], {k, q36Ns}]/10^6),
      "stampsMedianMatchesLog" -> (Abs[stampMed - in["stampsLogMedianMs"]] <= 5/10000),
+     "stampsKindsSumToTotal" -> (Total[Values[in["stampsKindNs"]]] == in["stampsTotalNs"]),
      "ladderHeadsAre1248" -> ({in["ladderHeads1"], in["ladderHeads2"], in["ladderHeads4"], in["ladderHeads8"]} == q36Ns),
      "pinnedUnionMeansRederived" -> AllTrue[Values[pinnedMeans], Abs[#[[1]] - #[[2]]] <= 10^-9 &],
      "expertBytesContract" -> (in["bytes[expert]"] == 3*2048*512 + 3*16*4*2 == 3146112 &&
@@ -173,10 +179,13 @@ q36Report[in_] := Module[{ms, uLinear, uMatched, uQuoted, uIndep, fitLinear, fit
      "lmHeadBytes" -> (in["bytes[lm_head]"] == 248320*2048*2),
      "mixBytesMatchReadme0944GB" -> (Round[in["bytes[mix]"]/10^9, 1/1000] == 944/1000),
      "fitPublishedReproducedLinearU" -> q36Reproduced[fitLinear],
-     "linearUMatchesPinnedUnions" -> (Round[uQuoted["U4 from 4chat"], 1/10] == uLinear[[3]] &&
-        Round[uQuoted["U8 from mean(set a, set b)"], 1/10] == uLinear[[4]] && uMatched[[1]] == uLinear[[1]]),
-     "contractT8" -> (predict[8, 556/10] == 837676/10000 && Round[predictTokS[8, 556/10], 1/100] == 9550/100),
-     "variantIndep" -> (Round[q36Uindep[8], 1/10] == 584/10 && Round[predictTokS[8, q36Uindep[8]], 1/10] == 933/10),
+     "linearU4U8MatchPinnedUnions" -> (Round[uQuoted["U4 from 4chat"], 1/10] == uLinear[[3]] &&
+        Round[uQuoted["U8 from mean(set a, set b)"], 1/10] == uLinear[[4]]),
+     "indepFormulaMatchesPinnedFiles" -> (Abs[q36Uindep[8] - 1 - in["pinnedUnionIndep[8prompts]"]] <= 10^-9 &&
+        Abs[q36Uindep[4] - 1 - in["pinnedUnionIndep[4p]"]] <= 10^-9),
+     (* publishedPin*: pins of the published Linear text against q36Published; they do not read the inputs *)
+     "publishedPinT8" -> (predict[8, 556/10] == 837676/10000 && Round[predictTokS[8, 556/10], 1/100] == 9550/100),
+     "publishedPinIndep8" -> (Round[q36Uindep[8], 1/10] == 584/10 && Round[predictTokS[8, q36Uindep[8]], 1/10] == 933/10),
      "weightClassesBelowCeiling" -> AllTrue[Most[Rest[bw]][[All, 5]], # <= q36CeilingGBs &]|>;
    <|"version" -> q36ModelVersion,
      "checks" -> checks,
@@ -194,6 +203,8 @@ q36Report[in_] := Module[{ms, uLinear, uMatched, uQuoted, uIndep, fitLinear, fit
      "freeFit (linear U)" -> q36NumAssoc[q36FreeFit[ms, uLinear]],
      "publishedModelRmsMs (linear U)" -> q36Num[q36Rms[ms, uLinear]],
      "publishedModelResidualsMs (linear U)" -> q36Num[ms - Table[predict[q36Ns[[i]], uLinear[[i]]], {i, 4}]],
+     "publishedModelResidualFraction (linear U, (measured - predicted)/predicted)" ->
+        q36Num[Table[(ms[[i]] - predict[q36Ns[[i]], uLinear[[i]]])/predict[q36Ns[[i]], uLinear[[i]]], {i, 4}]],
      "variantsN8" -> variants,
      "bandwidth (stamped lever-2 stroke)" -> bw,
      "projection" -> proj,
